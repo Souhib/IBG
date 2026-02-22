@@ -24,7 +24,7 @@ services:
     restart: always
 
   redis:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:latest
     volumes:
       - redis_data:/data
     healthcheck:
