@@ -25,6 +25,8 @@ services:
 
   redis:
     image: redis/redis-stack:latest
+    environment:
+      - REDIS_ARGS=--stop-writes-on-bgsave-error no
     ports:
       - "63791:6379"
       - "8011:8001"  # RedisInsight UI

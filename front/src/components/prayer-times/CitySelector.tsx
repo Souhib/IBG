@@ -35,6 +35,18 @@ function storeCity(data: CityCoordinates) {
 }
 
 async function fetchTimezone(lat: number, lng: number): Promise<string | undefined> {
+  // Try Open-Meteo first (free, no API key required)
+  try {
+    const res = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&timezone=auto&forecast_days=1`,
+    )
+    const data = await res.json()
+    if (data.timezone) return data.timezone as string
+  } catch {
+    // Open-Meteo unavailable, try fallback
+  }
+
+  // Fallback to Google Timezone API
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined
   if (!apiKey) return undefined
   try {
@@ -45,9 +57,18 @@ async function fetchTimezone(lat: number, lng: number): Promise<string | undefin
     const data = await res.json()
     if (data.status === "OK") return data.timeZoneId as string
   } catch {
-    // Timezone API not enabled or network error — fall back to browser timezone
+    // Google Timezone API not enabled or network error
   }
   return undefined
+}
+
+export async function refreshTimezoneIfMissing(coords: CityCoordinates): Promise<CityCoordinates | null> {
+  if (coords.timezone) return null
+  const timezone = await fetchTimezone(coords.lat, coords.lng)
+  if (!timezone) return null
+  const updated = { ...coords, timezone }
+  storeCity(updated)
+  return updated
 }
 
 export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {

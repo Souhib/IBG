@@ -10,7 +10,8 @@
     "next": "Next",
     "submit": "Submit",
     "close": "Close",
-    "or": "or"
+    "or": "or",
+    "goHome": "Go Home"
   },
   "nav": {
     "home": "Home",
@@ -75,7 +76,34 @@
     "startGame": "Start Game",
     "leave": "Leave Room",
     "host": "Host",
-    "minPlayers": "Minimum {{count}} players required"
+    "minPlayers": "Minimum {{count}} players required",
+    "lobby": "Room Lobby",
+    "enterCode": "Enter the 6-character room code",
+    "enterPassword": "Enter the 4-digit room password",
+    "joining": "Joining room...",
+    "joinFailed": "Failed to join room",
+    "invalidCode": "Please enter a valid room code",
+    "invalidPassword": "Please enter the 4-digit password"
+  },
+  "toast": {
+    "playerJoined": "{{username}} joined the room",
+    "playerLeft": "{{username}} left the room",
+    "playerDisconnected": "{{username}} disconnected",
+    "playerReconnected": "{{username}} reconnected",
+    "playerLeftPermanently": "{{username}} left permanently",
+    "ownerChanged": "{{username}} is now the host",
+    "gameStarting": "Game is starting!",
+    "voteCasted": "Your vote has been recorded",
+    "playerEliminated": "A player has been eliminated",
+    "gameOver": "Game Over!",
+    "gameCancelled": "Game cancelled",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionRestored": "Connection restored",
+    "clueGiven": "{{team}} spymaster gave a clue: {{word}} ({{number}})",
+    "cardRevealed": "Card revealed: {{word}}",
+    "turnEnded": "Turn ended — {{team}}'s turn now",
+    "yourTurn": "It's your turn!",
+    "votingStarted": "Voting phase has started"
   },
   "game": {
     "vote": "Vote",

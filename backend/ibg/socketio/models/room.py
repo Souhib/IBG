@@ -38,5 +38,9 @@ class LeaveRoomUser(EventRoom):
 
 class Room(RedisJsonModel, index=True):
     id: str = RedisField(index=True)
+    public_id: str = ""
     users: list[User] = []
     games: list[Game] = []
+    owner_id: str | None = None
+    active_game_id: str | None = None
+    active_game_type: str | None = None

@@ -318,3 +318,10 @@ pyrightconfig.json
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,visualstudiocode
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md
+
+# E2E tests
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/

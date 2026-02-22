@@ -1,32 +1,56 @@
+"""Tests for room model validation."""
+
 import random
-import string
 
 import pytest
 from faker import Faker
 
-from ibg.api.models.room import RoomStatus, RoomType
-from ibg.api.models.table import Room
+from ibg.api.models.room import RoomCreate, RoomStatus
 
 
 def test_room_password_with_non_digit_characters(faker: Faker):
-    password = "".join(string.ascii_lowercase for _ in range(4))
+    """Creating a room with non-digit password raises ValueError."""
 
+    # Arrange
+    password = "abcd"
+
+    # Act / Assert
     with pytest.raises(ValueError):
-        _ = Room(
+        RoomCreate(
             owner_id=faker.uuid4(),
-            type=random.choice(list(RoomType)),
             status=random.choice(list(RoomStatus)),
             password=password,
         )
 
 
 def test_room_password_with_less_than_4_characters(faker: Faker):
-    password = "".join(string.digits for _ in range(random.randint(1, 3)))
+    """Creating a room with fewer than 4 digits raises ValueError."""
 
+    # Arrange
+    password = "12"
+
+    # Act / Assert
     with pytest.raises(ValueError):
-        _ = Room(
+        RoomCreate(
             owner_id=faker.uuid4(),
-            type=random.choice(list(RoomType)),
             status=random.choice(list(RoomStatus)),
-            password=str(password),
+            password=password,
         )
+
+
+def test_room_password_valid(faker: Faker):
+    """Creating a room with a valid 4-digit password succeeds."""
+
+    # Arrange
+    password = "1234"
+
+    # Act
+    room = RoomCreate(
+        owner_id=faker.uuid4(),
+        status=RoomStatus.ONLINE,
+        password=password,
+    )
+
+    # Assert
+    assert room.password == "1234"
+    assert room.status == RoomStatus.ONLINE

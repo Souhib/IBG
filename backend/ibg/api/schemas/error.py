@@ -81,6 +81,7 @@ class BaseError(Exception):
 
 # Authentication & Authorization Errors
 
+
 class InvalidCredentialsError(BaseError):
     """Invalid login credentials."""
 
@@ -139,6 +140,7 @@ class ForbiddenError(BaseError):
 
 # User Errors
 
+
 class UserNotFoundError(BaseError):
     """User not found in the database."""
 
@@ -188,6 +190,7 @@ class UserAlreadyInRoomError(BaseError):
 
 
 # Room Errors
+
 
 class RoomNotFoundError(BaseError):
     """Room not found."""
@@ -239,6 +242,7 @@ class ErrorRoomIsNotActive(BaseError):
 
 # Game Errors
 
+
 class GameNotFoundError(BaseError):
     """Game not found."""
 
@@ -264,6 +268,7 @@ class NoTurnInsideGameError(BaseError):
 
 
 # Undercover Game Errors
+
 
 class WordAlreadyExistsError(BaseError):
     """Word already exists in the database."""
@@ -327,6 +332,7 @@ class TermPairNotFoundError(BaseError):
 
 # Voting Errors
 
+
 class CantVoteBecauseYouDeadError(BaseError):
     """Dead players cannot vote."""
 
@@ -360,4 +366,31 @@ class CantVoteForDeadPersonError(BaseError):
             frontend_message="You can't vote for an eliminated player.",
             status_code=status.HTTP_403_FORBIDDEN,
             details={"user_id": str(user_id), "dead_user_id": str(dead_user_id)},
+        )
+
+
+class PlayerRemovedFromGameError(BaseError):
+    """Player was removed from a game due to inactivity (disconnect timeout)."""
+
+    def __init__(self, user_id: str, game_id: str):
+        super().__init__(
+            message=f"Player {user_id} was removed from game {game_id} due to inactivity",
+            frontend_message="You were removed from this game due to inactivity.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            details={"user_id": user_id, "game_id": game_id},
+        )
+
+
+# Redis Errors
+
+
+class RedisUnavailableError(BaseError):
+    """Redis is unavailable or misconfigured (e.g., MISCONF RDB snapshot failure)."""
+
+    def __init__(self, operation: str, original_error: str | None = None):
+        super().__init__(
+            message=f"Redis unavailable during {operation}: {original_error}",
+            frontend_message="The server is experiencing a temporary issue. Please try again.",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            details={"operation": operation, "original_error": original_error or ""},
         )

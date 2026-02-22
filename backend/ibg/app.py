@@ -31,7 +31,11 @@ from ibg.socketio.routes.room import router as socket_router
 
 def _create_sio(settings: Settings) -> IBGSocket:
     """Create and configure the Socket.IO server with all event handlers."""
-    sio = IBGSocket(cors_origins=settings.cors_origins)
+    sio = IBGSocket(
+        cors_origins=settings.cors_origins,
+        ping_interval=settings.sio_ping_interval,
+        ping_timeout=settings.sio_ping_timeout,
+    )
     room.room_events(sio)
     undercover.undercover_events(sio)
     codenames.codenames_events(sio)

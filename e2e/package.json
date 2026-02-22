@@ -1,0 +1,25 @@
+{
+  "name": "ibg-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke/",
+    "test:auth": "playwright test tests/auth/",
+    "test:rooms": "playwright test tests/rooms/",
+    "test:undercover": "playwright test tests/undercover/",
+    "test:codenames": "playwright test tests/codenames/",
+    "test:cross-flow": "playwright test tests/cross-flow/",
+    "test:profile": "playwright test tests/profile/",
+    "report": "playwright show-report",
+    "docker:up": "docker compose -f docker-compose.e2e.yml up -d --build",
+    "docker:down": "docker compose -f docker-compose.e2e.yml down -v",
+    "docker:logs": "docker compose -f docker-compose.e2e.yml logs -f"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.0",
+    "socket.io-client": "^4.7.0"
+  }
+}

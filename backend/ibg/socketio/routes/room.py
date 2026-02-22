@@ -1,17 +1,35 @@
+import time
+from uuid import UUID
+
 from aredis_om import NotFoundError
 from fastapi import APIRouter
 from jose import JWTError, jwt
 from loguru import logger
+from sqlmodel import select
 from starlette.responses import HTMLResponse
 
-from ibg.api.models.room import RoomCreate
+from ibg.api.constants import (
+    DISCONNECT_GRACE_PERIOD_SECONDS,
+    EVENT_OWNER_CHANGED,
+    EVENT_PLAYER_DISCONNECTED,
+    EVENT_PLAYER_LEFT_PERMANENTLY,
+    EVENT_PLAYER_RECONNECTED,
+)
+from ibg.api.models.relationship import RoomUserLink
+from ibg.api.models.room import RoomCreate, RoomType
+from ibg.api.models.table import Room as DBRoom
 from ibg.api.models.view import RoomView
+from ibg.socketio.controllers.disconnect import handle_codenames_disconnect, handle_undercover_disconnect
 from ibg.socketio.dependencies import get_settings_singleton
+from ibg.socketio.models.codenames import CodenamesGame
 from ibg.socketio.models.room import JoinRoomUser, LeaveRoomUser
 from ibg.socketio.models.room import Room as RedisRoom
 from ibg.socketio.models.shared import IBGSocket
+from ibg.socketio.models.socket import UndercoverGame
 from ibg.socketio.models.user import User
 from ibg.socketio.routes.shared import send_event_to_client, serialize_model, socketio_exception_handler
+from ibg.socketio.utils.disconnect_tasks import schedule_disconnect_cleanup
+from ibg.socketio.utils.redis_ttl import set_game_finished_ttl
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -193,7 +211,12 @@ def room_events(sio: IBGSocket) -> None:
 
     @sio.event
     async def disconnect(sid):
-        """Clean up Redis state when a client disconnects."""
+        """Handle client disconnect with a grace period for reconnection.
+
+        Instead of immediately removing the user, marks them as disconnected
+        and schedules a delayed cleanup. If the user reconnects within
+        DISCONNECT_GRACE_PERIOD_SECONDS, the cleanup is cancelled.
+        """
         session = await sio.get_session(sid)
         user_id = session.get("user_id") if session else None
         if not user_id:
@@ -202,40 +225,215 @@ def room_events(sio: IBGSocket) -> None:
 
         logger.info(f"[SIO] Disconnected: sid={sid}, user_id={user_id}")
 
-        # Find all Redis rooms and remove the user
-        try:
-            all_rooms = await RedisRoom.find().all()
-        except Exception:
-            logger.warning(f"[SIO] Failed to query Redis rooms during disconnect for user_id={user_id}")
-            return
-
-        for redis_room in all_rooms:
-            user_in_room = next((u for u in redis_room.users if u.id == user_id), None)
-            if user_in_room:
-                redis_room.users = [u for u in redis_room.users if u.id != user_id]
-                await redis_room.save()
-
-                # Leave the Socket.IO room
-                await sio.leave_room(sid, redis_room.id)
-
-                # Notify remaining room members
-                await send_event_to_client(
-                    sio,
-                    "user_disconnected",
-                    {
-                        "user_id": user_id,
-                        "username": user_in_room.username,
-                        "message": f"User {user_in_room.username} has disconnected.",
-                    },
-                    room=redis_room.id,
-                )
-
-        # Clean up Redis User model
+        # Look up the Redis user to get their room_id directly
         try:
             redis_user = await User.get(user_id)
+        except NotFoundError:
+            logger.info(f"[SIO] No Redis user found for user_id={user_id}, nothing to clean up")
+            return
+
+        room_id = redis_user.room_id
+        if not room_id:
+            logger.info(f"[SIO] User {user_id} has no room_id, cleaning up user model only")
             await User.delete(redis_user.pk)
-        except (NotFoundError, Exception):
-            pass
+            return
+
+        # Mark user as disconnected (don't remove yet)
+        redis_user.disconnected_at = time.time()
+        await redis_user.save()
+
+        # Find the room and notify
+        try:
+            redis_room = await RedisRoom.get(room_id)
+        except NotFoundError:
+            logger.warning(f"[SIO] Room {room_id} not found during disconnect for user_id={user_id}")
+            await User.delete(redis_user.pk)
+            return
+
+        # Update user's disconnected_at in the room's user list too
+        user_in_room = next((u for u in redis_room.users if u.id == user_id), None)
+        if user_in_room:
+            user_in_room.disconnected_at = redis_user.disconnected_at
+            await redis_room.save()
+
+        # Leave the Socket.IO room (transport is gone)
+        await sio.leave_room(sid, redis_room.id)
+
+        # Notify remaining room members of temporary disconnect
+        in_game = redis_room.active_game_id is not None
+        await send_event_to_client(
+            sio,
+            EVENT_PLAYER_DISCONNECTED,
+            {
+                "user_id": user_id,
+                "username": redis_user.username,
+                "in_game": in_game,
+                "grace_period_seconds": DISCONNECT_GRACE_PERIOD_SECONDS,
+                "message": f"User {redis_user.username} has disconnected. Waiting for reconnect...",
+            },
+            room=redis_room.public_id,
+        )
+
+        # Schedule permanent cleanup after grace period
+        schedule_disconnect_cleanup(
+            user_id,
+            DISCONNECT_GRACE_PERIOD_SECONDS,
+            _permanent_disconnect_cleanup(sio, user_id, room_id),
+        )
+
+    async def _permanent_disconnect_cleanup(sio: IBGSocket, user_id: str, room_id: str) -> None:
+        """Permanently remove a user who didn't reconnect within the grace period.
+
+        Handles: Redis user deletion, room removal, game-specific cleanup,
+        owner transfer, empty room deactivation, and DB updates.
+        """
+        logger.info(f"[Disconnect] Permanent cleanup for user_id={user_id}, room_id={room_id}")
+
+        # Create a DB session for this background task
+        db_session = await sio.create_session()
+
+        try:
+            # Get the Redis user (may already be gone if they reconnected then left normally)
+            try:
+                redis_user = await User.get(user_id)
+            except NotFoundError:
+                logger.info(f"[Disconnect] User {user_id} already cleaned up, skipping")
+                return
+
+            # Verify user is still disconnected (not reconnected)
+            if redis_user.disconnected_at is None:
+                logger.info(f"[Disconnect] User {user_id} reconnected, skipping cleanup")
+                return
+
+            # Delete the Redis User model
+            await User.delete(redis_user.pk)
+
+            # Get the Redis room
+            try:
+                redis_room = await RedisRoom.get(room_id)
+            except NotFoundError:
+                logger.info(f"[Disconnect] Room {room_id} already gone, skipping")
+                return
+
+            # Handle game-specific disconnect if there's an active game
+            if redis_room.active_game_id:
+                if redis_room.active_game_type == "undercover":
+                    await handle_undercover_disconnect(sio, user_id, redis_room)
+                elif redis_room.active_game_type == "codenames":
+                    await handle_codenames_disconnect(sio, user_id, redis_room)
+
+            # Remove user from Redis room
+            redis_room.users = [u for u in redis_room.users if u.id != user_id]
+
+            # Owner transfer logic
+            was_owner = redis_room.owner_id == user_id
+            if was_owner:
+                # Find next connected user to become owner
+                connected_users = [u for u in redis_room.users if u.disconnected_at is None]
+                if connected_users:
+                    new_owner = connected_users[0]
+                    redis_room.owner_id = new_owner.id
+                    await redis_room.save()
+
+                    # Update DB room owner
+                    try:
+                        db_room = (await db_session.exec(select(DBRoom).where(DBRoom.id == UUID(room_id)))).first()
+                        if db_room:
+                            db_room.owner_id = UUID(new_owner.id)
+                            db_session.add(db_room)
+                            await db_session.commit()
+                    except Exception:
+                        logger.exception(f"[Disconnect] Failed to update DB owner for room {room_id}")
+
+                    await send_event_to_client(
+                        sio,
+                        EVENT_OWNER_CHANGED,
+                        {
+                            "new_owner_id": new_owner.id,
+                            "new_owner_username": new_owner.username,
+                            "message": f"{new_owner.username} is now the room owner.",
+                        },
+                        room=redis_room.public_id,
+                    )
+                elif not redis_room.users:
+                    # Room is empty — deactivate
+                    await _deactivate_room(db_session, redis_room)
+                    return
+                else:
+                    # All remaining users are also disconnected, pick first one
+                    new_owner = redis_room.users[0]
+                    redis_room.owner_id = new_owner.id
+                    await redis_room.save()
+            else:
+                await redis_room.save()
+
+            # If room is now empty, deactivate
+            if not redis_room.users:
+                await _deactivate_room(db_session, redis_room)
+                return
+
+            # Update RoomUserLink.connected = False in DB
+            try:
+                link = (
+                    await db_session.exec(
+                        select(RoomUserLink)
+                        .where(RoomUserLink.room_id == UUID(room_id))
+                        .where(RoomUserLink.user_id == UUID(user_id))
+                        .where(RoomUserLink.connected == True)  # noqa: E712
+                    )
+                ).first()
+                if link:
+                    link.connected = False
+                    db_session.add(link)
+                    await db_session.commit()
+            except Exception:
+                logger.exception(f"[Disconnect] Failed to update RoomUserLink for user {user_id}")
+
+            # Notify remaining players
+            await send_event_to_client(
+                sio,
+                EVENT_PLAYER_LEFT_PERMANENTLY,
+                {
+                    "user_id": user_id,
+                    "username": redis_user.username,
+                    "message": f"{redis_user.username} has left the room.",
+                },
+                room=redis_room.public_id,
+            )
+
+        except Exception:
+            logger.exception(f"[Disconnect] Error during permanent cleanup for user_id={user_id}")
+        finally:
+            await db_session.close()
+
+    async def _deactivate_room(db_session, redis_room: RedisRoom) -> None:
+        """Deactivate an empty room in both Redis and DB."""
+        logger.info(f"[Disconnect] Room {redis_room.id} is empty, deactivating")
+
+        # If there's an active game, set TTL on it
+        if redis_room.active_game_id:
+            try:
+                if redis_room.active_game_type == "undercover":
+                    game = await UndercoverGame.get(redis_room.active_game_id)
+                    await set_game_finished_ttl(game)
+                elif redis_room.active_game_type == "codenames":
+                    game = await CodenamesGame.get(redis_room.active_game_id)
+                    await set_game_finished_ttl(game)
+            except NotFoundError:
+                pass
+
+        # Delete Redis room
+        await RedisRoom.delete(redis_room.pk)
+
+        # Set DB room to INACTIVE
+        try:
+            db_room = (await db_session.exec(select(DBRoom).where(DBRoom.id == UUID(redis_room.id)))).first()
+            if db_room:
+                db_room.type = RoomType.INACTIVE
+                db_session.add(db_room)
+                await db_session.commit()
+        except Exception:
+            logger.exception(f"[Disconnect] Failed to deactivate DB room {redis_room.id}")
 
     @sio.event
     @socketio_exception_handler(sio)
@@ -244,36 +442,63 @@ def room_events(sio: IBGSocket) -> None:
         join_room_user = JoinRoomUser(**data)
 
         # Function Logic
-        room = await sio.socket_room_controller.user_join_room(sid, join_room_user)
+        room, is_reconnect = await sio.socket_room_controller.user_join_room(sid, join_room_user)
         await sio.enter_room(sid=sid, room=room.public_id)
 
         room_view = serialize_model(RoomView.model_validate(room))
 
-        # Send Notification to the user that they have joined
-        await send_event_to_client(
-            sio,
-            "room_status",
-            {
-                "user_id": str(join_room_user.user_id),
-                "username": room.users[-1].username,
-                "message": f"You joined the room {room.public_id}.",
-                "data": room_view,
-            },
-            room=sid,
-        )
+        if is_reconnect:
+            # Send reconnect acknowledgement to the reconnecting user
+            await send_event_to_client(
+                sio,
+                "room_status",
+                {
+                    "user_id": str(join_room_user.user_id),
+                    "username": room.users[-1].username,
+                    "message": f"You reconnected to room {room.public_id}.",
+                    "data": room_view,
+                },
+                room=sid,
+            )
 
-        # Send Notification to Room that user has joined
-        await send_event_to_client(
-            sio,
-            "new_user_joined",
-            {
-                "user_id": str(join_room_user.user_id),
-                "username": room.users[-1].username,
-                "message": f"User {sid} has joined the room.",
-                "data": room_view,
-            },
-            room=str(room.public_id),
-        )
+            # Notify room that user has reconnected
+            await send_event_to_client(
+                sio,
+                EVENT_PLAYER_RECONNECTED,
+                {
+                    "user_id": str(join_room_user.user_id),
+                    "username": room.users[-1].username,
+                    "message": f"User {room.users[-1].username} has reconnected.",
+                    "data": room_view,
+                },
+                room=str(room.public_id),
+            )
+        else:
+            # Send Notification to the user that they have joined
+            await send_event_to_client(
+                sio,
+                "room_status",
+                {
+                    "user_id": str(join_room_user.user_id),
+                    "username": room.users[-1].username,
+                    "message": f"You joined the room {room.public_id}.",
+                    "data": room_view,
+                },
+                room=sid,
+            )
+
+            # Send Notification to Room that user has joined
+            await send_event_to_client(
+                sio,
+                "new_user_joined",
+                {
+                    "user_id": str(join_room_user.user_id),
+                    "username": room.users[-1].username,
+                    "message": f"User {sid} has joined the room.",
+                    "data": room_view,
+                },
+                room=str(room.public_id),
+            )
 
     @sio.event
     @socketio_exception_handler(sio)

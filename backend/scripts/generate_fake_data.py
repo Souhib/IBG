@@ -53,7 +53,7 @@ from ibg.api.models.room import RoomStatus, RoomType
 from ibg.api.models.stats import UserStats
 from ibg.api.models.table import Game, Room, User
 from ibg.api.models.undercover import TermPair, Word
-from ibg.database import create_app_engine, create_db_and_tables
+from ibg.database import create_app_engine, create_db_and_tables, get_redis_om_connection
 from ibg.settings import Settings
 
 fake = Faker()
@@ -592,8 +592,17 @@ async def create_user_stats(session: AsyncSession, users: list[User]) -> None:
 # ── Main operations ─────────────────────────────────────────────────────────
 
 
+async def flush_redis() -> None:
+    """Flush all data from Redis (game state, rooms, users)."""
+    print("Flushing Redis data...")
+    conn = get_redis_om_connection()
+    await conn.flushall()
+    await conn.aclose()
+    print("  Redis data flushed successfully!")
+
+
 async def delete_all_data(engine: AsyncEngine) -> None:
-    """Delete all data by dropping and recreating tables.
+    """Delete all data by dropping and recreating tables, and flush Redis.
 
     Args:
         engine: The database engine.
@@ -601,6 +610,8 @@ async def delete_all_data(engine: AsyncEngine) -> None:
     print("Dropping and recreating all tables...")
     await create_db_and_tables(engine, drop_all=True)
     print("All tables dropped and recreated successfully!")
+
+    await flush_redis()
 
 
 async def generate_all_data(

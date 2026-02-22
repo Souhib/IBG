@@ -325,6 +325,11 @@ async def start_codenames_game(
     )
     await redis_game.save()
 
+    # Track active game on the room
+    redis_room.active_game_id = str(db_game.id)
+    redis_room.active_game_type = "codenames"
+    await redis_room.save()
+
     return redis_game
 
 
@@ -487,6 +492,14 @@ async def guess_card(
     # Set TTL on finished games so they don't persist forever
     if game.status == CodenamesGameStatus.FINISHED:
         await set_game_finished_ttl(game)
+        # Clear active game on the room
+        try:
+            redis_room = await RedisRoom.get(game.room_id)
+            redis_room.active_game_id = None
+            redis_room.active_game_type = None
+            await redis_room.save()
+        except NotFoundError:
+            pass
 
     return game, card, result
 

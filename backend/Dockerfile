@@ -27,12 +27,14 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files
+# Copy pyproject.toml and create minimal package structure for dependency resolution
 COPY pyproject.toml ./
-COPY requirements.txt ./
+RUN mkdir -p ibg && touch ibg/__init__.py
 
-# Install dependencies using uv
-RUN uv venv && uv pip install -r requirements.txt
+# Install dependencies using uv (from pyproject.toml)
+# INSTALL_DEV=true installs dev extras (faker, etc.) needed for E2E data seeding
+ARG INSTALL_DEV=false
+RUN uv venv && if [ "$INSTALL_DEV" = "true" ]; then uv pip install --no-cache ".[dev]"; else uv pip install --no-cache .; fi
 
 # Stage 3: Production
 FROM base AS production

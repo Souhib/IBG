@@ -55,6 +55,12 @@ IBG/
 - **[backend/CLAUDE.md](./backend/CLAUDE.md)**: Backend architecture, API patterns, database models
 - **[front/CLAUDE.md](./front/CLAUDE.md)**: Frontend patterns, component guidelines, Kubb usage
 
+When working on a specific component, consult both this root CLAUDE.md for project-wide conventions and the component-specific CLAUDE.md for detailed implementation guidance.
+
+## Development Mindset
+
+**Iterate fast, follow best practices without being overkill.** The goal is to ship quickly while maintaining code quality.
+
 ## Development Commands
 
 ### Backend
@@ -72,6 +78,7 @@ uv run poe check                         # All checks
 
 # Testing
 uv run poe test                          # Run tests
+uv run poe test-fast                     # Stop on first failure
 
 # Fake data
 PYTHONPATH=. uv run python scripts/generate_fake_data.py --create-db
@@ -125,6 +132,88 @@ docker compose -f docker-compose.dokploy.yml up -d
 | CI/CD | GitHub Actions |
 | Deployment | Docker + Dokploy (Oracle VPS) |
 
+## Coding Standards
+
+### CLAUDE.md Self-Maintenance
+
+**CRITICAL: Keep CLAUDE.md files up to date.** Whenever a change has significant business or technical implications, you MUST update the relevant CLAUDE.md (`CLAUDE.md`, `backend/CLAUDE.md`, or `front/CLAUDE.md`). This includes:
+- **Architecture changes**: new authentication flow, new service layer, new game type
+- **New tools or libraries**: added a new MCP server, switched linting tool, added a dependency
+- **Business logic changes**: new game rules, room management changes, new user roles
+- **Coding pattern corrections**: when the user corrects a mistake, add or strengthen the corresponding rule so it won't happen again
+- **New models or endpoints**: significant new database tables, API endpoints, or features
+- **Removed or renamed concepts**: update references so CLAUDE.md doesn't describe things that no longer exist
+
+If unsure whether a change warrants a CLAUDE.md update, err on the side of updating — stale documentation is worse than verbose documentation.
+
+### Debugging Test Failures
+
+**NEVER use `git stash` to check if a test failure is pre-existing.** When tests fail after your changes, investigate the failure directly:
+1. Read the error message and traceback carefully
+2. Check the test code and the code it's testing
+3. Determine if your changes caused the failure or if it's unrelated
+4. Fix the issue — don't try to prove it's "not your fault" by stashing
+
+### Python/FastAPI Guidelines
+
+#### Import Organization
+
+**All imports must be at the top of the file.** Never place imports inside functions or methods, even for lazy loading. The only acceptable exception is to break circular imports involving Redis OM models (e.g., `ibg.socketio.models` ↔ `ibg.api.controllers`), and even then, add a comment explaining why.
+
+```python
+# Good - imports at the top
+from loguru import logger
+from sqlmodel import select
+
+from ibg.api.models.table import User, Room
+from ibg.api.schemas.error import NotFoundError
+
+class MyController:
+    async def my_method(self):
+        ...
+
+# Bad - imports inside methods
+class MyController:
+    async def my_method(self):
+        from loguru import logger  # DON'T DO THIS
+        ...
+
+# Acceptable exception - circular import with Redis OM
+class MyController:
+    async def _check_redis(self):
+        # Lazy import to avoid circular dependency:
+        # room.py -> socketio.models.user -> socketio.models.shared -> room.py
+        from ibg.socketio.models.user import User as RedisUser
+        ...
+```
+
+#### General Guidelines
+
+- Use `def` for pure functions, `async def` for asynchronous operations
+- Python 3.10+ type hints for all function signatures
+- **CRITICAL: Always use the project's base classes from `ibg.api.schemas.shared`**, never `pydantic.BaseModel` or `sqlmodel.SQLModel` directly
+- **No nested function definitions.** Do not define functions inside other functions. Extract inner logic into separate methods on the class or standalone module-level functions.
+- Use descriptive variable names with auxiliary verbs (e.g., `is_active`, `has_permission`)
+- Use lowercase with underscores for directories and files
+- Store all magic values in `ibg/api/constants.py`
+
+#### Route → Controller → Model
+
+- **CRITICAL: NO logic in routes.** Routes must NEVER contain database queries, business logic, or data transformation. All `select()`, `session.exec()`, model validation, and data processing MUST live in controllers. Routes only call controller methods and return results.
+
+#### Error Handling
+
+- Handle errors and edge cases at the beginning of functions
+- Use early returns for error conditions to avoid deeply nested if statements
+- Place the happy path last in the function for improved readability
+- Use custom error classes for consistent error handling
+
+### Testing Guidelines
+
+- All tests follow the **Prepare / Act / Assert** pattern with clear section separation
+- Always verify both **return values** and **database state** (re-fetch from DB after mutations)
+- Mock external services (Redis) in unit tests; use real Redis (testcontainers) in socket tests
+
 ## Key Patterns
 
 - **Route -> Controller -> Model**: No business logic in routes
@@ -152,10 +241,14 @@ docker compose -f docker-compose.dokploy.yml up -d
 
 ## Git Conventions
 
+**CRITICAL: Never commit unless the user explicitly asks you to.** Do not auto-commit after completing work.
+
 Use Conventional Commits with emojis:
 - `feat(auth): ✨ add JWT refresh endpoint`
 - `fix(game): 🐛 fix vote counting in undercover`
 - `refactor(models): ♻️ migrate to async database`
+
+**IMPORTANT**: Do NOT add `Co-Authored-By` lines or any AI attribution to commit messages.
 
 ## Test Accounts
 

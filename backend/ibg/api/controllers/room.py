@@ -1,6 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -31,7 +32,16 @@ class RoomController:
             .where(RoomUserLink.connected == True)  # noqa: E712
         )).first()
         if is_user_in_room:
-            raise UserAlreadyInRoomError(user_id=room_create.owner_id, room_id=is_user_in_room.room_id)
+            if await self._is_room_link_stale(str(room_create.owner_id)):
+                logger.info(
+                    f"[Room] Cleaning stale RoomUserLink for user_id={room_create.owner_id}, "
+                    f"room_id={is_user_in_room.room_id}"
+                )
+                is_user_in_room.connected = False
+                self.session.add(is_user_in_room)
+                await self.session.commit()
+            else:
+                raise UserAlreadyInRoomError(user_id=room_create.owner_id, room_id=is_user_in_room.room_id)
         active_rooms = await self._get_all_active_rooms()
         room_public_id = create_random_public_id()
         while any(room.public_id == room_public_id for room in active_rooms):
@@ -50,6 +60,30 @@ class RoomController:
             .options(selectinload(Room.users), selectinload(Room.games))
         )).one()
         return room
+
+    @staticmethod
+    async def _is_room_link_stale(user_id: str) -> bool:
+        """Check Redis to verify if a user's room link is stale.
+
+        A link is stale when the DB says connected=True but Redis shows the user
+        is gone or disconnected (e.g. server restart lost the grace period cleanup).
+
+        Returns False (not stale) if Redis is unreachable, preserving the original
+        blocking behavior when we can't verify.
+        """
+        # Lazy import to avoid circular dependency:
+        # room.py -> socketio.models.user -> socketio.models.shared -> room.py
+        from aredis_om import NotFoundError as RedisNotFoundError
+        from ibg.socketio.models.user import User as RedisUser
+
+        try:
+            redis_user = await RedisUser.get(user_id)
+            return redis_user.disconnected_at is not None
+        except RedisNotFoundError:
+            return True
+        except Exception:
+            logger.warning(f"[Room] Redis unreachable while checking stale link for user_id={user_id}")
+            return False
 
     async def check_if_user_is_in_room(self, user_id: UUID, room_id: UUID) -> bool:
         try:

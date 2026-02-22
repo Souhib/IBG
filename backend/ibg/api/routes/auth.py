@@ -1,3 +1,4 @@
+import os
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
@@ -10,7 +11,10 @@ from ibg.api.models.view import UserView
 from ibg.api.schemas.auth import LoginRequest, LoginResponse, LoginUserData, TokenPairResponse
 from ibg.dependencies import get_auth_controller
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(
+    key_func=get_remote_address,
+    enabled=os.getenv("RATE_LIMIT_ENABLED", "true").lower() != "false",
+)
 
 router = APIRouter(
     prefix="/auth",

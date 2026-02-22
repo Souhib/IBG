@@ -1,7 +1,7 @@
 import { Clock, MapPin, Moon, ChevronDown } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { usePrayerTimes } from "@/hooks/use-prayer-times"
-import { CitySelector, loadStoredCity, type CityCoordinates } from "./CitySelector"
+import { CitySelector, loadStoredCity, refreshTimezoneIfMissing, type CityCoordinates } from "./CitySelector"
 
 const PRAYER_ICONS: Record<string, string> = {
   fajr: "\u{1F305}",
@@ -22,6 +22,15 @@ export function PrayerTimesNav() {
   const [coordinates, setCoordinates] = useState<CityCoordinates | null>(() => loadStoredCity())
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Re-fetch timezone if stored city is missing it (e.g. saved before timezone fix)
+  useEffect(() => {
+    if (coordinates && !coordinates.timezone) {
+      refreshTimezoneIfMissing(coordinates).then((updated) => {
+        if (updated) setCoordinates(updated)
+      })
+    }
+  }, [coordinates])
 
   const timezone = coordinates?.timezone
   const { prayers, tahajjud, nextPrayer, countdown } = usePrayerTimes(

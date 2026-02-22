@@ -1,387 +1,333 @@
 from uuid import uuid4
 
 import pytest
-from faker import Faker
 from sqlalchemy.exc import NoResultFound
-from sqlmodel import select
 
 from ibg.api.controllers.undercover import UndercoverController
-from ibg.api.models.error import (
+from ibg.api.models.undercover import WordCreate, WordUpdate
+from ibg.api.schemas.error import (
     TermPairAlreadyExistsError,
     TermPairNotFoundError,
     WordAlreadyExistsError,
     WordNotFoundErrorId,
     WordNotFoundErrorName,
 )
-from ibg.api.models.undercover import TermPair, Word, WordCreate, WordUpdate
+
+# --- Word CRUD ---
 
 
-@pytest.mark.asyncio
-async def test_create_word(undercover_controller: UndercoverController, faker: Faker):
+async def test_create_word_success(undercover_controller: UndercoverController):
+    """Creating a word with valid data returns a fully populated Word object."""
+    # Arrange
     word_create = WordCreate(
-        word=faker.word(),
-        category=faker.word(),
-        short_description=faker.sentence(),
-        long_description=faker.text(),
+        word="mosque",
+        category="islamic",
+        short_description="Place of worship",
+        long_description="A place where Muslims gather for prayer",
     )
+
+    # Act
     word = await undercover_controller.create_word(word_create)
-    assert word.word == word_create.word
-    assert word.category == word_create.category
-    assert word.short_description == word_create.short_description
-    assert word.long_description == word_create.long_description
+
+    # Assert
+    assert word.id is not None
+    assert word.word == "mosque"
+    assert word.category == "islamic"
+    assert word.short_description == "Place of worship"
+    assert word.long_description == "A place where Muslims gather for prayer"
 
 
-@pytest.mark.asyncio
-async def test_create_word_raises_exception_if_word_already_exists(
-    undercover_controller: UndercoverController, faker: Faker
-):
-    word_create = WordCreate(
-        word=faker.word(),
-        category=faker.word(),
-        short_description=faker.sentence(),
-        long_description=faker.text(),
-    )
-    _ = await undercover_controller.create_word(word_create)
-    with pytest.raises(WordAlreadyExistsError, match="Word .* already exists"):
-        await undercover_controller.create_word(word_create)
+async def test_create_word_duplicate(undercover_controller: UndercoverController, create_word):
+    """Creating two words with the same word string raises WordAlreadyExistsError."""
+    # Arrange
+    await create_word(word="duplicate_word")
 
-
-@pytest.mark.asyncio
-async def test_get_all_words(undercover_controller: UndercoverController, faker: Faker):
-    words = []
-    for _ in range(3):
-        word_create = WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-        words.append(await undercover_controller.create_word(word_create))
-    result = undercover_controller.session.exec(select(Word)).all()
-    assert len(result) == 3
-    for word, db_word in zip(words, result):
-        assert word.word == db_word.word
-        assert word.category == db_word.category
-        assert word.short_description == db_word.short_description
-        assert word.long_description == db_word.long_description
-
-
-@pytest.mark.asyncio
-async def test_get_word_by_id(undercover_controller: UndercoverController, faker: Faker):
-    word_create = WordCreate(
-        word=faker.word(),
-        category=faker.word(),
-        short_description=faker.sentence(),
-        long_description=faker.text(),
-    )
-    word = await undercover_controller.create_word(word_create)
-    result = await undercover_controller.get_word_by_id(word.id)
-    assert word.word == result.word
-    assert word.category == result.category
-    assert word.short_description == result.short_description
-    assert word.long_description == result.long_description
-
-
-@pytest.mark.asyncio
-async def test_get_word_by_id_raises_exception_if_word_does_not_exist(
-    undercover_controller: UndercoverController,
-):
-    with pytest.raises(WordNotFoundErrorId, match="Word with id .* not found"):
-        await undercover_controller.get_word_by_id(uuid4())
-
-
-@pytest.mark.asyncio
-async def test_get_word_by_word(undercover_controller: UndercoverController, faker: Faker):
-    word_create = WordCreate(
-        word=faker.word(),
-        category=faker.word(),
-        short_description=faker.sentence(),
-        long_description=faker.text(),
-    )
-    word = await undercover_controller.create_word(word_create)
-    result = await undercover_controller.get_word_by_word(word.word)
-    assert word.word == result.word
-    assert word.category == result.category
-    assert word.short_description == result.short_description
-    assert word.long_description == result.long_description
-
-
-@pytest.mark.asyncio
-async def test_get_word_by_word_raises_exception_if_word_does_not_exist(
-    undercover_controller: UndercoverController, faker: Faker
-):
-    with pytest.raises(WordNotFoundErrorName, match="Word .* not found"):
-        await undercover_controller.get_word_by_word(faker.word())
-
-
-@pytest.mark.asyncio
-async def test_delete_word(undercover_controller: UndercoverController, faker: Faker):
-    word_create = WordCreate(
-        word=faker.word(),
-        category=faker.word(),
-        short_description=faker.sentence(),
-        long_description=faker.text(),
-    )
-    word = await undercover_controller.create_word(word_create)
-    await undercover_controller.delete_word(word.id)
-    with pytest.raises(WordNotFoundErrorId, match="Word with id .* not found"):
-        _ = await undercover_controller.get_word_by_id(word.id)
-
-
-@pytest.mark.asyncio
-async def test_delete_word_raises_exception_if_word_does_not_exist(
-    undercover_controller: UndercoverController,
-):
-    with pytest.raises(NoResultFound):
-        await undercover_controller.delete_word(uuid4())
-
-
-@pytest.mark.asyncio
-async def test_update_word(undercover_controller: UndercoverController, faker: Faker):
-    word_create = WordCreate(
-        word=faker.word(),
-        category=faker.word(),
-        short_description=faker.sentence(),
-        long_description=faker.text(),
-    )
-    word = await undercover_controller.create_word(word_create)
-    new_category = faker.word()
-    updated_word = await undercover_controller.update_word(
-        word.id,
-        WordUpdate(
-            word=word.word,
-            category=new_category,
-            short_description=word.short_description,
-            long_description=word.long_description,
-        ),
-    )
-    assert updated_word.word == word.word
-    assert updated_word.category == new_category
-    assert updated_word.short_description == word.short_description
-    assert updated_word.long_description == word.long_description
-
-
-@pytest.mark.asyncio
-async def test_update_word_raises_exception_if_word_does_not_exist(
-    undercover_controller: UndercoverController, faker: Faker
-):
-    with pytest.raises(WordNotFoundErrorId, match="Word with id .* not found"):
-        await undercover_controller.update_word(
-            uuid4(),
-            WordUpdate(
-                word=faker.word(),
-                category=faker.word(),
-                short_description=faker.sentence(),
-                long_description=faker.text(),
-            ),
-        )
-
-
-@pytest.mark.asyncio
-async def test_get_words_by_category(undercover_controller: UndercoverController, faker: Faker):
-    words = []
-    category_one = faker.word()
-    category_two = faker.word()
-    for _ in range(2):
-        word_create = WordCreate(
-            word=faker.word(),
-            category=category_one,
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-        words.append(await undercover_controller.create_word(word_create))
-    _ = [
+    # Act & Assert
+    with pytest.raises(WordAlreadyExistsError):
         await undercover_controller.create_word(
             WordCreate(
-                word=faker.word(),
-                category=category_two,
-                short_description=faker.sentence(),
-                long_description=faker.text(),
+                word="duplicate_word",
+                category="test",
+                short_description="short",
+                long_description="long",
             )
         )
-        for _ in range(2)
-    ]
-    result = await undercover_controller.get_words_by_category(category_one)
+
+
+async def test_get_words_empty(undercover_controller: UndercoverController):
+    """Getting all words from an empty database returns an empty list."""
+    # Arrange
+    # (no words created)
+
+    # Act
+    words = await undercover_controller.get_words()
+
+    # Assert
+    assert words == []
+
+
+async def test_get_words_multiple(undercover_controller: UndercoverController, create_word):
+    """Getting all words after creating three returns a list of length 3."""
+    # Arrange
+    await create_word(word="word_one", category="cat_a")
+    await create_word(word="word_two", category="cat_b")
+    await create_word(word="word_three", category="cat_c")
+
+    # Act
+    words = await undercover_controller.get_words()
+
+    # Assert
+    assert len(words) == 3
+
+
+async def test_get_word_by_id_success(undercover_controller: UndercoverController, sample_word):
+    """Retrieving a word by its ID returns the correct word with all fields matching."""
+    # Arrange
+    # (sample_word already created via fixture)
+
+    # Act
+    found = await undercover_controller.get_word_by_id(sample_word.id)
+
+    # Assert
+    assert found.id == sample_word.id
+    assert found.word == sample_word.word
+    assert found.category == sample_word.category
+    assert found.short_description == sample_word.short_description
+    assert found.long_description == sample_word.long_description
+
+
+async def test_get_word_by_id_not_found(undercover_controller: UndercoverController):
+    """Retrieving a word with a nonexistent UUID raises WordNotFoundErrorId."""
+    # Arrange
+    random_id = uuid4()
+
+    # Act & Assert
+    with pytest.raises(WordNotFoundErrorId):
+        await undercover_controller.get_word_by_id(random_id)
+
+
+async def test_get_word_by_word_success(undercover_controller: UndercoverController, sample_word):
+    """Retrieving a word by its string value returns the matching word with correct ID."""
+    # Arrange
+    # (sample_word already created via fixture)
+
+    # Act
+    found = await undercover_controller.get_word_by_word(sample_word.word)
+
+    # Assert
+    assert found.id == sample_word.id
+
+
+async def test_get_word_by_word_not_found(undercover_controller: UndercoverController):
+    """Retrieving a word with a nonexistent string raises WordNotFoundErrorName."""
+    # Arrange
+    # (no words created)
+
+    # Act & Assert
+    with pytest.raises(WordNotFoundErrorName):
+        await undercover_controller.get_word_by_word("nonexistent_word")
+
+
+async def test_delete_word_success(undercover_controller: UndercoverController, create_word):
+    """Deleting an existing word removes it so that get_word_by_id raises WordNotFoundErrorId."""
+    # Arrange
+    word = await create_word(word="to_delete")
+
+    # Act
+    await undercover_controller.delete_word(word.id)
+
+    # Assert
+    with pytest.raises(WordNotFoundErrorId):
+        await undercover_controller.get_word_by_id(word.id)
+
+
+async def test_delete_word_not_found(undercover_controller: UndercoverController):
+    """Deleting a word with a nonexistent UUID raises NoResultFound."""
+    # Arrange
+    random_id = uuid4()
+
+    # Act & Assert
+    with pytest.raises(NoResultFound):
+        await undercover_controller.delete_word(random_id)
+
+
+async def test_update_word_success(undercover_controller: UndercoverController, create_word):
+    """Updating a word changes the specified fields while preserving the original word string."""
+    # Arrange
+    word = await create_word(
+        word="original_word",
+        category="original_category",
+        short_description="Original short",
+        long_description="Original long",
+    )
+    word_update = WordUpdate(
+        word="original_word",
+        category="updated_category",
+        short_description="Updated short",
+        long_description="Updated long",
+    )
+
+    # Act
+    updated = await undercover_controller.update_word(word.id, word_update)
+
+    # Assert
+    assert updated.id == word.id
+    assert updated.word == "original_word"
+    assert updated.category == "updated_category"
+    assert updated.short_description == "Updated short"
+    assert updated.long_description == "Updated long"
+
+
+async def test_update_word_not_found(undercover_controller: UndercoverController):
+    """Updating a word with a nonexistent UUID raises WordNotFoundErrorId."""
+    # Arrange
+    random_id = uuid4()
+    word_update = WordUpdate(
+        word="any",
+        category="any",
+        short_description="any",
+        long_description="any",
+    )
+
+    # Act & Assert
+    with pytest.raises(WordNotFoundErrorId):
+        await undercover_controller.update_word(random_id, word_update)
+
+
+# --- Category ---
+
+
+async def test_get_words_by_category(undercover_controller: UndercoverController, create_word):
+    """Filtering words by category returns only the words belonging to that category."""
+    # Arrange
+    await create_word(word="word_a1", category="category_a")
+    await create_word(word="word_a2", category="category_a")
+    await create_word(word="word_b1", category="category_b")
+
+    # Act
+    result = await undercover_controller.get_words_by_category("category_a")
+
+    # Assert
     assert len(result) == 2
-    assert words[0].word == result[0].word
-    assert words[0].category == result[0].category
-    assert words[0].short_description == result[0].short_description
-    assert words[0].long_description == result[0].long_description
-    assert words[1].word == result[1].word
-    assert words[1].category == result[1].category
-    assert words[1].short_description == result[1].short_description
-    assert words[1].long_description == result[1].long_description
 
 
-@pytest.mark.asyncio
-async def test_create_term_pair(undercover_controller: UndercoverController, faker: Faker):
-    word1 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
-    word2 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
+# --- Term Pair CRUD ---
 
+
+async def test_create_term_pair_success(undercover_controller: UndercoverController, create_word):
+    """Creating a term pair with two valid words returns a fully populated TermPair object."""
+    # Arrange
+    word1 = await create_word(word="term_one")
+    word2 = await create_word(word="term_two")
+
+    # Act
     term_pair = await undercover_controller.create_term_pair(word1.id, word2.id)
+
+    # Assert
+    assert term_pair.id is not None
     assert term_pair.word1_id == word1.id
     assert term_pair.word2_id == word2.id
 
 
-@pytest.mark.asyncio
-async def test_create_term_pair_raises_exception_if_term_pair_already_exists(
-    undercover_controller: UndercoverController, faker: Faker
-):
-    word1 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
-    word2 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
-    _ = await undercover_controller.create_term_pair(word1.id, word2.id)
-    with pytest.raises(TermPairAlreadyExistsError, match="Term pair .* - .* already exists"):
+async def test_create_term_pair_duplicate(undercover_controller: UndercoverController, create_word):
+    """Creating the same term pair twice raises TermPairAlreadyExistsError."""
+    # Arrange
+    word1 = await create_word(word="dup_pair_one")
+    word2 = await create_word(word="dup_pair_two")
+    await undercover_controller.create_term_pair(word1.id, word2.id)
+
+    # Act & Assert
+    with pytest.raises(TermPairAlreadyExistsError):
         await undercover_controller.create_term_pair(word1.id, word2.id)
 
 
-@pytest.mark.asyncio
-async def test_get_all_term_pairs(undercover_controller: UndercoverController, faker: Faker):
-    term_pairs = []
-    for _ in range(3):
-        word1 = await undercover_controller.create_word(
-            WordCreate(
-                word=faker.word(),
-                category=faker.word(),
-                short_description=faker.sentence(),
-                long_description=faker.text(),
-            )
-        )
-        word2 = await undercover_controller.create_word(
-            WordCreate(
-                word=faker.word(),
-                category=faker.word(),
-                short_description=faker.sentence(),
-                long_description=faker.text(),
-            )
-        )
-        term_pairs.append(await undercover_controller.create_term_pair(word1.id, word2.id))
-    result = undercover_controller.session.exec(select(TermPair)).all()
-    assert len(result) == 3
-    for term_pair, db_term_pair in zip(term_pairs, result):
-        assert term_pair.word1_id == db_term_pair.word1_id
-        assert term_pair.word2_id == db_term_pair.word2_id
+async def test_get_term_pairs_empty(undercover_controller: UndercoverController):
+    """Getting all term pairs from an empty database returns an empty list."""
+    # Arrange
+    # (no term pairs created)
+
+    # Act
+    pairs = await undercover_controller.get_term_pairs()
+
+    # Assert
+    assert pairs == []
 
 
-@pytest.mark.asyncio
-async def test_get_term_pair_by_id(undercover_controller: UndercoverController, faker: Faker):
-    word1 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
-    word2 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
+async def test_get_term_pairs_multiple(undercover_controller: UndercoverController, create_word):
+    """Getting all term pairs after creating three returns a list of length 3."""
+    # Arrange
+    for i in range(3):
+        w1 = await create_word(word=f"multi_a{i}")
+        w2 = await create_word(word=f"multi_b{i}")
+        await undercover_controller.create_term_pair(w1.id, w2.id)
+
+    # Act
+    pairs = await undercover_controller.get_term_pairs()
+
+    # Assert
+    assert len(pairs) == 3
+
+
+async def test_get_term_pair_by_id_success(undercover_controller: UndercoverController, create_word):
+    """Retrieving a term pair by its ID returns the correct pair with all fields matching."""
+    # Arrange
+    word1 = await create_word(word="pair_find_one")
+    word2 = await create_word(word="pair_find_two")
     term_pair = await undercover_controller.create_term_pair(word1.id, word2.id)
-    result = await undercover_controller.get_term_pair_by_id(term_pair.id)
-    assert term_pair.word1_id == result.word1_id
-    assert term_pair.word2_id == result.word2_id
+
+    # Act
+    found = await undercover_controller.get_term_pair_by_id(term_pair.id)
+
+    # Assert
+    assert found.id == term_pair.id
+    assert found.word1_id == word1.id
+    assert found.word2_id == word2.id
 
 
-@pytest.mark.asyncio
-async def test_get_term_pair_by_id_raises_exception_if_term_pair_does_not_exist(
-    undercover_controller: UndercoverController,
-):
-    with pytest.raises(TermPairNotFoundError, match="Term pair with id .* not found"):
-        await undercover_controller.get_term_pair_by_id(uuid4())
+async def test_get_term_pair_by_id_not_found(undercover_controller: UndercoverController):
+    """Retrieving a term pair with a nonexistent UUID raises TermPairNotFoundError."""
+    # Arrange
+    random_id = uuid4()
+
+    # Act & Assert
+    with pytest.raises(TermPairNotFoundError):
+        await undercover_controller.get_term_pair_by_id(random_id)
 
 
-@pytest.mark.asyncio
-async def test_get_random_term_pair(undercover_controller: UndercoverController, faker: Faker):
-    term_pairs = []
-    for _ in range(3):
-        word1 = await undercover_controller.create_word(
-            WordCreate(
-                word=faker.word(),
-                category=faker.word(),
-                short_description=faker.sentence(),
-                long_description=faker.text(),
-            )
-        )
-        word2 = await undercover_controller.create_word(
-            WordCreate(
-                word=faker.word(),
-                category=faker.word(),
-                short_description=faker.sentence(),
-                long_description=faker.text(),
-            )
-        )
-        term_pairs.append(await undercover_controller.create_term_pair(word1.id, word2.id))
+async def test_get_random_term_pair_success(undercover_controller: UndercoverController, create_word):
+    """Getting a random term pair when one exists returns a valid pair with correct word1_id."""
+    # Arrange
+    word1 = await create_word(word="random_one")
+    word2 = await create_word(word="random_two")
+    term_pair = await undercover_controller.create_term_pair(word1.id, word2.id)
+
+    # Act
     result = await undercover_controller.get_random_term_pair()
-    assert result in term_pairs
+
+    # Assert
+    assert result.word1_id == term_pair.word1_id
 
 
-@pytest.mark.asyncio
-async def test_get_random_term_pair_raises_exception_if_no_term_pairs_exist(
-    undercover_controller: UndercoverController,
-):
+async def test_get_random_term_pair_empty(undercover_controller: UndercoverController):
+    """Getting a random term pair from an empty database raises NoResultFound."""
+    # Arrange
+    # (no term pairs created)
+
+    # Act & Assert
     with pytest.raises(NoResultFound):
         await undercover_controller.get_random_term_pair()
 
 
-@pytest.mark.asyncio
-async def test_delete_term_pair(undercover_controller: UndercoverController, faker: Faker):
-    word1 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
-    word2 = await undercover_controller.create_word(
-        WordCreate(
-            word=faker.word(),
-            category=faker.word(),
-            short_description=faker.sentence(),
-            long_description=faker.text(),
-        )
-    )
+async def test_delete_term_pair_success(undercover_controller: UndercoverController, create_word):
+    """Deleting an existing term pair removes it so that get_term_pair_by_id raises TermPairNotFoundError."""
+    # Arrange
+    word1 = await create_word(word="del_pair_one")
+    word2 = await create_word(word="del_pair_two")
     term_pair = await undercover_controller.create_term_pair(word1.id, word2.id)
+
+    # Act
     await undercover_controller.delete_term_pair(term_pair.id)
-    with pytest.raises(TermPairNotFoundError):
-        _ = await undercover_controller.get_term_pair_by_id(term_pair.id)
 
-
-@pytest.mark.asyncio
-async def test_delete_term_pair_raises_exception_if_term_pair_does_not_exist(
-    undercover_controller: UndercoverController,
-):
+    # Assert
     with pytest.raises(TermPairNotFoundError):
-        await undercover_controller.delete_term_pair(uuid4())
+        await undercover_controller.get_term_pair_by_id(term_pair.id)

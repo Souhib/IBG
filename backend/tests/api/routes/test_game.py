@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
@@ -15,10 +15,93 @@ from ibg.dependencies import get_game_controller
 
 
 @pytest.mark.asyncio
-async def test_get_games(game_controller: GameController, app: FastAPI, client: TestClient):
+async def test_create_game_success(test_app: FastAPI, client: TestClient):
+    """POST /api/v1/games returns 201 with the created Game and all fields."""
+    # Arrange
+    game_id = uuid4()
+    room_id = uuid4()
+    user_id = uuid4()
+    start_time = datetime.now()
 
-    games_id = [uuid4() for _ in range(3)]
+    mock_game = Game(
+        id=game_id,
+        room_id=room_id,
+        user_id=user_id,
+        start_time=start_time,
+        end_time=None,
+        number_of_players=4,
+        type=GameType.UNDERCOVER,
+        game_configurations={"key": "value"},
+    )
 
+    mock_controller = Mock(spec=GameController)
+    mock_controller.create_game = AsyncMock(return_value=mock_game)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
+
+    # Act
+    response = client.post(
+        "/api/v1/games",
+        json={
+            "room_id": str(room_id),
+            "number_of_players": 4,
+            "type": GameType.UNDERCOVER.value,
+            "game_configurations": {"key": "value"},
+        },
+    )
+
+    # Assert
+    assert response.status_code == 201
+    data = response.json()
+    assert data["id"] == str(game_id)
+    assert data["room_id"] == str(room_id)
+    assert data["user_id"] == str(user_id)
+    assert data["start_time"] == start_time.isoformat()
+    assert data["end_time"] is None
+    assert data["number_of_players"] == 4
+    assert data["type"] == GameType.UNDERCOVER.value
+    assert data["game_configurations"] == {"key": "value"}
+    mock_controller.create_game.assert_called_once()
+
+    test_app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_create_game_inactive_room(test_app: FastAPI, client: TestClient):
+    """POST /api/v1/games returns 403 when the room is not active."""
+    # Arrange
+    room_id = uuid4()
+
+    mock_controller = Mock(spec=GameController)
+    mock_controller.create_game = AsyncMock(side_effect=ErrorRoomIsNotActive(room_id=room_id))
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
+
+    # Act
+    response = client.post(
+        "/api/v1/games",
+        json={
+            "room_id": str(room_id),
+            "number_of_players": 4,
+            "type": GameType.UNDERCOVER.value,
+            "game_configurations": {"key": "value"},
+        },
+    )
+
+    # Assert
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "ErrorRoomIsNotActive"
+    assert data["error_key"] == "errors.api.errorRoomIsNotActive"
+    assert data["message"] == "This room is no longer active."
+    assert data["details"] == {}
+    mock_controller.create_game.assert_called_once()
+
+    test_app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_all_games_success(test_app: FastAPI, client: TestClient):
+    """GET /api/v1/games returns 200 with a list of all games."""
+    # Arrange
     room_id = uuid4()
     user_id = uuid4()
     start_time = datetime.now()
@@ -26,7 +109,7 @@ async def test_get_games(game_controller: GameController, app: FastAPI, client: 
 
     mock_games = [
         Game(
-            id=games_id[0],
+            id=uuid4(),
             room_id=room_id,
             user_id=user_id,
             start_time=start_time,
@@ -36,139 +119,165 @@ async def test_get_games(game_controller: GameController, app: FastAPI, client: 
             game_configurations={"key": "value"},
         ),
         Game(
-            id=games_id[1],
+            id=uuid4(),
             room_id=room_id,
             user_id=user_id,
             start_time=start_time,
-            end_time=end_time,
-            number_of_players=4,
-            type=GameType.UNDERCOVER,
-            game_configurations={"key": "value"},
-        ),
-        Game(
-            id=games_id[2],
-            room_id=room_id,
-            user_id=user_id,
-            start_time=start_time,
-            end_time=end_time,
-            number_of_players=4,
-            type=GameType.UNDERCOVER,
-            game_configurations={"key": "value"},
+            end_time=None,
+            number_of_players=6,
+            type=GameType.CODENAMES,
+            game_configurations={},
         ),
     ]
 
-    def _mock_get_games():
-        game_controller.get_games = AsyncMock(return_value=mock_games)
-        return game_controller
+    mock_controller = Mock(spec=GameController)
+    mock_controller.get_games = AsyncMock(return_value=mock_games)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
 
-    app.dependency_overrides[get_game_controller] = _mock_get_games
+    # Act
+    response = client.get("/api/v1/games")
 
-    get_games_route_response = client.get("/games")
-    assert get_games_route_response.status_code == 200
-    assert get_games_route_response.json() == [
-        {
-            "id": str(game.id),
-            "room_id": str(game.room_id),
-            "user_id": str(game.user_id),
-            "start_time": game.start_time.isoformat(),
-            "end_time": game.end_time.isoformat(),
-            "number_of_players": game.number_of_players,
-            "type": game.type,
-            "game_configurations": game.game_configurations,
-        }
-        for game in mock_games
-    ]
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["id"] == str(mock_games[0].id)
+    assert data[0]["room_id"] == str(room_id)
+    assert data[0]["user_id"] == str(user_id)
+    assert data[0]["start_time"] == start_time.isoformat()
+    assert data[0]["end_time"] == end_time.isoformat()
+    assert data[0]["number_of_players"] == 4
+    assert data[0]["type"] == GameType.UNDERCOVER.value
+    assert data[0]["game_configurations"] == {"key": "value"}
+    assert data[1]["id"] == str(mock_games[1].id)
+    assert data[1]["number_of_players"] == 6
+    assert data[1]["type"] == GameType.CODENAMES.value
+    assert data[1]["end_time"] is None
+    mock_controller.get_games.assert_called_once()
+
+    test_app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
-async def test_create_game(game_controller: GameController, app: FastAPI, client: TestClient):
-
+async def test_get_game_by_id_success(test_app: FastAPI, client: TestClient):
+    """GET /api/v1/games/{game_id} returns 200 with the requested game."""
+    # Arrange
+    game_id = uuid4()
+    room_id = uuid4()
     user_id = uuid4()
     start_time = datetime.now()
     end_time = datetime.now()
 
-    game_data = {
-        "room_id": uuid4(),
-        "number_of_players": 4,
-        "type": GameType.UNDERCOVER,
-        "game_configurations": {"key": "value"},
-    }
-
     mock_game = Game(
-        id=uuid4(),
-        room_id=game_data["room_id"],
+        id=game_id,
+        room_id=room_id,
         user_id=user_id,
         start_time=start_time,
         end_time=end_time,
-        number_of_players=game_data["number_of_players"],
-        type=game_data["type"],
-        game_configurations=game_data["game_configurations"],
+        number_of_players=5,
+        type=GameType.CODENAMES,
+        game_configurations={"rounds": 3},
     )
 
-    def _mock_create_game():
-        game_controller.create_game = AsyncMock(return_value=mock_game)
-        return game_controller
+    mock_controller = Mock(spec=GameController)
+    mock_controller.get_game_by_id = AsyncMock(return_value=mock_game)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
 
-    app.dependency_overrides[get_game_controller] = _mock_create_game
+    # Act
+    response = client.get(f"/api/v1/games/{game_id}")
 
-    create_game_route_response = client.post(
-        "/games",
-        json={
-            "room_id": str(game_data["room_id"]),
-            "number_of_players": game_data["number_of_players"],
-            "type": game_data["type"],
-            "game_configurations": game_data["game_configurations"],
-        },
-    )
-    assert create_game_route_response.status_code == 201
-    assert create_game_route_response.json() == {
-        "id": str(mock_game.id),
-        "room_id": str(mock_game.room_id),
-        "user_id": str(mock_game.user_id),
-        "start_time": mock_game.start_time.isoformat(),
-        "end_time": mock_game.end_time.isoformat(),
-        "number_of_players": mock_game.number_of_players,
-        "type": mock_game.type,
-        "game_configurations": mock_game.game_configurations,
-    }
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(game_id)
+    assert data["room_id"] == str(room_id)
+    assert data["user_id"] == str(user_id)
+    assert data["start_time"] == start_time.isoformat()
+    assert data["end_time"] == end_time.isoformat()
+    assert data["number_of_players"] == 5
+    assert data["type"] == GameType.CODENAMES.value
+    assert data["game_configurations"] == {"rounds": 3}
+    mock_controller.get_game_by_id.assert_called_once()
+
+    test_app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
-async def test_create_game_room_not_active(game_controller: GameController, app: FastAPI, client: TestClient):
+async def test_get_game_by_id_not_found(test_app: FastAPI, client: TestClient):
+    """GET /api/v1/games/{game_id} returns 404 when the game does not exist."""
+    # Arrange
+    game_id = uuid4()
 
-    game_data = {
-        "room_id": uuid4(),
-        "number_of_players": 4,
-        "type": GameType.UNDERCOVER,
-        "game_configurations": {"key": "value"},
-    }
+    mock_controller = Mock(spec=GameController)
+    mock_controller.get_game_by_id = AsyncMock(side_effect=NoResultFound)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
 
-    def _mock_create_game():
-        game_controller.create_game = AsyncMock(side_effect=ErrorRoomIsNotActive(room_id=game_data["room_id"]))
-        return game_controller
+    # Act
+    response = client.get(f"/api/v1/games/{game_id}")
 
-    app.dependency_overrides[get_game_controller] = _mock_create_game
+    # Assert
+    assert response.status_code == 404
+    data = response.json()
+    assert data["error_key"] == "errors.api.resourceNotFound"
+    assert data["frontend_message"] == "Couldn't find requested resource."
+    mock_controller.get_game_by_id.assert_called_once()
 
-    create_game_route_response = client.post(
-        "/games",
-        json={
-            "room_id": str(game_data["room_id"]),
-            "number_of_players": game_data["number_of_players"],
-            "type": game_data["type"],
-            "game_configurations": game_data["game_configurations"],
-        },
-    )
-    assert create_game_route_response.status_code == 403
-    assert create_game_route_response.json() == {
-        "name": "ErrorRoomIsNotActive",
-        "message": f"Room with id {game_data['room_id']} is not active",
-        "status_code": 403,
-    }
+    test_app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
-async def test_get_game_by_id(game_controller: GameController, app: FastAPI, client: TestClient):
+async def test_update_game_success(test_app: FastAPI, client: TestClient):
+    """PATCH /api/v1/games/{game_id} returns 200 with the updated game."""
+    # Arrange
+    game_id = uuid4()
+    room_id = uuid4()
+    user_id = uuid4()
+    start_time = datetime.now()
 
+    mock_game = Game(
+        id=game_id,
+        room_id=room_id,
+        user_id=user_id,
+        start_time=start_time,
+        end_time=None,
+        number_of_players=6,
+        type=GameType.CODENAMES,
+        game_configurations={"key": "updated"},
+    )
+
+    mock_controller = Mock(spec=GameController)
+    mock_controller.update_game = AsyncMock(return_value=mock_game)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
+
+    # Act
+    response = client.patch(
+        f"/api/v1/games/{game_id}",
+        json={
+            "number_of_players": 6,
+            "type": GameType.CODENAMES.value,
+        },
+    )
+
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(game_id)
+    assert data["room_id"] == str(room_id)
+    assert data["user_id"] == str(user_id)
+    assert data["start_time"] == start_time.isoformat()
+    assert data["end_time"] is None
+    assert data["number_of_players"] == 6
+    assert data["type"] == GameType.CODENAMES.value
+    assert data["game_configurations"] == {"key": "updated"}
+    mock_controller.update_game.assert_called_once()
+
+    test_app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_end_game_success(test_app: FastAPI, client: TestClient):
+    """PATCH /api/v1/games/{game_id}/end returns 200 with end_time set."""
+    # Arrange
     game_id = uuid4()
     room_id = uuid4()
     user_id = uuid4()
@@ -183,181 +292,49 @@ async def test_get_game_by_id(game_controller: GameController, app: FastAPI, cli
         end_time=end_time,
         number_of_players=4,
         type=GameType.UNDERCOVER,
-        game_configurations={"key": "value"},
+        game_configurations={},
     )
 
-    def _mock_get_game():
-        game_controller.get_game_by_id = AsyncMock(return_value=mock_game)
-        return game_controller
+    mock_controller = Mock(spec=GameController)
+    mock_controller.end_game = AsyncMock(return_value=mock_game)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
 
-    app.dependency_overrides[get_game_controller] = _mock_get_game
+    # Act
+    response = client.patch(f"/api/v1/games/{game_id}/end")
 
-    get_game_route_response = client.get(f"/games/{game_id}")
-    assert get_game_route_response.status_code == 200
-    assert get_game_route_response.json() == {
-        "id": str(mock_game.id),
-        "room_id": str(mock_game.room_id),
-        "user_id": str(mock_game.user_id),
-        "start_time": mock_game.start_time.isoformat(),
-        "end_time": mock_game.end_time.isoformat(),
-        "number_of_players": mock_game.number_of_players,
-        "type": mock_game.type,
-        "game_configurations": mock_game.game_configurations,
-    }
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(game_id)
+    assert data["room_id"] == str(room_id)
+    assert data["user_id"] == str(user_id)
+    assert data["start_time"] == start_time.isoformat()
+    assert data["end_time"] == end_time.isoformat()
+    assert data["end_time"] is not None
+    assert data["number_of_players"] == 4
+    assert data["type"] == GameType.UNDERCOVER.value
+    assert data["game_configurations"] == {}
+    mock_controller.end_game.assert_called_once()
 
-
-@pytest.mark.asyncio
-async def test_get_game_by_id_no_result_found(game_controller: GameController, app: FastAPI, client: TestClient):
-
-    game_id = uuid4()
-
-    def _mock_get_game():
-        game_controller.get_game_by_id = AsyncMock(side_effect=NoResultFound)
-        return game_controller
-
-    app.dependency_overrides[get_game_controller] = _mock_get_game
-
-    get_game_route_response = client.get(f"/games/{game_id}")
-    assert get_game_route_response.status_code == 404
-    assert get_game_route_response.json() == {"message": "Couldn't find requested resource"}
+    test_app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
-async def test_update_game(game_controller: GameController, app: FastAPI, client: TestClient):
-
-    game_id = uuid4()
-    room_id = uuid4()
-    user_id = uuid4()
-    start_time = datetime.now()
-    end_time = datetime.now()
-
-    game_data = {
-        "room_id": room_id,
-        "number_of_players": 4,
-        "type": GameType.UNDERCOVER,
-        "game_configurations": {"key": "value"},
-    }
-
-    mock_game = Game(
-        id=game_id,
-        room_id=room_id,
-        user_id=user_id,
-        start_time=start_time,
-        end_time=end_time,
-        number_of_players=game_data["number_of_players"],
-        type=game_data["type"],
-        game_configurations=game_data["game_configurations"],
-    )
-
-    def _mock_update_game():
-        game_controller.update_game = AsyncMock(return_value=mock_game)
-        return game_controller
-
-    app.dependency_overrides[get_game_controller] = _mock_update_game
-
-    update_game_route_response = client.patch(
-        f"/games/{game_id}",
-        json={
-            "number_of_players": game_data["number_of_players"],
-            "type": game_data["type"],
-            "game_configurations": game_data["game_configurations"],
-        },
-    )
-    assert update_game_route_response.status_code == 200
-    assert update_game_route_response.json() == {
-        "id": str(mock_game.id),
-        "room_id": str(mock_game.room_id),
-        "user_id": str(mock_game.user_id),
-        "start_time": mock_game.start_time.isoformat(),
-        "end_time": mock_game.end_time.isoformat(),
-        "number_of_players": mock_game.number_of_players,
-        "type": mock_game.type,
-        "game_configurations": mock_game.game_configurations,
-    }
-
-
-@pytest.mark.asyncio
-async def test_end_game(game_controller: GameController, app: FastAPI, client: TestClient):
-
-    game_id = uuid4()
-    room_id = uuid4()
-    user_id = uuid4()
-    start_time = datetime.now()
-    end_time = datetime.now()
-
-    mock_game = Game(
-        id=game_id,
-        room_id=room_id,
-        user_id=user_id,
-        start_time=start_time,
-        end_time=end_time,
-        number_of_players=4,
-        type=GameType.UNDERCOVER,
-        game_configurations={"key": "value"},
-    )
-
-    def _mock_end_game():
-        game_controller.end_game = AsyncMock(return_value=mock_game)
-        return game_controller
-
-    app.dependency_overrides[get_game_controller] = _mock_end_game
-
-    end_game_route_response = client.patch(f"/games/{game_id}/end")
-    assert end_game_route_response.status_code == 200
-    assert end_game_route_response.json() == {
-        "id": str(mock_game.id),
-        "room_id": str(mock_game.room_id),
-        "user_id": str(mock_game.user_id),
-        "start_time": mock_game.start_time.isoformat(),
-        "end_time": mock_game.end_time.isoformat(),
-        "number_of_players": mock_game.number_of_players,
-        "type": mock_game.type,
-        "game_configurations": mock_game.game_configurations,
-    }
-
-
-@pytest.mark.asyncio
-async def test_end_game_no_result_found(game_controller: GameController, app: FastAPI, client: TestClient):
-
+async def test_delete_game_success(test_app: FastAPI, client: TestClient):
+    """DELETE /api/v1/games/{game_id} returns 204 with no content."""
+    # Arrange
     game_id = uuid4()
 
-    def _mock_end_game():
-        game_controller.end_game = AsyncMock(side_effect=NoResultFound)
-        return game_controller
+    mock_controller = Mock(spec=GameController)
+    mock_controller.delete_game = AsyncMock(return_value=None)
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
 
-    app.dependency_overrides[get_game_controller] = _mock_end_game
+    # Act
+    response = client.delete(f"/api/v1/games/{game_id}")
 
-    end_game_route_response = client.patch(f"/games/{game_id}/end")
-    assert end_game_route_response.status_code == 404
-    assert end_game_route_response.json() == {"message": "Couldn't find requested resource"}
+    # Assert
+    assert response.status_code == 204
+    assert response.content == b""
+    mock_controller.delete_game.assert_called_once()
 
-
-@pytest.mark.asyncio
-async def test_delete_game_by_id(game_controller: GameController, app: FastAPI, client: TestClient):
-
-    game_id = uuid4()
-
-    def _mock_delete_game():
-        game_controller.delete_game = AsyncMock(return_value=None)
-        return game_controller
-
-    app.dependency_overrides[get_game_controller] = _mock_delete_game
-
-    delete_game_route_response = client.delete(f"/games/{game_id}")
-    assert delete_game_route_response.status_code == 204
-
-
-@pytest.mark.asyncio
-async def test_delete_game_by_id_no_result_found(game_controller: GameController, app: FastAPI, client: TestClient):
-
-    game_id = uuid4()
-
-    def _mock_delete_game():
-        game_controller.delete_game = AsyncMock(side_effect=NoResultFound)
-        return game_controller
-
-    app.dependency_overrides[get_game_controller] = _mock_delete_game
-
-    delete_game_route_response = client.delete(f"/games/{game_id}")
-    assert delete_game_route_response.status_code == 404
-    assert delete_game_route_response.json() == {"message": "Couldn't find requested resource"}
+    test_app.dependency_overrides.clear()

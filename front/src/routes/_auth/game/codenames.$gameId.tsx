@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
@@ -38,10 +39,15 @@ function CodenamesGamePage() {
   const { gameId } = Route.useParams()
   const { t } = useTranslation()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const { emit, on, isConnected } = useSocket()
   const [gameState, setGameState] = useState<CodenamesGameState | null>(null)
   const [clueWord, setClueWord] = useState("")
   const [clueNumber, setClueNumber] = useState(1)
+  const [cancelMessage, setCancelMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSubmittingClue, setIsSubmittingClue] = useState(false)
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false)
 
   // Request board state on mount (handles navigation from lobby where initial event is missed)
   useEffect(() => {
@@ -105,6 +111,9 @@ function CodenamesGamePage() {
 
     const offClueGiven = on("codenames_clue_given", (data: unknown) => {
       const d = data as { clue_word: string; clue_number: number; team: "red" | "blue"; max_guesses: number }
+      const teamName = d.team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
+      toast.info(t("toast.clueGiven", { team: teamName, word: d.clue_word, number: d.clue_number }))
+      setIsSubmittingClue(false)
       setGameState((prev) =>
         prev
           ? {
@@ -128,6 +137,10 @@ function CodenamesGamePage() {
         blue_remaining: number
         guesses_made: number
         max_guesses: number
+        word?: string
+      }
+      if (d.word) {
+        toast(t("toast.cardRevealed", { word: d.word }))
       }
       setGameState((prev) => {
         if (!prev) return prev
@@ -146,16 +159,37 @@ function CodenamesGamePage() {
 
     const offTurnEnded = on("codenames_turn_ended", (data: unknown) => {
       const d = data as { current_team: "red" | "blue"; reason: string }
+      const teamName = d.current_team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
+      toast.info(t("toast.turnEnded", { team: teamName }))
       setGameState((prev) =>
         prev ? { ...prev, current_team: d.current_team, current_turn: null } : prev,
       )
     })
 
     const offGameOver = on("codenames_game_over", (data: unknown) => {
+      toast.success(t("toast.gameOver"))
       const d = data as { winner: "red" | "blue"; board: CodenamesCard[] }
       setGameState((prev) =>
         prev ? { ...prev, status: "finished", winner: d.winner, board: d.board } : prev,
       )
+    })
+
+    // game_cancelled: not enough players, navigate back
+    const offGameCancelled = on("game_cancelled", (data: unknown) => {
+      toast.error(t("toast.gameCancelled"))
+      const payload = data as { message: string }
+      setCancelMessage(payload.message || "Game cancelled: not enough players.")
+      setTimeout(() => {
+        navigate({ to: "/" })
+      }, 3000)
+    })
+
+    // error: catch backend errors (e.g. game not found, invalid move)
+    const offError = on("error", (data: unknown) => {
+      const payload = data as { frontend_message?: string; message?: string }
+      const msg = payload.frontend_message || payload.message || "An error occurred"
+      toast.error(msg)
+      setErrorMessage(msg)
     })
 
     return () => {
@@ -165,11 +199,23 @@ function CodenamesGamePage() {
       offCardRevealed()
       offTurnEnded()
       offGameOver()
+      offGameCancelled()
+      offError()
     }
-  }, [isConnected, on])
+  }, [isConnected, on, navigate])
+
+  // Loading timeout: if gameState is still null after 15s, show error
+  useEffect(() => {
+    if (gameState) return
+    const timer = setTimeout(() => {
+      setLoadingTimedOut(true)
+    }, 15000)
+    return () => clearTimeout(timer)
+  }, [gameState])
 
   const handleGiveClue = useCallback(() => {
-    if (!clueWord.trim()) return
+    if (!clueWord.trim() || isSubmittingClue) return
+    setIsSubmittingClue(true)
     emit("give_clue", {
       game_id: gameId,
       user_id: user?.id,
@@ -178,7 +224,7 @@ function CodenamesGamePage() {
     })
     setClueWord("")
     setClueNumber(1)
-  }, [emit, gameId, user?.id, clueWord, clueNumber])
+  }, [emit, gameId, user?.id, clueWord, clueNumber, isSubmittingClue])
 
   const handleGuessCard = useCallback(
     (index: number) => {
@@ -191,7 +237,54 @@ function CodenamesGamePage() {
     emit("end_turn", { game_id: gameId, user_id: user?.id })
   }, [emit, gameId, user?.id])
 
+  if (cancelMessage) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="rounded-xl border bg-destructive/10 p-8 text-center">
+          <h2 className="text-xl font-bold text-destructive mb-2">{t("game.gameOver")}</h2>
+          <p className="text-muted-foreground">{cancelMessage}</p>
+          <p className="text-sm text-muted-foreground mt-2">Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="rounded-xl border bg-destructive/10 p-8 text-center">
+          <h2 className="text-xl font-bold text-destructive mb-2">{t("common.error")}</h2>
+          <p className="text-muted-foreground">{errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/" })}
+            className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            {t("common.goHome")}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (!gameState) {
+    if (loadingTimedOut) {
+      return (
+        <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="rounded-xl border bg-destructive/10 p-8 text-center">
+            <h2 className="text-xl font-bold text-destructive mb-2">{t("common.error")}</h2>
+            <p className="text-muted-foreground">Failed to load game state. The game may no longer exist.</p>
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/" })}
+              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              {t("common.goHome")}
+            </button>
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-muted-foreground">Loading game...</p>
@@ -276,7 +369,7 @@ function CodenamesGamePage() {
               key={index}
               type="button"
               onClick={() => handleGuessCard(index)}
-              disabled={!canGuess || card.revealed}
+              disabled={!canGuess || card.revealed || gameState.status === "finished"}
               className={cn(
                 "rounded-lg border p-3 text-center text-sm font-medium transition-all min-h-[60px] flex items-center justify-center",
                 bgColor,
@@ -314,9 +407,13 @@ function CodenamesGamePage() {
             <button
               type="button"
               onClick={handleGiveClue}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              disabled={isSubmittingClue}
+              className={cn(
+                "rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90",
+                isSubmittingClue && "opacity-50 cursor-not-allowed",
+              )}
             >
-              Send
+              {isSubmittingClue ? "Sending..." : "Send"}
             </button>
           </div>
         </div>

@@ -1,138 +1,266 @@
-import asyncio
+"""Test configuration for Socket.IO tests with real Redis via testcontainers.
+
+Starts a redis-stack container (session-scoped) so that Redis OM models
+(Room, User, UndercoverGame, CodenamesGame) operate against a real Redis
+instance instead of mocks.  Only external services (sio, DB controllers)
+are mocked in individual tests.
+"""
+
 import os
-import time
-from functools import wraps
-from multiprocessing import Process
+
+# Set env defaults BEFORE any socketio imports trigger Settings / connection creation.
+os.environ.setdefault("REDIS_OM_URL", "redis://localhost:6379")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ.setdefault("LOGFIRE_TOKEN", "fake")
 
 import pytest
-import socketio
-from aiohttp import ClientConnectorError, ClientSession
-from loguru import logger
-from uvicorn import Config, Server
+import pytest_asyncio
+from testcontainers.core.container import DockerContainer
+from testcontainers.core.waiting_utils import wait_for_logs
+
+from ibg.api.models.undercover import UndercoverRole
+from ibg.socketio.models.codenames import (
+    CodenamesCard,
+    CodenamesCardType,
+    CodenamesGame,
+    CodenamesGameStatus,
+    CodenamesPlayer,
+    CodenamesRole,
+    CodenamesTeam,
+    CodenamesTurn,
+)
+from ibg.socketio.models.room import Room as RedisRoom
+from ibg.socketio.models.socket import UndercoverGame, UndercoverTurn
+from ibg.socketio.models.user import UndercoverSocketPlayer
+from ibg.socketio.models.user import User as RedisUser
+
+# ---------------------------------------------------------------------------
+# Session-scoped Redis container
+# ---------------------------------------------------------------------------
 
 
-class TestUserClient:
+@pytest.fixture(scope="session")
+def redis_container():
+    """Start a redis-stack container for the entire test session."""
+    container = DockerContainer("redis/redis-stack:latest")
+    container.with_exposed_ports(6379)
+    container.start()
+    wait_for_logs(container, "Ready to accept connections", timeout=30)
 
-    def __init__(self):
-        self.client = socketio.AsyncClient()
-        self.responses = {}
+    host = container.get_container_host_ip()
+    port = container.get_exposed_port(6379)
+    redis_url = f"redis://{host}:{port}"
+    os.environ["REDIS_OM_URL"] = redis_url
 
-    async def connect(self):
-        await self.client.connect("http://127.0.0.1:5000")
+    # Clear the singleton cache so it picks up the new URL
+    from ibg.socketio.dependencies import _cache
 
-        @self.client.on("*", namespace="*")
-        async def any_event(event, sid, data):
-            self.responses[event] = data
+    _cache.clear()
 
+    # Get a fresh connection pointing to the test container
+    from ibg.socketio.dependencies import get_redis_connection_singleton
 
-class UvicornServer(Process):
+    conn = get_redis_connection_singleton()
 
-    def __init__(self, config: Config, env_vars=None):
-        super().__init__()
-        self.server = Server(config=config)
-        self.config = config
-        self.env_vars = env_vars or {}
+    # Patch every module-level reference to `redis_connection`
+    import ibg.socketio.controllers.room as room_ctrl_mod
+    import ibg.socketio.controllers.undercover_game as uc_mod
+    import ibg.socketio.models.shared as shared_mod
+    import ibg.socketio.utils.redis_ttl as ttl_mod
 
-    def stop(self) -> None:
-        """
-        Stop the server.
+    shared_mod.redis_connection = conn
+    shared_mod.RedisJsonModel.Meta.database = conn
+    uc_mod.redis_connection = conn
+    ttl_mod.redis_connection = conn
+    room_ctrl_mod.redis_connection = conn
 
-        :return: None
-        """
-        self.terminate()
-
-    def run(self, *args, **kwargs) -> None:
-        """
-        Run the server in the subprocess.
-        This method is called when the process is started.
-        We don't need to call it manually.
-
-        :param args:
-        :param kwargs:
-        :return: None
-        """
-        original_env = os.environ.copy()
-        os.environ.update(self.env_vars)
-        try:
-            self.server.run()
-        finally:
-            os.environ.clear()
-            os.environ.update(original_env)
+    yield container
+    container.stop()
 
 
-async def wait_for_server(url: str, timeout: int = 15):
+# ---------------------------------------------------------------------------
+# Per-test Redis cleanup (NOT autouse — pulled in by factory fixtures)
+# ---------------------------------------------------------------------------
+
+
+@pytest_asyncio.fixture
+async def redis_cleanup(redis_container):  # noqa: ARG001
+    """Flush Redis after the test. Triggered by factory fixtures, not autouse."""
+    yield
+    from ibg.socketio.dependencies import get_redis_connection_singleton
+
+    conn = get_redis_connection_singleton()
+    await conn.flushall()
+
+
+# ---------------------------------------------------------------------------
+# Factory fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest_asyncio.fixture
+async def make_redis_room(redis_cleanup):  # noqa: ARG001
+    """Factory fixture to create and save a RedisRoom."""
+
+    async def _make(
+        room_id: str,
+        users: list | None = None,
+        owner_id: str | None = None,
+        active_game_id: str | None = None,
+        active_game_type: str | None = None,
+    ) -> RedisRoom:
+        room = RedisRoom(
+            pk=room_id,
+            id=room_id,
+            users=users or [],
+            owner_id=owner_id,
+            active_game_id=active_game_id,
+            active_game_type=active_game_type,
+        )
+        await room.save()
+        return room
+
+    return _make
+
+
+@pytest_asyncio.fixture
+async def make_redis_user(redis_cleanup):  # noqa: ARG001
+    """Factory fixture to create and save a RedisUser."""
+
+    async def _make(
+        user_id: str,
+        username: str,
+        sid: str,
+        room_id: str | None = None,
+    ) -> RedisUser:
+        user = RedisUser(
+            pk=user_id,
+            id=user_id,
+            username=username,
+            sid=sid,
+            room_id=room_id,
+        )
+        await user.save()
+        return user
+
+    return _make
+
+
+@pytest_asyncio.fixture
+async def make_undercover_game(redis_cleanup):  # noqa: ARG001
+    """Factory fixture to create and save an UndercoverGame in Redis."""
+
+    async def _make(
+        game_id: str,
+        room_id: str,
+        players: list[UndercoverSocketPlayer],
+        civilian_word: str = "prayer",
+        undercover_word: str = "fasting",
+        turns: list[UndercoverTurn] | None = None,
+        eliminated_players: list[UndercoverSocketPlayer] | None = None,
+    ) -> UndercoverGame:
+        game = UndercoverGame(
+            pk=game_id,
+            room_id=room_id,
+            id=game_id,
+            civilian_word=civilian_word,
+            undercover_word=undercover_word,
+            players=players,
+            turns=turns or [],
+            eliminated_players=eliminated_players or [],
+        )
+        await game.save()
+        return game
+
+    return _make
+
+
+@pytest_asyncio.fixture
+async def make_codenames_game(redis_cleanup):  # noqa: ARG001
+    """Factory fixture to create and save a CodenamesGame in Redis."""
+
+    async def _make(
+        game_id: str,
+        room_id: str,
+        board: list[CodenamesCard],
+        players: list[CodenamesPlayer],
+        current_team: CodenamesTeam = CodenamesTeam.RED,
+        current_turn: CodenamesTurn | None = None,
+        status: CodenamesGameStatus = CodenamesGameStatus.IN_PROGRESS,
+        red_remaining: int = 9,
+        blue_remaining: int = 8,
+        winner: CodenamesTeam | None = None,
+    ) -> CodenamesGame:
+        game = CodenamesGame(
+            pk=game_id,
+            room_id=room_id,
+            id=game_id,
+            board=board,
+            players=players,
+            current_team=current_team,
+            current_turn=current_turn,
+            red_remaining=red_remaining,
+            blue_remaining=blue_remaining,
+            status=status,
+            winner=winner,
+        )
+        await game.save()
+        return game
+
+    return _make
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers (importable by test files)
+# ---------------------------------------------------------------------------
+
+
+def make_undercover_player(
+    user_id: str,
+    role: UndercoverRole = UndercoverRole.CIVILIAN,
+    alive: bool = True,
+    is_mayor: bool = False,
+) -> UndercoverSocketPlayer:
+    """Create an UndercoverSocketPlayer with sensible defaults."""
+    return UndercoverSocketPlayer(
+        user_id=user_id,
+        username=f"player_{user_id[:8]}",
+        role=role,
+        sid=f"sid-{user_id[:8]}",
+        is_alive=alive,
+        is_mayor=is_mayor,
+    )
+
+
+def make_codenames_player(
+    user_id: str,
+    team: CodenamesTeam = CodenamesTeam.RED,
+    role: CodenamesRole = CodenamesRole.OPERATIVE,
+) -> CodenamesPlayer:
+    """Create a CodenamesPlayer with sensible defaults."""
+    return CodenamesPlayer(
+        sid=f"sid-{user_id[:8]}",
+        user_id=user_id,
+        username=f"player_{user_id[:8]}",
+        team=team,
+        role=role,
+    )
+
+
+def make_codenames_board(words: list[str] | None = None) -> list[CodenamesCard]:
+    """Build a 25-card board with known card types.
+
+    Layout: 9 RED | 8 BLUE | 7 NEUTRAL | 1 ASSASSIN.
     """
-    Wait for the server to start. This function will raise a TimeoutError if the server does not start in time.
-
-    :param url: The URL to check
-    :param timeout: The maximum time to wait
-    :return: None
-    """
-    start_time = time.time()
-    while True:
-        try:
-            async with ClientSession() as session:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        logger.info("Server is ready")
-                        return True
-        except ClientConnectorError:
-            pass
-        if time.time() - start_time > timeout:
-            raise TimeoutError("Server did not start in time")
-        await asyncio.sleep(1)
-
-
-def server_required():
-    """
-    Decorator to wait for the server to start before running the test.
-
-    :return: The decorator
-    """
-
-    def decorator(func) -> callable:
-        """
-        The actual decorator function.
-
-        :param func: The function to decorate
-        :return: The decorated function
-        """
-
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            """
-            The wrapper function that waits for the server to start before running the test.
-
-            :param args:
-            :param kwargs:
-            :return: The result of the decorated function
-            """
-            await wait_for_server("http://127.0.0.1:5000/docs")
-            return await func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-@pytest.fixture(scope="session", autouse=True, name="server")
-def server(postgres, redis_host_and_port: tuple[str, int]):
-    """
-    Fixture to start the server before running the tests. The server will be stopped after the tests are done.
-
-    :param postgres: The postgres fixture
-    :param redis_host_and_port: The redis_host_and_port fixture
-    :return: The server instance
-    """
-
-    host, port = redis_host_and_port
-    config = Config("main:app", host="127.0.0.1", port=5000, log_level="debug")
-    env_vars = {
-        "DATABASE_URL": postgres.get_connection_url(),
-        "REDIS_OM_URL": f"redis://{host}:{port}",
-        "LOGFIRE_TOKEN": "fake_token",
-    }
-    instance = UvicornServer(config=config, env_vars=env_vars)
-    instance.start()
-    yield instance
-    instance.stop()
+    if words is None:
+        words = [f"word_{i}" for i in range(25)]
+    card_types = (
+        [CodenamesCardType.RED] * 9
+        + [CodenamesCardType.BLUE] * 8
+        + [CodenamesCardType.NEUTRAL] * 7
+        + [CodenamesCardType.ASSASSIN] * 1
+    )
+    return [
+        CodenamesCard(word=w, card_type=ct, revealed=False)
+        for w, ct in zip(words, card_types, strict=True)
+    ]

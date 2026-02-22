@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Copy, Crown, KeyRound, Users } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 import apiClient from "@/api/client"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
@@ -19,6 +20,7 @@ interface Player {
   id: string
   username: string
   is_host: boolean
+  is_disconnected?: boolean
 }
 
 export const Route = createFileRoute("/_auth/rooms/$roomId")({
@@ -102,13 +104,18 @@ function RoomLobbyPage() {
     const offNewUser = on("new_user_joined", (data: unknown) => {
       const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
       if (payload.data?.users) {
-        setPlayers(
-          payload.data.users.map((u) => ({
+        setPlayers((prev) => {
+          const prevIds = new Set(prev.map((p) => p.id))
+          const newUser = payload.data.users.find((u) => !prevIds.has(u.id))
+          if (newUser) {
+            toast.info(t("toast.playerJoined", { username: newUser.username }))
+          }
+          return payload.data.users.map((u) => ({
             id: u.id,
             username: u.username,
             is_host: u.id === payload.data.owner_id,
-          })),
-        )
+          }))
+        })
       }
     })
 
@@ -116,13 +123,18 @@ function RoomLobbyPage() {
     const offUserLeft = on("user_left", (data: unknown) => {
       const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
       if (payload.data?.users) {
-        setPlayers(
-          payload.data.users.map((u) => ({
+        setPlayers((prev) => {
+          const newIds = new Set(payload.data.users.map((u) => u.id))
+          const leftUser = prev.find((p) => !newIds.has(p.id))
+          if (leftUser) {
+            toast(t("toast.playerLeft", { username: leftUser.username }))
+          }
+          return payload.data.users.map((u) => ({
             id: u.id,
             username: u.username,
             is_host: u.id === payload.data.owner_id,
-          })),
-        )
+          }))
+        })
       }
     })
 
@@ -133,31 +145,112 @@ function RoomLobbyPage() {
 
     // game_started: undercover game started, navigate to game page with role data
     const offGameStarted = on("game_started", (data: unknown) => {
+      toast.success(t("toast.gameStarting"))
       const { game_id, game_type, players: playerNames, mayor } = data as {
         game_id: string; game_type: string; players: string[]; mayor: string
       }
       if (game_type === "undercover") {
-        // Store role data in sessionStorage so the game page can read it on mount
-        if (roleDataRef.current) {
+        const doNavigate = () => {
+          // Always store game_started data; include role data if available
           sessionStorage.setItem(
             `ibg-game-init-${game_id}`,
             JSON.stringify({ roleData: roleDataRef.current, players: playerNames, mayor }),
           )
+          navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
         }
-        navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
+
+        if (roleDataRef.current) {
+          doNavigate()
+        } else {
+          // role_assigned may not have been processed yet — wait briefly
+          setTimeout(() => doNavigate(), 150)
+        }
       }
     })
 
     // codenames_game_started: codenames game started, navigate to game page
     const offCodenamesStarted = on("codenames_game_started", (data: unknown) => {
+      toast.success(t("toast.gameStarting"))
       const { game_id } = data as { game_id: string }
       navigate({ to: "/game/codenames/$gameId", params: { gameId: game_id } })
     })
 
+    // player_disconnected: a player's connection dropped (grace period active)
+    const offPlayerDisconnected = on("player_disconnected", (data: unknown) => {
+      const payload = data as { user_id: string }
+      setPlayers((prev) => {
+        const player = prev.find((p) => p.id === payload.user_id)
+        if (player) {
+          toast.warning(t("toast.playerDisconnected", { username: player.username }))
+        }
+        return prev.map((p) => (p.id === payload.user_id ? { ...p, is_disconnected: true } : p))
+      })
+    })
+
+    // player_reconnected: a player reconnected within grace period
+    const offPlayerReconnected = on("player_reconnected", (data: unknown) => {
+      const payload = data as { user_id: string; data?: { users: { id: string; username: string }[]; owner_id: string } }
+      if (payload.data?.users) {
+        const reconnectedUser = payload.data.users.find((u) => u.id === payload.user_id)
+        if (reconnectedUser) {
+          toast.success(t("toast.playerReconnected", { username: reconnectedUser.username }))
+        }
+        setPlayers(
+          payload.data.users.map((u) => ({
+            id: u.id,
+            username: u.username,
+            is_host: u.id === payload.data!.owner_id,
+            is_disconnected: false,
+          })),
+        )
+      } else {
+        setPlayers((prev) => {
+          const player = prev.find((p) => p.id === payload.user_id)
+          if (player) {
+            toast.success(t("toast.playerReconnected", { username: player.username }))
+          }
+          return prev.map((p) => (p.id === payload.user_id ? { ...p, is_disconnected: false } : p))
+        })
+      }
+    })
+
+    // player_left_permanently: grace period expired, player removed
+    const offPlayerLeftPermanently = on("player_left_permanently", (data: unknown) => {
+      const payload = data as { user_id: string }
+      setPlayers((prev) => {
+        const player = prev.find((p) => p.id === payload.user_id)
+        if (player) {
+          toast.error(t("toast.playerLeftPermanently", { username: player.username }))
+        }
+        return prev.filter((p) => p.id !== payload.user_id)
+      })
+    })
+
+    // owner_changed: room ownership transferred
+    const offOwnerChanged = on("owner_changed", (data: unknown) => {
+      const payload = data as { new_owner_id: string }
+      setPlayers((prev) => {
+        const newOwner = prev.find((p) => p.id === payload.new_owner_id)
+        if (newOwner) {
+          toast.info(t("toast.ownerChanged", { username: newOwner.username }))
+        }
+        return prev.map((p) => ({ ...p, is_host: p.id === payload.new_owner_id }))
+      })
+      setRoomData((prev) => (prev ? { ...prev, owner_id: payload.new_owner_id } : prev))
+    })
+
+    // user_disconnected: legacy event (backward compat)
+    const offUserDisconnected = on("user_disconnected", (data: unknown) => {
+      const payload = data as { user_id: string }
+      setPlayers((prev) => prev.filter((p) => p.id !== payload.user_id))
+    })
+
     // error: socket error events
     const offError = on("error", (data: unknown) => {
-      const payload = data as { message: string }
-      setError(payload.message || "Socket error")
+      const payload = data as { frontend_message?: string; message: string }
+      const msg = payload.frontend_message || payload.message || "Socket error"
+      setError(msg)
+      toast.error(msg)
     })
 
     return () => {
@@ -167,6 +260,11 @@ function RoomLobbyPage() {
       offRoleAssigned()
       offGameStarted()
       offCodenamesStarted()
+      offPlayerDisconnected()
+      offPlayerReconnected()
+      offPlayerLeftPermanently()
+      offOwnerChanged()
+      offUserDisconnected()
       offError()
     }
   }, [isConnected, roomData, on, navigate])
@@ -217,9 +315,9 @@ function RoomLobbyPage() {
             <button
               type="button"
               onClick={() => copyToClipboard(roomData.public_id, "code")}
-              className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 font-mono text-lg font-bold tracking-widest hover:bg-muted/80 transition-colors"
+              className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 font-mono text-lg font-bold hover:bg-muted/80 transition-colors"
             >
-              {roomData.public_id}
+              <span className="tracking-widest">{roomData.public_id}</span>
               <Copy className="h-4 w-4 text-muted-foreground" />
             </button>
             {copied === "code" && <span className="text-xs text-primary">Copied!</span>}
@@ -229,10 +327,10 @@ function RoomLobbyPage() {
             <button
               type="button"
               onClick={() => copyToClipboard(roomData.password, "password")}
-              className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 font-mono text-lg font-bold tracking-widest hover:bg-muted/80 transition-colors"
+              className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 font-mono text-lg font-bold hover:bg-muted/80 transition-colors"
             >
               <KeyRound className="h-4 w-4 text-muted-foreground" />
-              {roomData.password}
+              <span className="tracking-widest">{roomData.password}</span>
               <Copy className="h-4 w-4 text-muted-foreground" />
             </button>
             {copied === "password" && <span className="text-xs text-primary">Copied!</span>}
@@ -260,15 +358,23 @@ function RoomLobbyPage() {
             {players.map((player) => (
               <div
                 key={player.id}
-                className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-2.5"
+                className={cn(
+                  "flex items-center justify-between rounded-lg px-4 py-2.5",
+                  player.is_disconnected ? "bg-destructive/10 opacity-60" : "bg-muted/50",
+                )}
               >
                 <span className="text-sm font-medium">{player.username}</span>
-                {player.is_host && (
-                  <span className="flex items-center gap-1 text-xs text-accent">
-                    <Crown className="h-3 w-3" />
-                    {t("room.host")}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {player.is_disconnected && (
+                    <span className="text-xs text-destructive animate-pulse">Reconnecting...</span>
+                  )}
+                  {player.is_host && (
+                    <span className="flex items-center gap-1 text-xs text-accent">
+                      <Crown className="h-3 w-3" />
+                      {t("room.host")}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -308,15 +414,18 @@ function RoomLobbyPage() {
             </div>
           </div>
 
+          {players.length < minPlayers && (
+            <p className="text-center text-sm text-muted-foreground">
+              {t("room.minPlayers", { count: minPlayers })}
+            </p>
+          )}
           <button
             type="button"
             onClick={handleStartGame}
             disabled={players.length < minPlayers}
             className="w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
-            {players.length < minPlayers
-              ? t("room.minPlayers", { count: minPlayers })
-              : t("room.startGame")}
+            {t("room.startGame")}
           </button>
         </div>
       )}

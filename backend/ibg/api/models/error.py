@@ -7,6 +7,8 @@ from ibg.api.schemas.error import (  # noqa: F401
     ErrorRoomIsNotActive,
     GameNotFoundError,
     NoTurnInsideGameError,
+    PlayerRemovedFromGameError,
+    RedisUnavailableError,
     RoomAlreadyExistsError,
     RoomNotFoundError,
     TermPairAlreadyExistsError,

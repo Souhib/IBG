@@ -1,301 +1,423 @@
-import uuid
-from unittest.mock import AsyncMock
+"""Route-level tests for /api/v1/users endpoints."""
 
-import pytest
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
+
 from fastapi import FastAPI
-from sqlalchemy.exc import NoResultFound
 from starlette.testclient import TestClient
 
 from ibg.api.controllers.user import UserController
-from ibg.api.models.error import UserAlreadyExistsError
 from ibg.api.models.table import User
+from ibg.api.schemas.error import UserAlreadyExistsError, UserNotFoundError
 from ibg.dependencies import get_user_controller
 
-
-@pytest.mark.asyncio
-async def test_get_user_by_id(user_controller: UserController, app: FastAPI, client: TestClient):
-    _id = uuid.uuid4()
-
-    def _mock_get_user_by_id():
-        user_controller.get_user_by_id = AsyncMock(
-            return_value=User(
-                id=_id,
-                username="JohnDoe",
-                email_address="john.doe@test.com",
-                country="FRA",
-                password="securepassword",
-            )
-        )
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_get_user_by_id
-
-    get_user_route_response = client.get(f"/users/{_id}")
-    assert get_user_route_response.status_code == 200
-    assert get_user_route_response.json() == {
-        "id": str(_id),
-        "username": "JohnDoe",
-        "email_address": "john.doe@test.com",
-        "country": "FRA",
-    }
+# ========== POST /api/v1/users ==========
 
 
-@pytest.mark.asyncio
-async def test_get_user_by_id_raise_no_result_found(user_controller: UserController, app: FastAPI, client: TestClient):
-    _id = uuid.uuid4()
-
-    def _mock_get_user_by_id():
-        user_controller.get_user_by_id = AsyncMock(side_effect=NoResultFound)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_get_user_by_id
-
-    get_user_route_response = client.get(f"/users/{_id}")
-    assert get_user_route_response.status_code == 404
-    assert get_user_route_response.json() == {"message": "Couldn't find requested resource"}
-
-
-@pytest.mark.asyncio
-async def test_get_users(user_controller: UserController, app: FastAPI, client: TestClient):
-
-    mock_users = [
-        User(
-            id=uuid.uuid4(),
+def test_create_user_success(test_app: FastAPI, client: TestClient):
+    """POST /users with valid data returns 201 and the created UserView."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.create_user = AsyncMock(
+        return_value=User(
+            id=user_id,
             username="JohnDoe",
             email_address="john.doe@test.com",
             country="FRA",
             password="securepassword",
-        ),
-        User(
-            id=uuid.uuid4(),
-            username="JaneDoe",
-            email_address="jane.doe@test.com",
+        )
+    )
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.post(
+        "/api/v1/users",
+        json={
+            "username": "JohnDoe",
+            "email_address": "john.doe@test.com",
+            "country": "FRA",
+            "password": "securepassword",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 201
+    body = response.json()
+    assert body["id"] == str(user_id)
+    assert body["username"] == "JohnDoe"
+    assert body["email_address"] == "john.doe@test.com"
+    assert body["country"] == "FRA"
+    assert "password" not in body
+
+    test_app.dependency_overrides.clear()
+
+
+def test_create_user_duplicate_email(test_app: FastAPI, client: TestClient):
+    """POST /users with an already-existing email returns 409."""
+    # Arrange
+    mock_controller = Mock(spec=UserController)
+    mock_controller.create_user = AsyncMock(side_effect=UserAlreadyExistsError(email_address="john.doe@test.com"))
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.post(
+        "/api/v1/users",
+        json={
+            "username": "JohnDoe",
+            "email_address": "john.doe@test.com",
+            "country": "FRA",
+            "password": "securepassword",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 409
+    body = response.json()
+    assert body["error"] == "UserAlreadyExistsError"
+    assert body["error_key"] == "errors.api.userAlreadyExists"
+    assert body["message"] == "An account with this email already exists."
+    assert body["details"]["email_address"] == "john.doe@test.com"
+
+    test_app.dependency_overrides.clear()
+
+
+def test_create_user_validation_error(test_app: FastAPI, client: TestClient):
+    """POST /users with an invalid email returns 422 validation error."""
+    # Arrange
+    mock_controller = Mock(spec=UserController)
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.post(
+        "/api/v1/users",
+        json={
+            "username": "JohnDoe",
+            "email_address": "not-an-email",
+            "country": "FRA",
+            "password": "securepassword",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 422
+    body = response.json()
+    assert body["error"] == "ValidationError"
+    assert body["error_key"] == "errors.api.validation"
+
+    test_app.dependency_overrides.clear()
+
+
+# ========== GET /api/v1/users ==========
+
+
+def test_get_all_users_success(test_app: FastAPI, client: TestClient):
+    """GET /users returns 200 and a list of users."""
+    # Arrange
+    user_id_1 = uuid4()
+    user_id_2 = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.get_users = AsyncMock(
+        return_value=[
+            User(
+                id=user_id_1,
+                username="JohnDoe",
+                email_address="john.doe@test.com",
+                country="FRA",
+                password="securepassword",
+            ),
+            User(
+                id=user_id_2,
+                username="JaneDoe",
+                email_address="jane.doe@test.com",
+                country="USA",
+                password="securepassword",
+            ),
+        ]
+    )
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.get("/api/v1/users")
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 2
+    assert body[0]["id"] == str(user_id_1)
+    assert body[0]["username"] == "JohnDoe"
+    assert body[0]["email_address"] == "john.doe@test.com"
+    assert body[0]["country"] == "FRA"
+    assert "password" not in body[0]
+    assert body[1]["id"] == str(user_id_2)
+    assert body[1]["username"] == "JaneDoe"
+    assert body[1]["email_address"] == "jane.doe@test.com"
+    assert body[1]["country"] == "USA"
+    assert "password" not in body[1]
+
+    test_app.dependency_overrides.clear()
+
+
+def test_get_all_users_empty(test_app: FastAPI, client: TestClient):
+    """GET /users returns 200 and an empty list when no users exist."""
+    # Arrange
+    mock_controller = Mock(spec=UserController)
+    mock_controller.get_users = AsyncMock(return_value=[])
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.get("/api/v1/users")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == []
+
+    test_app.dependency_overrides.clear()
+
+
+# ========== GET /api/v1/users/{user_id} ==========
+
+
+def test_get_user_by_id_success(test_app: FastAPI, client: TestClient):
+    """GET /users/{id} returns 200 and the requested UserView."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.get_user_by_id = AsyncMock(
+        return_value=User(
+            id=user_id,
+            username="JohnDoe",
+            email_address="john.doe@test.com",
             country="FRA",
             password="securepassword",
-        ),
-    ]
-
-    def _mock_get_users():
-        user_controller.get_users = AsyncMock(return_value=mock_users)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_get_users
-
-    get_users_route_response = client.get("/users")
-    assert get_users_route_response.status_code == 200
-    assert get_users_route_response.json() == [
-        {
-            "id": str(user.id),
-            "username": user.username,
-            "email_address": user.email_address,
-            "country": user.country,
-        }
-        for user in mock_users
-    ]
-
-
-@pytest.mark.asyncio
-async def test_create_user(user_controller: UserController, app: FastAPI, client: TestClient):
-
-    user_data = {
-        "username": "JohnDoe",
-        "email_address": "john.doe@test.com",
-        "country": "FRA",
-        "password": "securepassword",
-    }
-
-    mock_user = User(id=uuid.uuid4(), **user_data)
-
-    def _mock_create_user():
-        user_controller.create_user = AsyncMock(return_value=mock_user)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_create_user
-
-    create_user_route_response = client.post("/users", json=user_data)
-    assert create_user_route_response.status_code == 201
-    assert create_user_route_response.json() == {
-        "id": str(mock_user.id),
-        "username": mock_user.username,
-        "email_address": mock_user.email_address,
-        "country": mock_user.country,
-    }
-
-
-@pytest.mark.asyncio
-async def test_create_user_user_already_exists(user_controller: UserController, app: FastAPI, client: TestClient):
-
-    user_data = {
-        "username": "JohnDoe",
-        "email_address": "john.doe@test.com",
-        "country": "FRA",
-        "password": "securepassword",
-    }
-
-    def _mock_create_user():
-        user_controller.create_user = AsyncMock(
-            side_effect=UserAlreadyExistsError(email_address=user_data["email_address"])
         )
-        return user_controller
+    )
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
 
-    app.dependency_overrides[get_user_controller] = _mock_create_user
+    # Act
+    response = client.get(f"/api/v1/users/{user_id}")
 
-    create_user_route_response = client.post("/users", json=user_data)
-    assert create_user_route_response.status_code == 409
-    assert create_user_route_response.json() == {
-        "name": "UserAlreadyExistsError",
-        "message": f"User with email address {user_data['email_address']} already exists",
-        "status_code": 409,
-    }
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(user_id)
+    assert body["username"] == "JohnDoe"
+    assert body["email_address"] == "john.doe@test.com"
+    assert body["country"] == "FRA"
+    assert "password" not in body
 
-
-@pytest.mark.asyncio
-async def test_create_user_invalid_username(user_controller: UserController, app: FastAPI, client: TestClient):
-
-    user_data = {
-        "username": "",  # Invalid username
-        "email_address": "john.doe@test.com",
-        "country": "FRA",
-        "password": "securepassword",
-    }
-
-    def _mock_create_user():
-        user_controller.create_user = AsyncMock(side_effect=ValueError)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_create_user
-
-    create_user_route_response = client.post("/users", json=user_data)
-    assert create_user_route_response.status_code == 422
+    test_app.dependency_overrides.clear()
 
 
-@pytest.mark.asyncio
-async def test_create_user_bad_country(user_controller: UserController, app: FastAPI, client: TestClient):
+def test_get_user_by_id_not_found(test_app: FastAPI, client: TestClient):
+    """GET /users/{id} returns 404 when the user does not exist."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.get_user_by_id = AsyncMock(side_effect=UserNotFoundError(user_id=user_id))
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
 
-    user_data = {
-        "username": "JohnDoe",
-        "email_address": "john.doe@test.com",
-        "country": "XYZ",
-        "password": "securepassword",
-    }
+    # Act
+    response = client.get(f"/api/v1/users/{user_id}")
 
-    def _mock_create_user():
-        user_controller.create_user = AsyncMock(side_effect=ValueError)
-        return user_controller
+    # Assert
+    assert response.status_code == 404
+    body = response.json()
+    assert body["error"] == "UserNotFoundError"
+    assert body["error_key"] == "errors.api.userNotFound"
+    assert body["message"] == "User not found."
 
-    app.dependency_overrides[get_user_controller] = _mock_create_user
-
-    create_user_route_response = client.post("/users", json=user_data)
-    assert create_user_route_response.status_code == 422
+    test_app.dependency_overrides.clear()
 
 
-@pytest.mark.asyncio
-async def test_update_user_by_id(user_controller: UserController, app: FastAPI, client: TestClient):
-    _id = uuid.uuid4()
+# ========== PATCH /api/v1/users/{user_id} ==========
 
-    user_update_data = {
-        "username": "UpdatedJohnDoe",
-        "email_address": "updated.john.doe@test.com",
-        "country": "USA",
-    }
 
-    updated_user = User(
-        id=_id,
-        **user_update_data,
-        password="securepassword",  # password is not updated
+def test_update_user_success(test_app: FastAPI, client: TestClient):
+    """PATCH /users/{id} returns 200 and the updated UserView."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.update_user_by_id = AsyncMock(
+        return_value=User(
+            id=user_id,
+            username="UpdatedJohn",
+            email_address="updated.john@test.com",
+            country="USA",
+            password="securepassword",
+        )
+    )
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.patch(
+        f"/api/v1/users/{user_id}",
+        json={
+            "username": "UpdatedJohn",
+            "email_address": "updated.john@test.com",
+            "country": "USA",
+        },
     )
 
-    def _mock_update_user_by_id():
-        user_controller.update_user_by_id = AsyncMock(return_value=updated_user)
-        return user_controller
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(user_id)
+    assert body["username"] == "UpdatedJohn"
+    assert body["email_address"] == "updated.john@test.com"
+    assert body["country"] == "USA"
+    assert "password" not in body
 
-    app.dependency_overrides[get_user_controller] = _mock_update_user_by_id
-
-    update_user_route_response = client.patch(f"/users/{_id}", json=user_update_data)
-    assert update_user_route_response.status_code == 200
-    assert update_user_route_response.json() == {
-        "id": str(updated_user.id),
-        "username": updated_user.username,
-        "email_address": updated_user.email_address,
-        "country": updated_user.country,
-    }
+    test_app.dependency_overrides.clear()
 
 
-@pytest.mark.asyncio
-async def test_update_user_by_id_no_result_found_error(
-    user_controller: UserController, app: FastAPI, client: TestClient
-):
-    _id = uuid.uuid4()
+def test_update_user_not_found(test_app: FastAPI, client: TestClient):
+    """PATCH /users/{id} returns 404 when the user does not exist."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.update_user_by_id = AsyncMock(side_effect=UserNotFoundError(user_id=user_id))
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
 
-    user_update_data = {
-        "username": "UpdatedJohnDoe",
-        "email_address": "updated.john.doe@test.com",
-        "country": "USA",
-    }
-
-    def _mock_update_user_by_id():
-        user_controller.update_user_by_id = AsyncMock(side_effect=NoResultFound)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_update_user_by_id
-
-    update_user_route_response = client.patch(f"/users/{_id}", json=user_update_data)
-    assert update_user_route_response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_delete_user_by_id(user_controller: UserController, app: FastAPI, client: TestClient):
-    _id = uuid.uuid4()
-
-    def _mock_delete_user():
-        user_controller.delete_user = AsyncMock(return_value=None)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_delete_user
-
-    delete_user_route_response = client.delete(f"/users/{_id}")
-    assert delete_user_route_response.status_code == 204
-
-
-@pytest.mark.asyncio
-async def test_delete_user_by_id_no_result_found(user_controller: UserController, app: FastAPI, client: TestClient):
-    _id = uuid.uuid4()
-
-    def _mock_delete_user():
-        user_controller.delete_user = AsyncMock(side_effect=NoResultFound)
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_delete_user
-
-    delete_user_route_response = client.delete(f"/users/{_id}")
-    assert delete_user_route_response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_update_user_password(user_controller: UserController, app: FastAPI, client: TestClient):
-    _id = uuid.uuid4()
-
-    password_data = {"password": "newsecurepassword"}
-
-    updated_user = User(
-        id=_id,
-        username="JohnDoe",
-        email_address="john.doe@test.com",
-        country="FRA",
-        password="newsecurepassword",
+    # Act
+    response = client.patch(
+        f"/api/v1/users/{user_id}",
+        json={
+            "username": "UpdatedJohn",
+            "email_address": "updated.john@test.com",
+            "country": "USA",
+        },
     )
 
-    def _mock_update_user_password():
-        user_controller.update_user_password = AsyncMock(return_value=updated_user)
-        return user_controller
+    # Assert
+    assert response.status_code == 404
+    body = response.json()
+    assert body["error"] == "UserNotFoundError"
+    assert body["error_key"] == "errors.api.userNotFound"
+    assert body["message"] == "User not found."
 
-    app.dependency_overrides[get_user_controller] = _mock_update_user_password
+    test_app.dependency_overrides.clear()
 
-    update_user_password_route_response = client.patch(f"/users/{_id}/password", json=password_data)
-    assert update_user_password_route_response.status_code == 200
-    assert update_user_password_route_response.json() == {
-        "id": str(updated_user.id),
-        "username": updated_user.username,
-        "email_address": updated_user.email_address,
-        "country": updated_user.country,
-    }
+
+# ========== PATCH /api/v1/users/{user_id}/password ==========
+
+
+def test_update_user_password_success(test_app: FastAPI, client: TestClient):
+    """PATCH /users/{id}/password returns 200 and the updated UserView."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.update_user_password = AsyncMock(
+        return_value=User(
+            id=user_id,
+            username="JohnDoe",
+            email_address="john.doe@test.com",
+            country="FRA",
+            password="newsecurepassword",
+        )
+    )
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.patch(
+        f"/api/v1/users/{user_id}/password",
+        json={"password": "newsecurepassword"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(user_id)
+    assert body["username"] == "JohnDoe"
+    assert body["email_address"] == "john.doe@test.com"
+    assert body["country"] == "FRA"
+    assert "password" not in body
+
+    test_app.dependency_overrides.clear()
+
+
+def test_update_user_password_not_found(test_app: FastAPI, client: TestClient):
+    """PATCH /users/{id}/password returns 404 when the user does not exist."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.update_user_password = AsyncMock(side_effect=UserNotFoundError(user_id=user_id))
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.patch(
+        f"/api/v1/users/{user_id}/password",
+        json={"password": "newsecurepassword"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    body = response.json()
+    assert body["error"] == "UserNotFoundError"
+    assert body["error_key"] == "errors.api.userNotFound"
+    assert body["message"] == "User not found."
+
+    test_app.dependency_overrides.clear()
+
+
+# ========== DELETE /api/v1/users/{user_id} ==========
+
+
+def test_delete_user_success(test_app: FastAPI, client: TestClient):
+    """DELETE /users/{id} returns 204 on successful deletion."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.delete_user = AsyncMock(return_value=None)
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.delete(f"/api/v1/users/{user_id}")
+
+    # Assert
+    assert response.status_code == 204
+    assert response.content == b""
+
+    test_app.dependency_overrides.clear()
+
+
+def test_delete_user_not_found(test_app: FastAPI, client: TestClient):
+    """DELETE /users/{id} returns 404 when the user does not exist."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=UserController)
+    mock_controller.delete_user = AsyncMock(side_effect=UserNotFoundError(user_id=user_id))
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.delete(f"/api/v1/users/{user_id}")
+
+    # Assert
+    assert response.status_code == 404
+    body = response.json()
+    assert body["error"] == "UserNotFoundError"
+    assert body["error_key"] == "errors.api.userNotFound"
+    assert body["message"] == "User not found."
+
+    test_app.dependency_overrides.clear()
+
+
+# ========== Validation edge case ==========
+
+
+def test_get_user_invalid_uuid(test_app: FastAPI, client: TestClient):
+    """GET /users/not-a-uuid returns 422 for an invalid UUID path parameter."""
+    # Arrange
+    mock_controller = Mock(spec=UserController)
+    test_app.dependency_overrides[get_user_controller] = lambda: mock_controller
+
+    # Act
+    response = client.get("/api/v1/users/not-a-uuid")
+
+    # Assert
+    assert response.status_code == 422
+    body = response.json()
+    assert body["error"] == "ValidationError"
+    assert body["error_key"] == "errors.api.validation"
+
+    test_app.dependency_overrides.clear()

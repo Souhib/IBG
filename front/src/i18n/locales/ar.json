@@ -10,7 +10,8 @@
     "next": "التالي",
     "submit": "إرسال",
     "close": "إغلاق",
-    "or": "أو"
+    "or": "أو",
+    "goHome": "العودة للرئيسية"
   },
   "nav": {
     "home": "الرئيسية",
@@ -75,7 +76,34 @@
     "startGame": "ابدأ اللعبة",
     "leave": "مغادرة الغرفة",
     "host": "المضيف",
-    "minPlayers": "يلزم {{count}} لاعبين كحد أدنى"
+    "minPlayers": "يلزم {{count}} لاعبين كحد أدنى",
+    "lobby": "ردهة الغرفة",
+    "enterCode": "أدخل رمز الغرفة المكون من 6 أحرف",
+    "enterPassword": "أدخل كلمة المرور المكونة من 4 أرقام",
+    "joining": "جاري الانضمام...",
+    "joinFailed": "فشل الانضمام للغرفة",
+    "invalidCode": "الرجاء إدخال رمز غرفة صحيح",
+    "invalidPassword": "الرجاء إدخال كلمة المرور المكونة من 4 أرقام"
+  },
+  "toast": {
+    "playerJoined": "{{username}} انضم للغرفة",
+    "playerLeft": "{{username}} غادر الغرفة",
+    "playerDisconnected": "{{username}} انقطع اتصاله",
+    "playerReconnected": "{{username}} عاد للاتصال",
+    "playerLeftPermanently": "{{username}} غادر نهائياً",
+    "ownerChanged": "{{username}} أصبح المضيف",
+    "gameStarting": "اللعبة تبدأ!",
+    "voteCasted": "تم تسجيل تصويتك",
+    "playerEliminated": "تم إقصاء لاعب",
+    "gameOver": "انتهت اللعبة!",
+    "gameCancelled": "تم إلغاء اللعبة",
+    "connectionLost": "انقطع الاتصال. جاري إعادة الاتصال...",
+    "connectionRestored": "تم استعادة الاتصال",
+    "clueGiven": "رئيس جواسيس {{team}} أعطى تلميحاً: {{word}} ({{number}})",
+    "cardRevealed": "تم كشف البطاقة: {{word}}",
+    "turnEnded": "انتهى الدور — دور {{team}} الآن",
+    "yourTurn": "دورك الآن!",
+    "votingStarted": "بدأت مرحلة التصويت"
   },
   "game": {
     "vote": "صوّت",

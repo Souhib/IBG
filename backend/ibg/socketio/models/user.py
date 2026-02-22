@@ -11,6 +11,8 @@ class User(RedisJsonModel, index=True):
     id: str = RedisField(index=True)
     username: str = RedisField(index=True)
     sid: str = RedisField(index=True)
+    room_id: str | None = None
+    disconnected_at: float | None = None
 
 
 class SocketPlayer(BaseModel):

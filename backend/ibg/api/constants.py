@@ -1,3 +1,5 @@
+import os
+
 # Room constants
 ROOM_PASSWORD_LENGTH = 4
 ROOM_PUBLIC_ID_LENGTH = 5
@@ -48,3 +50,14 @@ EVENT_CODENAMES_CLUE_GIVEN = "codenames_clue_given"
 EVENT_CODENAMES_CARD_REVEALED = "codenames_card_revealed"
 EVENT_CODENAMES_TURN_ENDED = "codenames_turn_ended"
 EVENT_CODENAMES_GAME_OVER = "codenames_game_over"
+
+# Disconnect / reconnect constants
+DISCONNECT_GRACE_PERIOD_SECONDS = int(os.getenv("DISCONNECT_GRACE_PERIOD_SECONDS", "30"))
+
+# Disconnect / reconnect event names
+EVENT_PLAYER_DISCONNECTED = "player_disconnected"
+EVENT_PLAYER_RECONNECTED = "player_reconnected"
+EVENT_PLAYER_LEFT_PERMANENTLY = "player_left_permanently"
+EVENT_OWNER_CHANGED = "owner_changed"
+EVENT_GAME_CANCELLED = "game_cancelled"
+EVENT_UNDERCOVER_GAME_STATE = "undercover_game_state"

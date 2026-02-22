@@ -17,11 +17,21 @@ redis_connection = get_redis_connection_singleton()
 class IBGSocket(socketio.AsyncServer):
     """Socket.IO server with per-event database session management."""
 
-    def __init__(self, cors_origins: list[str] | None = None):
+    def __init__(
+        self,
+        cors_origins: list[str] | None = None,
+        ping_interval: int = 25,
+        ping_timeout: int = 20,
+    ):
         from ibg.socketio.controllers.room import SocketRoomController
 
         allowed_origins = cors_origins or ["*"]
-        super().__init__(async_mode="asgi", cors_allowed_origins=allowed_origins)
+        super().__init__(
+            async_mode="asgi",
+            cors_allowed_origins=allowed_origins,
+            ping_interval=ping_interval,
+            ping_timeout=ping_timeout,
+        )
         self._socket_room_controller_cls = SocketRoomController
         logger.info(f"[SIO] IBGSocket initialized with CORS origins: {allowed_origins}")
 

@@ -1,6 +1,10 @@
-from aredis_om import NotFoundError
+from uuid import UUID
 
-from ibg.api.models.error import GameNotFoundError
+from aredis_om import NotFoundError
+from pydantic import BaseModel
+
+from ibg.api.constants import EVENT_UNDERCOVER_GAME_STATE
+from ibg.api.models.error import GameNotFoundError, PlayerRemovedFromGameError
 from ibg.api.models.undercover import UndercoverRole
 from ibg.socketio.controllers.undercover_game import (
     check_if_a_team_has_win,
@@ -12,6 +16,11 @@ from ibg.socketio.controllers.undercover_game import (
 from ibg.socketio.models.shared import IBGSocket
 from ibg.socketio.models.socket import StartGame, StartNewTurn, UndercoverGame, VoteForAPerson
 from ibg.socketio.routes.shared import send_event_to_client, socketio_exception_handler
+
+
+class GetUndercoverState(BaseModel):
+    game_id: str
+    user_id: str
 
 
 def undercover_events(sio: IBGSocket) -> None:
@@ -88,7 +97,7 @@ def undercover_events(sio: IBGSocket) -> None:
             sio,
             "notification",
             {"message": "Starting a new turn."},
-            room=start_new_turn_data.room_id,
+            room=str(db_room.public_id),
         )
 
     @sio.event
@@ -135,7 +144,7 @@ def undercover_events(sio: IBGSocket) -> None:
                     {
                         "data": "The civilians have won the game.",
                     },
-                    room=game.room_id,
+                    room=data.room_id,
                 )
             elif team_that_won == UndercoverRole.UNDERCOVER:
                 await send_event_to_client(
@@ -144,11 +153,11 @@ def undercover_events(sio: IBGSocket) -> None:
                     {
                         "data": "The undercovers have won the game.",
                     },
-                    room=game.room_id,
+                    room=data.room_id,
                 )
 
         else:
-            players_that_voted = [player for player in game.players if player.id in game.turns[-1].votes.values()]
+            players_that_voted = [player for player in game.players if player.user_id in game.turns[-1].votes.values()]
             await send_event_to_client(
                 sio,
                 "vote_casted",
@@ -172,3 +181,78 @@ def undercover_events(sio: IBGSocket) -> None:
                 },
                 room=sid,
             )
+
+    @sio.event
+    @socketio_exception_handler(sio)
+    async def get_undercover_state(sid, data) -> None:
+        """Return full game state for a reconnecting player.
+
+        Used when a player refreshes the page during an Undercover game
+        and has no sessionStorage data.
+        """
+        state_data = GetUndercoverState(**data)
+
+        try:
+            game = await UndercoverGame.get(state_data.game_id)
+        except NotFoundError:
+            raise GameNotFoundError(game_id=state_data.game_id) from None
+
+        # Check if the player is in the game
+        player = next(
+            (p for p in game.players if str(p.user_id) == state_data.user_id),
+            None,
+        )
+        if not player:
+            raise PlayerRemovedFromGameError(
+                user_id=state_data.user_id,
+                game_id=state_data.game_id,
+            )
+
+        # Determine word based on role
+        if player.role == UndercoverRole.MR_WHITE:
+            my_word = "You are Mr. White. You have to guess the word."
+        elif player.role == UndercoverRole.UNDERCOVER:
+            my_word = game.undercover_word
+        else:
+            my_word = game.civilian_word
+
+        # Build voted info
+        current_turn_votes = {}
+        has_voted = False
+        if game.turns:
+            current_turn = game.turns[-1]
+            current_turn_votes = {str(voter_id): str(voted_id) for voter_id, voted_id in current_turn.votes.items()}
+            has_voted = UUID(state_data.user_id) in current_turn.votes
+
+        await send_event_to_client(
+            sio,
+            EVENT_UNDERCOVER_GAME_STATE,
+            {
+                "game_id": game.id,
+                "room_id": game.room_id,
+                "my_role": player.role.value,
+                "my_word": my_word,
+                "is_alive": player.is_alive,
+                "players": [
+                    {
+                        "user_id": str(p.user_id),
+                        "username": p.username,
+                        "is_alive": p.is_alive,
+                        "is_mayor": p.is_mayor,
+                    }
+                    for p in game.players
+                ],
+                "eliminated_players": [
+                    {
+                        "user_id": str(p.user_id),
+                        "username": p.username,
+                        "role": p.role.value,
+                    }
+                    for p in game.eliminated_players
+                ],
+                "turn_number": len(game.turns),
+                "votes": current_turn_votes,
+                "has_voted": has_voted,
+            },
+            room=sid,
+        )

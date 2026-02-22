@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "*"
 
+    # Socket.IO
+    sio_ping_interval: int = 25
+    sio_ping_timeout: int = 20
+
     @field_validator("cors_origins")
     @classmethod
     def parse_cors_origins(cls, v: str) -> list[str]:
