@@ -19,6 +19,11 @@ class JoinRoomUser(BaseModel):
     public_room_id: str
     password: str = Field(min_length=4, max_length=4)
 
+    @field_validator("public_room_id")
+    @classmethod
+    def normalize_room_id(cls, v: str) -> str:
+        return v.upper()
+
     @field_validator("password")
     @classmethod
     def check_password_only_digits(cls, v: str) -> str:
