@@ -99,6 +99,7 @@ function RoomLobbyPage() {
     const offStatus = on("room_status", (data: unknown) => {
       const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
       if (payload.data?.users) {
+        toast.success(t("toast.roomJoined"))
         setPlayers(
           payload.data.users.map((u) => ({
             id: u.id,
@@ -296,6 +297,7 @@ function RoomLobbyPage() {
       room_id: roomData.id,
       username: user.username,
     })
+    toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
   }
 

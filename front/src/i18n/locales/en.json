@@ -103,7 +103,10 @@
     "cardRevealed": "Card revealed: {{word}}",
     "turnEnded": "Turn ended — {{team}}'s turn now",
     "yourTurn": "It's your turn!",
-    "votingStarted": "Voting phase has started"
+    "votingStarted": "Voting phase has started",
+    "youLeftRoom": "You left the room",
+    "roomJoined": "You joined the room",
+    "roomCreated": "Room created"
   },
   "game": {
     "vote": "Vote",

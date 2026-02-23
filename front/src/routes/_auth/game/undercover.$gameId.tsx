@@ -221,8 +221,9 @@ function UndercoverGamePage() {
       room_id: roomIdRef.current,
       username: user.username,
     })
+    toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
-  }, [user, emit, navigate])
+  }, [user, emit, navigate, t])
 
   const myPlayer = gameState.players.find((p) => p.id === user?.id)
   const isAlive = myPlayer?.is_alive !== false

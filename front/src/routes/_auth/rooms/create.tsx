@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
 
 export const Route = createFileRoute("/_auth/rooms/create")({
@@ -29,6 +30,7 @@ function CreateRoomPage() {
       })
 
       const room = response.data as { id: string }
+      toast.success(t("toast.roomCreated"))
       navigate({ to: "/rooms/$roomId", params: { roomId: room.id } })
     } catch (err) {
       setError(getApiErrorMessage(err))

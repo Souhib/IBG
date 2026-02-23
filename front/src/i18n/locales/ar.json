@@ -103,7 +103,10 @@
     "cardRevealed": "تم كشف البطاقة: {{word}}",
     "turnEnded": "انتهى الدور — دور {{team}} الآن",
     "yourTurn": "دورك الآن!",
-    "votingStarted": "بدأت مرحلة التصويت"
+    "votingStarted": "بدأت مرحلة التصويت",
+    "youLeftRoom": "غادرت الغرفة",
+    "roomJoined": "انضممت للغرفة",
+    "roomCreated": "تم إنشاء الغرفة"
   },
   "game": {
     "vote": "صوّت",

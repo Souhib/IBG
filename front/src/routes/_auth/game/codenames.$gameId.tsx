@@ -251,8 +251,9 @@ function CodenamesGamePage() {
       room_id: roomIdRef.current,
       username: user.username,
     })
+    toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
-  }, [user, emit, navigate])
+  }, [user, emit, navigate, t])
 
   if (cancelMessage) {
     return (
