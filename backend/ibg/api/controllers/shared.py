@@ -40,7 +40,7 @@ def create_random_public_id() -> str:
 
     :return: A random public id of 4 characters.
     """
-    return "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(5))
+    return "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(5))
 
 
 def generate_password() -> str:

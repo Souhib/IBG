@@ -54,7 +54,7 @@ function RoomsPage() {
   }, [isConnected, on, navigate, t])
 
   const handleRoomCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 5)
+    const value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 5)
     setRoomCode(value)
   }, [])
 
@@ -192,7 +192,7 @@ function RoomsPage() {
                   placeholder={t("room.enterCode")}
                   autoFocus
                   maxLength={5}
-                  className="w-full rounded-md border bg-background px-4 py-2.5 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-sm placeholder:tracking-normal"
+                  className="w-full rounded-md border bg-background px-4 py-2.5 text-center font-mono text-lg uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-sm placeholder:tracking-normal placeholder:normal-case"
                 />
               </div>
 
@@ -233,6 +233,11 @@ function RoomsPage() {
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     {t("room.joining")}
+                  </>
+                ) : !isConnected ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("toast.connectionLost")}
                   </>
                 ) : (
                   t("room.join")
