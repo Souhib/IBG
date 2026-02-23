@@ -96,5 +96,5 @@ def test_ttl_constants():
 
     # Assert
     assert ROOM_ACTIVITY_TTL == 86400  # 24 hours
-    assert USER_ACTIVITY_TTL == 3600  # 1 hour
+    assert USER_ACTIVITY_TTL == 86400  # 24 hours (match room TTL)
     assert GAME_FINISHED_TTL == 3600  # 1 hour

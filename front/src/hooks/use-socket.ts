@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { Socket } from "socket.io-client"
+import { toast } from "sonner"
 import { connectSocket, disconnectSocket, getSocket } from "@/lib/socket"
 import { useAuth } from "@/providers/AuthProvider"
 
@@ -9,22 +11,37 @@ import { useAuth } from "@/providers/AuthProvider"
  */
 export function useSocket() {
   const { isAuthenticated } = useAuth()
+  const { t } = useTranslation()
   const [isConnected, setIsConnected] = useState(false)
   const socketRef = useRef<Socket | null>(null)
+  const wasConnectedRef = useRef(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
       disconnectSocket()
       setIsConnected(false)
       socketRef.current = null
+      wasConnectedRef.current = false
       return
     }
 
     const socket = getSocket()
     socketRef.current = socket
 
-    const onConnect = () => setIsConnected(true)
-    const onDisconnect = () => setIsConnected(false)
+    const onConnect = () => {
+      setIsConnected(true)
+      if (wasConnectedRef.current) {
+        toast.success(t("toast.connectionRestored"))
+      }
+      wasConnectedRef.current = true
+    }
+    const onDisconnect = (reason: string) => {
+      setIsConnected(false)
+      // Only show toast for unexpected disconnects, not intentional ones
+      if (reason !== "io client disconnect") {
+        toast.error(t("toast.connectionLost"))
+      }
+    }
 
     socket.on("connect", onConnect)
     socket.on("disconnect", onDisconnect)

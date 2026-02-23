@@ -5,7 +5,7 @@ from ibg.socketio.models.shared import redis_connection
 # TTL constants in seconds
 GAME_FINISHED_TTL = 3600  # 1 hour after game ends
 ROOM_ACTIVITY_TTL = 86400  # 24 hours of inactivity
-USER_ACTIVITY_TTL = 3600  # 1 hour of inactivity
+USER_ACTIVITY_TTL = 86400  # 24 hours (match room TTL — user key must outlive room)
 
 
 async def set_ttl(model_instance, ttl_seconds: int) -> None:
