@@ -21,6 +21,9 @@ import {
   ROUTES,
   SOCKET_EVENTS,
 } from "../../helpers/constants";
+import { flushRedis } from "../../helpers/test-setup";
+
+test.beforeAll(() => { flushRedis() });
 
 const SIX_ACCOUNTS = [
   TEST_USER,
@@ -93,6 +96,7 @@ test.describe("Rooms — Large Room (4-6 Players)", () => {
   });
 
   test("owner transfer chain across multiple disconnects", async () => {
+    test.setTimeout(120_000);
     // 4 players in room via socket
     const accounts = [TEST_USER, TEST_PLAYER, TEST_ALI, TEST_FATIMA];
     const logins = await Promise.all(

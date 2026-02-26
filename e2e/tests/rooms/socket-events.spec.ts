@@ -7,6 +7,9 @@ import {
   TEST_ALI,
   ROUTES,
 } from "../../helpers/constants";
+import { flushRedis } from "../../helpers/test-setup";
+
+test.beforeAll(() => { flushRedis() });
 
 test.describe("Rooms — Socket Events", () => {
   test("player 1 sees join notification when player 2 joins", async ({
@@ -24,8 +27,11 @@ test.describe("Rooms — Socket Events", () => {
     await player1.goto(ROUTES.room(room.id));
     await player1.waitForLoadState("networkidle");
 
-    // Wait for socket connection and room load
-    await player1.waitForTimeout(2000);
+    // Wait for socket connection and room page to render
+    await player1.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Player 2 joins via UI
     const player2 = await createPlayerPage(
@@ -53,7 +59,7 @@ test.describe("Rooms — Socket Events", () => {
 
     // Player 1 should see a toast about player joining
     await expect(
-      player1.locator('[data-sonner-toast]'),
+      player1.locator('[data-sonner-toast]').first(),
     ).toBeVisible({ timeout: 10_000 });
 
     // Both players should see each other in the player list
@@ -115,6 +121,7 @@ test.describe("Rooms — Socket Events", () => {
   });
 
   test("ownership transfers when host leaves", async ({ browser }) => {
+    test.setTimeout(90_000);
     // Player 1 (host) creates room
     const p1Login = await apiLogin(TEST_USER.email, TEST_USER.password);
     const room = await apiCreateRoom(p1Login.access_token, "undercover");
@@ -146,14 +153,21 @@ test.describe("Rooms — Socket Events", () => {
     }
     await player2.locator('button[type="submit"]').click();
     await expect(player2).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-    await player2.waitForTimeout(2000);
+
+    // Wait for player2 to appear in the player list (confirms socket join_room processed)
+    await expect(player1.locator("text=Players (2)")).toBeVisible({ timeout: 10_000 });
+
+    // Also ensure player2's socket is connected
+    await player2.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Host (player 1) disconnects
     await player1.context().close();
 
-    // After grace period, player 2 should become host
-    // Wait for "owner changed" toast or host badge to appear on player 2
-    await player2.waitForTimeout(5_000); // Grace period is 3s in E2E
+    // After grace period (3s in e2e), ownership should transfer via socket event
+    await player2.waitForTimeout(5_000);
 
     // Player 2 should now see the host controls (game type selector + start button)
     await expect(

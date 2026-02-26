@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Loader2, LogOut, Shield, Skull, ThumbsUp, User } from "lucide-react"
+import { Crown, Loader2, LogOut, Shield, Skull, ThumbsUp, User } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -11,19 +11,21 @@ interface UndercoverPlayer {
   id: string
   username: string
   is_alive: boolean
+  is_mayor?: boolean
   role?: string
-  word?: string
-  vote_count?: number
 }
 
 interface GameState {
   players: UndercoverPlayer[]
-  phase: "role_reveal" | "discussion" | "voting" | "elimination" | "game_over"
+  phase: "role_reveal" | "playing" | "elimination" | "game_over"
   round: number
   my_role?: string
   my_word?: string
-  eliminated_player?: UndercoverPlayer
+  eliminated_player_username?: string
+  eliminated_player_role?: string
   winner?: string
+  votedPlayers: string[]
+  isHost: boolean
 }
 
 export const Route = createFileRoute("/_auth/game/undercover/$gameId")({
@@ -45,19 +47,24 @@ function UndercoverGamePage() {
       players: [],
       phase: "role_reveal",
       round: 1,
+      votedPlayers: [],
+      isHost: false,
     }
-    // Read initial state passed from lobby via sessionStorage
     try {
       const stored = sessionStorage.getItem(`ibg-game-init-${gameId}`)
       if (stored) {
         sessionStorage.removeItem(`ibg-game-init-${gameId}`)
-        const { roleData, players: playerNames, roomId } = JSON.parse(stored) as {
+        const { roleData, players: playerNames, roomId, ownerId } = JSON.parse(stored) as {
           roleData?: { role: string; word: string | null }
           players?: string[]
           mayor?: string
           roomId?: string
+          ownerId?: string
         }
         if (roomId) roomIdRef.current = roomId
+        if (ownerId && user) {
+          initial.isHost = ownerId === user.id
+        }
         if (roleData) {
           initial.my_role = roleData.role
           initial.my_word = roleData.word || undefined
@@ -77,11 +84,20 @@ function UndercoverGamePage() {
   const [hasVoted, setHasVoted] = useState(false)
   const [isLoadingState, setIsLoadingState] = useState(!gameState.my_role)
   const [loadingTimedOut, setLoadingTimedOut] = useState(false)
+  const lastServerRoundRef = useRef(0)
 
   // Always request authoritative state from server on mount
   useEffect(() => {
     if (!isConnected || !user) return
     emit("get_undercover_state", { game_id: gameId, user_id: user.id })
+
+    // Retry if no state received within 2s (socket may have missed the initial emit)
+    const retryTimer = setTimeout(() => {
+      if (gameState.players.length === 0 && isConnected) {
+        emit("get_undercover_state", { game_id: gameId, user_id: user.id })
+      }
+    }, 2000)
+    return () => clearTimeout(retryTimer)
   }, [isConnected, user, emit, gameId])
 
   useEffect(() => {
@@ -98,40 +114,75 @@ function UndercoverGamePage() {
       setIsLoadingState(false)
     })
 
-    const offVotingStarted = on("voting_started", () => {
-      toast.info(t("toast.votingStarted"))
-      setGameState((prev) => ({ ...prev, phase: "voting" }))
-      setSelectedVote(null)
+    // vote_casted: your vote was recorded
+    const offVoteCasted = on("vote_casted", () => {
+      toast.success(t("toast.voteCasted"))
+    })
+
+    // waiting_other_votes: shows who has voted
+    const offWaitingVotes = on("waiting_other_votes", (data: unknown) => {
+      const d = data as { message: string; players_that_voted: { username: string; user_id: string }[] }
+      setGameState((prev) => ({
+        ...prev,
+        votedPlayers: d.players_that_voted.map((p) => p.user_id),
+      }))
+    })
+
+    // you_died: you were eliminated
+    const offYouDied = on("you_died", (data: unknown) => {
+      const d = data as { message: string }
+      toast.error(d.message)
+      setGameState((prev) => ({
+        ...prev,
+        players: prev.players.map((p) =>
+          p.id === user?.id ? { ...p, is_alive: false } : p,
+        ),
+      }))
+    })
+
+    // notification: turn updates from backend
+    const offNotification = on("notification", (data: unknown) => {
+      const d = data as { message: string }
+      toast.info(d.message)
+      setGameState((prev) => ({
+        ...prev,
+        phase: "playing",
+        round: prev.round + 1,
+        votedPlayers: [],
+        eliminated_player_username: undefined,
+        eliminated_player_role: undefined,
+      }))
       setHasVoted(false)
+      setSelectedVote(null)
     })
 
     const offPlayerEliminated = on("player_eliminated", (data: unknown) => {
       toast.warning(t("toast.playerEliminated"))
-      const elimData = data as { player: UndercoverPlayer }
+      const d = data as {
+        message: string
+        eliminated_player_role: string
+        eliminated_player_username: string
+        eliminated_player_user_id: string
+      }
       setGameState((prev) => ({
         ...prev,
         phase: "elimination",
-        eliminated_player: elimData.player,
+        eliminated_player_username: d.eliminated_player_username,
+        eliminated_player_role: d.eliminated_player_role,
         players: prev.players.map((p) =>
-          p.id === elimData.player.id ? { ...p, is_alive: false } : p,
+          p.id === d.eliminated_player_user_id ? { ...p, is_alive: false } : p,
         ),
       }))
     })
 
     const offGameOver = on("game_over", (data: unknown) => {
       toast.success(t("toast.gameOver"))
-      const gameOverData = data as { winner: string; players: UndercoverPlayer[] }
+      const d = data as { data: string; winner: string }
       setGameState((prev) => ({
         ...prev,
         phase: "game_over",
-        winner: gameOverData.winner,
-        players: gameOverData.players || prev.players,
+        winner: d.winner,
       }))
-    })
-
-    const offGameState = on("game_state", (data: unknown) => {
-      const state = data as Partial<GameState>
-      setGameState((prev) => ({ ...prev, ...state }))
     })
 
     // undercover_game_state: full state recovery for reconnecting players
@@ -140,24 +191,56 @@ function UndercoverGamePage() {
         my_role: string
         my_word: string
         is_alive: boolean
-        players: { user_id: string; username: string; is_alive: boolean }[]
+        players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
         eliminated_players: { user_id: string; username: string; role: string }[]
         turn_number: number
         has_voted: boolean
+        room_id?: string
+        votes?: Record<string, string>
+        winner?: string | null
       }
+      if (d.room_id) roomIdRef.current = d.room_id
+      const votedPlayerIds = d.votes ? Object.keys(d.votes) : []
+
+      // Determine phase: game_over if winner exists, otherwise playing/role_reveal
+      let phase: GameState["phase"]
+      if (d.winner) {
+        phase = "game_over"
+      } else if (d.turn_number > 0) {
+        phase = "playing"
+      } else {
+        phase = "role_reveal"
+      }
+
+      // Only reset vote state when the round actually changes (e.g., reconnecting
+      // to a new round after missing the notification event). This avoids a race
+      // condition where the initial mount response resets a vote already cast locally.
+      const roundChanged = d.turn_number !== lastServerRoundRef.current
+      lastServerRoundRef.current = d.turn_number
+
       setGameState((prev) => ({
         ...prev,
         my_role: d.my_role,
         my_word: d.my_word,
         round: d.turn_number,
+        phase,
+        winner: d.winner || prev.winner,
+        votedPlayers: votedPlayerIds,
         players: d.players.map((p) => ({
           id: p.user_id,
           username: p.username,
           is_alive: p.is_alive,
+          is_mayor: p.is_mayor,
         })),
       }))
       setIsLoadingState(false)
-      if (d.has_voted) {
+
+      if (roundChanged || d.winner) {
+        // New round or game over: reset vote state from server
+        setHasVoted(d.has_voted)
+        setSelectedVote(null)
+      } else if (d.has_voted) {
+        // Same round, server confirms we voted
         setHasVoted(true)
       }
     })
@@ -181,15 +264,17 @@ function UndercoverGamePage() {
 
     return () => {
       offRoleAssigned()
-      offVotingStarted()
+      offVoteCasted()
+      offWaitingVotes()
+      offYouDied()
+      offNotification()
       offPlayerEliminated()
       offGameOver()
-      offGameState()
       offUndercoverState()
       offGameCancelled()
       offError()
     }
-  }, [isConnected, on, navigate])
+  }, [isConnected, on, navigate, user, t])
 
   // Loading timeout: if state never arrives after 15s, show error
   useEffect(() => {
@@ -202,14 +287,33 @@ function UndercoverGamePage() {
 
   const handleVote = useCallback(
     (playerId: string) => {
-      if (hasVoted) return
+      if (hasVoted || !user) return
+      const votedPlayer = gameState.players.find((p) => p.id === playerId)
       setSelectedVote(playerId)
-      emit("vote", { game_id: gameId, voted_for: playerId })
       setHasVoted(true)
-      toast.success(t("toast.voteCasted"))
+      if (votedPlayer) {
+        toast.info(t("game.undercover.votedFor", { username: votedPlayer.username }))
+      }
+      emit("vote_for_a_player", {
+        room_id: roomIdRef.current,
+        game_id: gameId,
+        user_id: user.id,
+        voted_user_id: playerId,
+      })
     },
-    [hasVoted, emit, gameId, t],
+    [hasVoted, emit, gameId, user, gameState.players, t],
   )
+
+  const handleNextRound = useCallback(() => {
+    emit("start_new_turn_event", {
+      room_id: roomIdRef.current,
+      game_id: gameId,
+    })
+  }, [emit, gameId])
+
+  const handleDismissRole = useCallback(() => {
+    setGameState((prev) => ({ ...prev, phase: "playing" }))
+  }, [])
 
   const handleLeaveRoom = useCallback(() => {
     if (!user || !roomIdRef.current) {
@@ -290,59 +394,110 @@ function UndercoverGamePage() {
               <p className="text-2xl font-bold mt-1">{gameState.my_word}</p>
             </div>
           )}
+          <button
+            type="button"
+            onClick={handleDismissRole}
+            className="mt-6 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {t("game.undercover.iUnderstand")}
+          </button>
         </div>
       )}
 
-      {/* Voting Phase */}
-      {gameState.phase === "voting" && (
+      {/* Playing Phase */}
+      {gameState.phase === "playing" && (
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-center mb-4">{t("game.vote")}</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          {/* Role/Word reminder */}
+          {gameState.my_role && gameState.my_role !== "mr_white" && gameState.my_word && (
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-4 text-center">
+              <span className="text-sm text-muted-foreground">{t("game.undercover.yourWordReminder")}:</span>{" "}
+              <span className="font-bold text-primary">{gameState.my_word}</span>
+            </div>
+          )}
+
+          {!isAlive && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 mb-4 text-center">
+              <Skull className="h-5 w-5 inline mr-2 text-destructive" />
+              <span className="text-sm font-medium text-destructive">{t("game.undercover.youAreDead")}</span>
+            </div>
+          )}
+
+          <h2 className="text-xl font-bold text-center mb-4">{t("game.undercover.discussAndVote")}</h2>
+
+          {hasVoted && (
+            <div className="rounded-lg bg-muted/50 p-3 mb-4 text-center">
+              <p className="text-sm text-muted-foreground">{t("game.undercover.waitingForVotes")}</p>
+            </div>
+          )}
+
+          {isAlive && <div className="grid gap-3 sm:grid-cols-2">
             {gameState.players
               .filter((p) => p.is_alive && p.id !== user?.id)
-              .map((player) => (
-                <button
-                  key={player.id}
-                  type="button"
-                  onClick={() => handleVote(player.id)}
-                  disabled={hasVoted || !isAlive}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg border p-4 transition-colors",
-                    selectedVote === player.id
-                      ? "border-primary bg-primary/5"
-                      : "hover:border-primary/50",
-                    (hasVoted || !isAlive) && "opacity-50 cursor-not-allowed",
-                  )}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-medium">{player.username}</div>
-                    {selectedVote === player.id && (
-                      <div className="flex items-center gap-1 text-xs text-primary">
-                        <ThumbsUp className="h-3 w-3" />
-                        Voted
-                      </div>
+              .map((player) => {
+                const hasPlayerVoted = gameState.votedPlayers.includes(player.id)
+                return (
+                  <button
+                    key={player.id}
+                    type="button"
+                    onClick={() => handleVote(player.id)}
+                    disabled={hasVoted || !isAlive}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg border p-4 transition-colors",
+                      selectedVote === player.id
+                        ? "border-primary bg-primary/5"
+                        : "hover:border-primary/50",
+                      (hasVoted || !isAlive) && "opacity-50 cursor-not-allowed",
                     )}
-                  </div>
-                </button>
-              ))}
-          </div>
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div className="text-left flex-1">
+                      <div className="font-medium flex items-center gap-2">
+                        {player.username}
+                        {player.is_mayor && (
+                          <Crown className="h-3.5 w-3.5 text-yellow-500" />
+                        )}
+                      </div>
+                      {selectedVote === player.id && (
+                        <div className="flex items-center gap-1 text-xs text-primary">
+                          <ThumbsUp className="h-3 w-3" />
+                          {t("game.undercover.voted")}
+                        </div>
+                      )}
+                    </div>
+                    {hasPlayerVoted && (
+                      <span className="text-xs bg-muted rounded-full px-2 py-0.5 text-muted-foreground">
+                        {t("game.undercover.voted")}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+          </div>}
         </div>
       )}
 
       {/* Elimination */}
-      {gameState.phase === "elimination" && gameState.eliminated_player && (
+      {gameState.phase === "elimination" && (
         <div className="rounded-xl border bg-card p-8 text-center mb-8">
           <Skull className="h-12 w-12 mx-auto text-destructive mb-4" />
           <h2 className="text-xl font-bold">{t("game.eliminated")}</h2>
-          <p className="text-lg mt-2">{gameState.eliminated_player.username}</p>
-          {gameState.eliminated_player.role && (
+          {gameState.eliminated_player_username && (
+            <p className="text-lg mt-2">{gameState.eliminated_player_username}</p>
+          )}
+          {gameState.eliminated_player_role && (
             <p className="text-sm text-muted-foreground mt-1">
-              Role: {gameState.eliminated_player.role}
+              {t("game.yourRole")}: {gameState.eliminated_player_role}
             </p>
           )}
+          <button
+            type="button"
+            onClick={handleNextRound}
+            className="mt-6 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {t("game.undercover.nextRound")}
+          </button>
         </div>
       )}
 
@@ -379,7 +534,10 @@ function UndercoverGamePage() {
                 player.is_alive ? "bg-muted/50" : "bg-destructive/5 line-through opacity-50",
               )}
             >
-              <span className="text-sm">{player.username}</span>
+              <span className="text-sm flex items-center gap-2">
+                {player.username}
+                {player.is_mayor && <Crown className="h-3 w-3 text-yellow-500" />}
+              </span>
               <span className="text-xs text-muted-foreground">
                 {player.is_alive ? t("game.alive") : t("game.eliminated")}
               </span>

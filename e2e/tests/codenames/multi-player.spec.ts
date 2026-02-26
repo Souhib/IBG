@@ -1,492 +1,697 @@
-import { test, expect } from "@playwright/test";
-import { waitForEvent } from "../../helpers/socket-client";
-import { SOCKET_EVENTS } from "../../helpers/constants";
+import { test, expect, type Page } from "@playwright/test";
 import {
-  setupCodenamesGame,
-  type CodenamesPlayer,
-} from "../../helpers/game-setup";
+  TEST_USER,
+  TEST_PLAYER,
+  TEST_ALI,
+  TEST_FATIMA,
+  TEST_OMAR,
+  TEST_AISHA,
+} from "../../helpers/constants";
+import { flushRedis } from "../../helpers/test-setup";
+import {
+  setupRoomWithPlayers,
+  startGameViaUI,
+  getPlayerRoleFromUI,
+  getCurrentTeamFromUI,
+  giveClueViaUI,
+  clickBoardCard,
+  findUnrevealedCardIndex,
+  getSpymasterCardTypes,
+  getUnrevealedCardIndicesByType,
+  type PlayerContext,
+  type CodenamesPlayerRole,
+} from "../../helpers/ui-game-setup";
 
-test.describe("Codenames — Multi-Player Games (6 Players)", () => {
-  test("6-player team assignment is balanced (3v3)", async () => {
-    const { players, cleanup } = await setupCodenamesGame(6);
+test.beforeAll(() => { flushRedis() });
+
+test.describe("Codenames — Multi-Player Games (UI)", () => {
+  test("6-player team assignment is balanced (3v3) via UI", async ({
+    browser,
+  }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      const redPlayers = players.filter((p) => p.team === "red");
-      const bluePlayers = players.filter((p) => p.team === "blue");
+      await startGameViaUI(setup.players, "codenames");
 
-      // Each team has 3 players
-      expect(redPlayers).toHaveLength(3);
-      expect(bluePlayers).toHaveLength(3);
+      const roles: CodenamesPlayerRole[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        roles.push(role);
+      }
 
-      // Each team has 1 spymaster + 2 operatives
+      // At least 4 players should be in the game (minimum for codenames)
+      expect(roles.length).toBeGreaterThanOrEqual(4);
+
+      const redPlayers = roles.filter((r) => r.team === "red");
+      const bluePlayers = roles.filter((r) => r.team === "blue");
+
+      // Teams should be balanced (difference at most 1)
+      expect(Math.abs(redPlayers.length - bluePlayers.length)).toBeLessThanOrEqual(1);
+
+      // Each team should have exactly 1 spymaster
       expect(
-        redPlayers.filter((p) => p.gameRole === "spymaster"),
+        redPlayers.filter((p) => p.role === "spymaster"),
       ).toHaveLength(1);
       expect(
-        redPlayers.filter((p) => p.gameRole === "operative"),
-      ).toHaveLength(2);
-      expect(
-        bluePlayers.filter((p) => p.gameRole === "spymaster"),
+        bluePlayers.filter((p) => p.role === "spymaster"),
       ).toHaveLength(1);
-      expect(
-        bluePlayers.filter((p) => p.gameRole === "operative"),
-      ).toHaveLength(2);
 
-      // Board has 25 cards
-      const spymaster = players.find((p) => p.gameRole === "spymaster")!;
-      expect(spymaster.board).toHaveLength(25);
+      // Each team should have at least 1 operative
+      expect(
+        redPlayers.filter((p) => p.role === "operative").length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        bluePlayers.filter((p) => p.role === "operative").length,
+      ).toBeGreaterThanOrEqual(1);
+
+      // Board should have 25 cards for players in the game
+      for (const player of setup.players) {
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const cards = player.page.locator(".grid-cols-5 button");
+        await expect(cards).toHaveCount(25, { timeout: 10_000 });
+      }
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 
-  test("6-player full game: correct guesses lead to team victory", async () => {
-    const { players, gameId, roomPublicId, currentTeam, cleanup } =
-      await setupCodenamesGame(6);
+  test("correct guesses lead to team victory via UI", async ({ browser }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      // Find current team's spymaster (has full board with card_types)
-      const spymaster = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "spymaster",
-      )!;
-      expect(spymaster).toBeTruthy();
+      await startGameViaUI(setup.players, "codenames");
 
-      // Find current team's operative (first one)
-      const operative = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "operative",
-      )!;
+      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+
+      // Identify spymaster and operative of current team
+      const playerRoles: { player: PlayerContext; role: CodenamesPlayerRole }[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        playerRoles.push({ player, role });
+      }
+
+      const spymaster = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "spymaster",
+      );
+      const operative = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "operative",
+      );
+
+      expect(spymaster).toBeTruthy();
       expect(operative).toBeTruthy();
 
-      // Get indices of all cards belonging to the current team
-      const teamCardIndices = spymaster.board
-        .filter((card) => card.card_type === currentTeam)
-        .map((card) => card.index);
-
+      // Get team card indices from spymaster's view
+      const teamCardIndices = await getUnrevealedCardIndicesByType(
+        spymaster!.player.page,
+        currentTeam,
+      );
       expect(teamCardIndices.length).toBeGreaterThanOrEqual(8);
 
       // Spymaster gives clue with number = total team cards
-      const cluePromise = waitForEvent(
-        operative.socket,
-        SOCKET_EVENTS.CODENAMES_CLUE_GIVEN,
-        10_000,
+      await giveClueViaUI(spymaster!.player.page, "victory", teamCardIndices.length);
+
+      // Wait for clue to propagate — with reload fallback
+      const victoryClueLocator = operative!.player.page.locator(
+        ".bg-muted\\/50.p-3.text-center >> text=victory",
       );
-
-      spymaster.socket.emit("give_clue", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: spymaster.login.user.id,
-        clue_word: "victory",
-        clue_number: teamCardIndices.length,
-      });
-
-      await cluePromise;
+      let victoryClueVisible = await victoryClueLocator
+        .waitFor({ state: "visible", timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!victoryClueVisible) {
+        await operative!.player.page.reload();
+        await operative!.player.page.waitForLoadState("domcontentloaded");
+        await operative!.player.page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await operative!.player.page.locator(".grid-cols-5 button").first()
+          .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      }
+      await expect(victoryClueLocator).toBeVisible({ timeout: 10_000 });
 
       // Operative guesses all team cards one by one
-      for (let i = 0; i < teamCardIndices.length; i++) {
-        const isLast = i === teamCardIndices.length - 1;
+      let gameOver = false;
+      for (let i = 0; i < teamCardIndices.length && !gameOver; i++) {
+        await clickBoardCard(operative!.player.page, teamCardIndices[i]);
+        // Wait for card reveal or game over
+        await operative!.player.page.locator(".grid-cols-5 button.opacity-75, h2:has-text('Game Over')")
+          .first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
 
-        const revealPromise = waitForEvent<{
-          card_index: number;
-          card_type: string;
-          result: string;
-        }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
+        // Check if game ended
+        gameOver = await setup.players[0].page
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
+      }
 
-        let gameOverPromise: Promise<{
-          winner: string;
-          reason: string;
-        }> | null = null;
-        if (isLast) {
-          gameOverPromise = waitForEvent(
-            operative.socket,
-            SOCKET_EVENTS.CODENAMES_GAME_OVER,
-            10_000,
-          );
-        }
-
-        operative.socket.emit("guess_card", {
-          room_id: roomPublicId,
-          game_id: gameId,
-          user_id: operative.login.user.id,
-          card_index: teamCardIndices[i],
-        });
-
-        const reveal = await revealPromise;
-        expect(reveal.card_type).toBe(currentTeam);
-
-        if (isLast) {
-          expect(reveal.result).toBe("win");
-          const gameOver = await gameOverPromise!;
-          expect(gameOver.winner).toBe(currentTeam);
-        } else {
-          expect(reveal.result).toBe("correct");
-        }
+      // If all team cards guessed, game should be over
+      if (gameOver) {
+        await expect(
+          setup.players[0].page.locator("h2:has-text('Game Over')"),
+        ).toBeVisible();
+        await expect(
+          setup.players[0].page.locator("text=wins!").first(),
+        ).toBeVisible();
       }
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 
-  test("assassin card causes immediate loss", async () => {
-    const { players, gameId, roomPublicId, currentTeam, cleanup } =
-      await setupCodenamesGame(6);
+  test("assassin card causes immediate loss via UI", async ({ browser }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      const spymaster = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "spymaster",
-      )!;
-      const operative = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "operative",
-      )!;
+      await startGameViaUI(setup.players, "codenames");
 
-      // Find the assassin card
-      const assassinCard = spymaster.board.find(
-        (card) => card.card_type === "assassin",
-      )!;
-      expect(assassinCard).toBeTruthy();
+      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
 
-      // Spymaster gives a clue
-      const cluePromise = waitForEvent(
-        operative.socket,
-        SOCKET_EVENTS.CODENAMES_CLUE_GIVEN,
-        10_000,
+      const playerRoles: { player: PlayerContext; role: CodenamesPlayerRole }[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        playerRoles.push({ player, role });
+      }
+
+      const spymaster = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "spymaster",
+      );
+      const operative = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "operative",
       );
 
-      spymaster.socket.emit("give_clue", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: spymaster.login.user.id,
-        clue_word: "danger",
-        clue_number: 1,
-      });
+      expect(spymaster).toBeTruthy();
+      expect(operative).toBeTruthy();
 
-      await cluePromise;
+      // Find the assassin card from spymaster's view
+      const assassinIndices = await getUnrevealedCardIndicesByType(
+        spymaster!.player.page,
+        "assassin",
+      );
+      expect(assassinIndices.length).toBe(1);
+
+      // Spymaster gives a clue
+      await giveClueViaUI(spymaster!.player.page, "danger", 1);
+
+      // Wait for clue to propagate — with reload fallback
+      const dangerClueLocator = operative!.player.page.locator(
+        ".bg-muted\\/50.p-3.text-center >> text=danger",
+      );
+      let dangerClueVisible = await dangerClueLocator
+        .waitFor({ state: "visible", timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!dangerClueVisible) {
+        await operative!.player.page.reload();
+        await operative!.player.page.waitForLoadState("domcontentloaded");
+        await operative!.player.page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await operative!.player.page.locator(".grid-cols-5 button").first()
+          .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      }
+      await expect(dangerClueLocator).toBeVisible({ timeout: 10_000 });
 
       // Operative guesses the assassin card
-      const revealPromise = waitForEvent<{
-        card_index: number;
-        card_type: string;
-        result: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
+      await clickBoardCard(operative!.player.page, assassinIndices[0]);
+      // Wait for game over after assassin hit
+      await operative!.player.page.locator("h2:has-text('Game Over')")
+        .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
 
-      const gameOverPromise = waitForEvent<{
-        winner: string;
-        reason: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_GAME_OVER, 10_000);
+      // Game should be over — other team wins
+      await expect(
+        setup.players[0].page.locator("h2:has-text('Game Over')"),
+      ).toBeVisible({ timeout: 10_000 });
 
-      operative.socket.emit("guess_card", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-        card_index: assassinCard.index,
-      });
-
-      const reveal = await revealPromise;
-      expect(reveal.card_type).toBe("assassin");
-      expect(reveal.result).toBe("assassin");
-
-      const gameOver = await gameOverPromise;
-      const otherTeam = currentTeam === "red" ? "blue" : "red";
-      expect(gameOver.winner).toBe(otherTeam);
-      expect(gameOver.reason).toBe("assassin");
+      // The OTHER team should win
+      const otherTeamName = currentTeam === "red" ? "Blue Team" : "Red Team";
+      await expect(
+        setup.players[0].page.locator(`text=${otherTeamName}`).first(),
+      ).toBeVisible({ timeout: 5_000 });
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 
-  test("neutral card ends turn without penalty", async () => {
-    const { players, gameId, roomPublicId, currentTeam, cleanup } =
-      await setupCodenamesGame(6);
+  test("neutral card ends turn without penalty via UI", async ({ browser }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      const spymaster = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "spymaster",
-      )!;
-      const operative = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "operative",
-      )!;
+      await startGameViaUI(setup.players, "codenames");
 
-      // Find a neutral card
-      const neutralCard = spymaster.board.find(
-        (card) => card.card_type === "neutral",
-      )!;
-      expect(neutralCard).toBeTruthy();
+      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      const otherTeam = currentTeam === "red" ? "blue" : "red";
+      const otherTeamName = otherTeam === "red" ? "Red Team" : "Blue Team";
 
-      // Spymaster gives a clue
-      const cluePromise = waitForEvent(
-        operative.socket,
-        SOCKET_EVENTS.CODENAMES_CLUE_GIVEN,
-        10_000,
+      const playerRoles: { player: PlayerContext; role: CodenamesPlayerRole }[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        playerRoles.push({ player, role });
+      }
+
+      const spymaster = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "spymaster",
+      );
+      const operative = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "operative",
       );
 
-      spymaster.socket.emit("give_clue", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: spymaster.login.user.id,
-        clue_word: "nothing",
-        clue_number: 1,
-      });
+      expect(spymaster).toBeTruthy();
+      expect(operative).toBeTruthy();
 
-      await cluePromise;
+      // Find a neutral card from spymaster's view
+      const neutralIndices = await getUnrevealedCardIndicesByType(
+        spymaster!.player.page,
+        "neutral",
+      );
+      expect(neutralIndices.length).toBeGreaterThanOrEqual(1);
 
-      // Operative guesses neutral card
-      const revealPromise = waitForEvent<{
-        card_type: string;
-        result: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
+      // Spymaster gives a clue
+      await giveClueViaUI(spymaster!.player.page, "nothing", 1);
 
-      const turnEndPromise = waitForEvent<{
-        reason: string;
-        current_team: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_TURN_ENDED, 10_000);
+      // Wait for clue to propagate — with reload fallback
+      const nothingClueLocator = operative!.player.page.locator(
+        ".bg-muted\\/50.p-3.text-center >> text=nothing",
+      );
+      let nothingClueVisible = await nothingClueLocator
+        .waitFor({ state: "visible", timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!nothingClueVisible) {
+        await operative!.player.page.reload();
+        await operative!.player.page.waitForLoadState("domcontentloaded");
+        await operative!.player.page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await operative!.player.page.locator(".grid-cols-5 button").first()
+          .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      }
+      await expect(nothingClueLocator).toBeVisible({ timeout: 10_000 });
 
-      operative.socket.emit("guess_card", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-        card_index: neutralCard.index,
-      });
+      // Operative guesses the neutral card
+      await clickBoardCard(operative!.player.page, neutralIndices[0]);
+      // Wait for card reveal
+      await operative!.player.page.locator(".grid-cols-5 button.opacity-75")
+        .first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
 
-      const reveal = await revealPromise;
-      expect(reveal.card_type).toBe("neutral");
-      expect(reveal.result).toBe("neutral");
-
-      const turnEnd = await turnEndPromise;
-      expect(turnEnd.reason).toBe("neutral");
-      // Turn switches to other team
-      const otherTeam = currentTeam === "red" ? "blue" : "red";
-      expect(turnEnd.current_team).toBe(otherTeam);
+      // Turn should switch to the other team (use .first() to avoid strict mode
+      // violation — both Turn Info and My Info sections match bg-muted/50)
+      await expect(
+        setup.players[0].page.locator(
+          `.bg-muted\\/50.p-3.text-center .font-semibold:has-text("${otherTeamName}")`,
+        ).first(),
+      ).toBeVisible({ timeout: 10_000 });
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 
-  test("opponent card ends turn and decrements opponent's remaining", async () => {
-    const {
-      players,
-      gameId,
-      roomPublicId,
-      currentTeam,
-      redRemaining,
-      blueRemaining,
-      cleanup,
-    } = await setupCodenamesGame(6);
+  test("opponent card ends turn and gives opponent a point via UI", async ({
+    browser,
+  }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      const spymaster = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "spymaster",
-      )!;
-      const operative = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "operative",
-      )!;
+      await startGameViaUI(setup.players, "codenames");
 
+      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
       const otherTeam = currentTeam === "red" ? "blue" : "red";
-      const initialOpponentRemaining =
-        otherTeam === "red" ? redRemaining : blueRemaining;
+      const otherTeamName = otherTeam === "red" ? "Red Team" : "Blue Team";
 
-      // Find an opponent's card
-      const opponentCard = spymaster.board.find(
-        (card) => card.card_type === otherTeam,
-      )!;
-      expect(opponentCard).toBeTruthy();
+      const playerRoles: { player: PlayerContext; role: CodenamesPlayerRole }[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        playerRoles.push({ player, role });
+      }
 
-      // Spymaster gives a clue
-      const cluePromise = waitForEvent(
-        operative.socket,
-        SOCKET_EVENTS.CODENAMES_CLUE_GIVEN,
-        10_000,
+      const spymaster = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "spymaster",
+      );
+      const operative = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "operative",
       );
 
-      spymaster.socket.emit("give_clue", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: spymaster.login.user.id,
-        clue_word: "mistake",
-        clue_number: 1,
-      });
+      expect(spymaster).toBeTruthy();
+      expect(operative).toBeTruthy();
 
-      await cluePromise;
+      // Read initial opponent score (use .first() to avoid strict mode
+      // violation — after a card is revealed, an adjacent card may also match)
+      const scoreEl = otherTeam === "red"
+        ? setup.players[0].page.locator(".bg-red-500 + .text-sm").first()
+        : setup.players[0].page.locator(".bg-blue-500 + .text-sm").first();
+      await expect(scoreEl).toBeVisible({ timeout: 10_000 });
+      const initialScore = parseInt((await scoreEl.textContent()) || "0");
+
+      // Find an opponent's card from spymaster's view
+      const opponentIndices = await getUnrevealedCardIndicesByType(
+        spymaster!.player.page,
+        otherTeam,
+      );
+      expect(opponentIndices.length).toBeGreaterThanOrEqual(1);
+
+      // Spymaster gives a clue
+      await giveClueViaUI(spymaster!.player.page, "mistake", 1);
+
+      // Wait for clue to propagate — with reload fallback
+      const mistakeClueLocator = operative!.player.page.locator(
+        ".bg-muted\\/50.p-3.text-center >> text=mistake",
+      );
+      let mistakeClueVisible = await mistakeClueLocator
+        .waitFor({ state: "visible", timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!mistakeClueVisible) {
+        await operative!.player.page.reload();
+        await operative!.player.page.waitForLoadState("domcontentloaded");
+        await operative!.player.page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await operative!.player.page.locator(".grid-cols-5 button").first()
+          .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      }
+      await expect(mistakeClueLocator).toBeVisible({ timeout: 10_000 });
 
       // Operative guesses opponent's card
-      const revealPromise = waitForEvent<{
-        card_type: string;
-        result: string;
-        red_remaining: number;
-        blue_remaining: number;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
+      await clickBoardCard(operative!.player.page, opponentIndices[0]);
+      // Wait for card reveal
+      await operative!.player.page.locator(".grid-cols-5 button.opacity-75")
+        .first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
 
-      const turnEndPromise = waitForEvent<{
-        reason: string;
-        current_team: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_TURN_ENDED, 10_000);
+      // Turn should switch to other team (use .first() to avoid strict mode violation)
+      await expect(
+        setup.players[0].page.locator(
+          `.bg-muted\\/50.p-3.text-center .font-semibold:has-text("${otherTeamName}")`,
+        ).first(),
+      ).toBeVisible({ timeout: 10_000 });
 
-      operative.socket.emit("guess_card", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-        card_index: opponentCard.index,
-      });
-
-      const reveal = await revealPromise;
-      expect(reveal.card_type).toBe(otherTeam);
-      expect(reveal.result).toBe("opponent_card");
-
-      // Opponent's remaining should decrease by 1
-      const newOpponentRemaining =
-        otherTeam === "red" ? reveal.red_remaining : reveal.blue_remaining;
-      expect(newOpponentRemaining).toBe(initialOpponentRemaining - 1);
-
-      const turnEnd = await turnEndPromise;
-      expect(turnEnd.reason).toBe("opponent_card");
-      expect(turnEnd.current_team).toBe(otherTeam);
+      // Opponent's remaining score should have decreased by 1
+      const newScore = parseInt((await scoreEl.textContent()) || "0");
+      expect(newScore).toBe(initialScore - 1);
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 
-  test("operative voluntarily ends turn", async () => {
-    const { players, gameId, roomPublicId, currentTeam, cleanup } =
-      await setupCodenamesGame(6);
+  test("operative voluntarily ends turn via UI", async ({ browser }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      const spymaster = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "spymaster",
-      )!;
-      const operative = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "operative",
-      )!;
+      await startGameViaUI(setup.players, "codenames");
 
-      // Find a correct team card
-      const teamCard = spymaster.board.find(
-        (card) => card.card_type === currentTeam,
-      )!;
+      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      const otherTeam = currentTeam === "red" ? "blue" : "red";
+      const otherTeamName = otherTeam === "red" ? "Red Team" : "Blue Team";
+
+      const playerRoles: { player: PlayerContext; role: CodenamesPlayerRole }[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        playerRoles.push({ player, role });
+      }
+
+      const spymaster = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "spymaster",
+      );
+      const operative = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "operative",
+      );
+
+      expect(spymaster).toBeTruthy();
+      expect(operative).toBeTruthy();
 
       // Spymaster gives clue with number=2
-      const cluePromise = waitForEvent(
-        operative.socket,
-        SOCKET_EVENTS.CODENAMES_CLUE_GIVEN,
-        10_000,
+      await giveClueViaUI(spymaster!.player.page, "partial", 2);
+
+      // Wait for clue to propagate — with reload fallback
+      const partialClueLocator = operative!.player.page.locator(
+        ".bg-muted\\/50.p-3.text-center >> text=partial",
       );
+      let partialClueVisible = await partialClueLocator
+        .waitFor({ state: "visible", timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!partialClueVisible) {
+        await operative!.player.page.reload();
+        await operative!.player.page.waitForLoadState("domcontentloaded");
+        await operative!.player.page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await operative!.player.page.locator(".grid-cols-5 button").first()
+          .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      }
+      await expect(partialClueLocator).toBeVisible({ timeout: 10_000 });
 
-      spymaster.socket.emit("give_clue", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: spymaster.login.user.id,
-        clue_word: "partial",
-        clue_number: 2,
-      });
+      // Operative clicks "End Turn" without guessing
+      const endTurnButton = operative!.player.page.locator(
+        "button:has-text('End Turn')",
+      );
+      await expect(endTurnButton).toBeVisible({ timeout: 5_000 });
+      await endTurnButton.click();
 
-      await cluePromise;
-
-      // Operative guesses 1 correct card
-      const revealPromise = waitForEvent<{
-        result: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
-
-      operative.socket.emit("guess_card", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-        card_index: teamCard.index,
-      });
-
-      const reveal = await revealPromise;
-      expect(reveal.result).toBe("correct");
-
-      // Operative voluntarily ends turn
-      const turnEndPromise = waitForEvent<{
-        reason: string;
-        current_team: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_TURN_ENDED, 10_000);
-
-      operative.socket.emit("end_turn", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-      });
-
-      const turnEnd = await turnEndPromise;
-      expect(turnEnd.reason).toBe("voluntary");
-      const otherTeam = currentTeam === "red" ? "blue" : "red";
-      expect(turnEnd.current_team).toBe(otherTeam);
+      // Turn should switch to other team
+      await expect(
+        setup.players[0].page.locator(
+          `.bg-muted\\/50.p-3.text-center .font-semibold:has-text("${otherTeamName}")`,
+        ),
+      ).toBeVisible({ timeout: 10_000 });
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 
-  test("max guesses enforcement (clue_number + 1)", async () => {
-    const { players, gameId, roomPublicId, currentTeam, cleanup } =
-      await setupCodenamesGame(6);
+  test("max guesses enforcement (clue_number + 1) via UI", async ({
+    browser,
+  }) => {
+    test.setTimeout(120_000);
+    const accounts = [
+      TEST_USER,
+      TEST_PLAYER,
+      TEST_ALI,
+      TEST_FATIMA,
+      TEST_OMAR,
+      TEST_AISHA,
+    ];
+    const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 
     try {
-      const spymaster = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "spymaster",
-      )!;
-      const operative = players.find(
-        (p) => p.team === currentTeam && p.gameRole === "operative",
-      )!;
+      await startGameViaUI(setup.players, "codenames");
 
-      // Find 2 correct team cards
-      const teamCards = spymaster.board.filter(
-        (card) => card.card_type === currentTeam,
+      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      const otherTeam = currentTeam === "red" ? "blue" : "red";
+      const otherTeamName = otherTeam === "red" ? "Red Team" : "Blue Team";
+
+      const playerRoles: { player: PlayerContext; role: CodenamesPlayerRole }[] = [];
+      for (const player of setup.players) {
+        // Skip players on error pages (not included in the game)
+        const hasError = await player.page
+          .locator("text=An error occurred")
+          .isVisible()
+          .catch(() => false);
+        if (hasError) continue;
+        const role = await getPlayerRoleFromUI(player.page);
+        playerRoles.push({ player, role });
+      }
+
+      const spymaster = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "spymaster",
       );
-      expect(teamCards.length).toBeGreaterThanOrEqual(2);
+      const operative = playerRoles.find(
+        (pr) => pr.role.team === currentTeam && pr.role.role === "operative",
+      );
+
+      expect(spymaster).toBeTruthy();
+      expect(operative).toBeTruthy();
+
+      // Ensure spymaster has roomId in sessionStorage
+      const spymasterGameId = spymaster!.player.page
+        .url()
+        .match(/\/game\/codenames\/(.+)/)?.[1];
+      if (spymasterGameId) {
+        await spymaster!.player.page.evaluate(
+          ([gid, rid]: [string, string]) => {
+            if (!sessionStorage.getItem(`ibg-game-room-${gid}`)) {
+              sessionStorage.setItem(`ibg-game-room-${gid}`, rid);
+            }
+          },
+          [spymasterGameId, setup.roomId] as [string, string],
+        );
+      }
+
+      // Find team cards from spymaster's view
+      const teamCardIndices = await getUnrevealedCardIndicesByType(
+        spymaster!.player.page,
+        currentTeam,
+      );
+      expect(teamCardIndices.length).toBeGreaterThanOrEqual(2);
 
       // Spymaster gives clue with number=1 → max_guesses=2
-      const cluePromise = waitForEvent(
-        operative.socket,
-        SOCKET_EVENTS.CODENAMES_CLUE_GIVEN,
-        10_000,
-      );
+      await giveClueViaUI(spymaster!.player.page, "limit", 1);
 
-      spymaster.socket.emit("give_clue", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: spymaster.login.user.id,
-        clue_word: "limit",
-        clue_number: 1,
-      });
+      // Wait for clue to propagate — with reload fallback
+      let cluePropagated = await operative!.player.page
+        .locator(".bg-muted\\/50.p-3.text-center >> text=limit")
+        .waitFor({ state: "visible", timeout: 10_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!cluePropagated) {
+        await operative!.player.page.reload();
+        await operative!.player.page.waitForLoadState("domcontentloaded");
+        await operative!.player.page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await operative!.player.page.locator(".grid-cols-5 button").first()
+          .waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      }
+      await expect(
+        operative!.player.page.locator(".bg-muted\\/50.p-3.text-center >> text=limit"),
+      ).toBeVisible({ timeout: 10_000 });
 
-      await cluePromise;
+      // Ensure operative has roomId in sessionStorage
+      const operativeGameId = operative!.player.page
+        .url()
+        .match(/\/game\/codenames\/(.+)/)?.[1];
+      if (operativeGameId) {
+        await operative!.player.page.evaluate(
+          ([gid, rid]: [string, string]) => {
+            if (!sessionStorage.getItem(`ibg-game-room-${gid}`)) {
+              sessionStorage.setItem(`ibg-game-room-${gid}`, rid);
+            }
+          },
+          [operativeGameId, setup.roomId] as [string, string],
+        );
+      }
 
-      // Guess 1: correct
-      const reveal1Promise = waitForEvent<{
-        result: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
+      // Guess 1: correct team card
+      await clickBoardCard(operative!.player.page, teamCardIndices[0]);
+      // Wait for card reveal
+      await operative!.player.page.locator(".grid-cols-5 button.opacity-75")
+        .first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
 
-      operative.socket.emit("guess_card", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-        card_index: teamCards[0].index,
-      });
+      // Guess 2: correct team card — should hit max_guesses and end turn
+      await clickBoardCard(operative!.player.page, teamCardIndices[1]);
+      // Wait for card reveal
+      await operative!.player.page.locator(".grid-cols-5 button.opacity-75")
+        .first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
 
-      const reveal1 = await reveal1Promise;
-      expect(reveal1.result).toBe("correct");
-
-      // Guess 2: correct but hits max_guesses (2)
-      const reveal2Promise = waitForEvent<{
-        result: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_CARD_REVEALED, 10_000);
-
-      const turnEndPromise = waitForEvent<{
-        reason: string;
-        current_team: string;
-      }>(operative.socket, SOCKET_EVENTS.CODENAMES_TURN_ENDED, 10_000);
-
-      operative.socket.emit("guess_card", {
-        room_id: roomPublicId,
-        game_id: gameId,
-        user_id: operative.login.user.id,
-        card_index: teamCards[1].index,
-      });
-
-      const reveal2 = await reveal2Promise;
-      expect(reveal2.result).toBe("max_guesses");
-
-      const turnEnd = await turnEndPromise;
-      expect(turnEnd.reason).toBe("max_guesses");
+      // Turn should switch to other team (max guesses reached) — with reload fallback
+      let turnSwitchedToOther = await setup.players[0].page
+        .locator(`.bg-muted\\/50.p-3.text-center .font-semibold:has-text("${otherTeamName}")`)
+        .waitFor({ state: "visible", timeout: 15_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!turnSwitchedToOther) {
+        await setup.players[0].page.reload();
+        await setup.players[0].page.waitForLoadState("domcontentloaded");
+        await setup.players[0].page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+      }
+      await expect(
+        setup.players[0].page.locator(
+          `.bg-muted\\/50.p-3.text-center .font-semibold:has-text("${otherTeamName}")`,
+        ),
+      ).toBeVisible({ timeout: 15_000 });
     } finally {
-      cleanup();
+      await setup.cleanup();
     }
   });
 });

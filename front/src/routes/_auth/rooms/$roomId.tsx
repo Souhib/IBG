@@ -66,7 +66,7 @@ function RoomLobbyPage() {
       .finally(() => setIsLoading(false))
   }, [roomId])
 
-  // Socket.IO join room + leave on unmount
+  // Socket.IO join room (leave handled by explicit Leave Room button or disconnect handler)
   useEffect(() => {
     if (!isConnected || !roomData || !user) return
     if (joinedRef.current) return
@@ -79,14 +79,6 @@ function RoomLobbyPage() {
     })
 
     return () => {
-      // Leave room on unmount unless navigating to a game page
-      if (!navigatingToGameRef.current && joinedRef.current) {
-        emit("leave_room", {
-          user_id: user.id,
-          room_id: roomData.id,
-          username: user.username,
-        })
-      }
       joinedRef.current = false
     }
   }, [isConnected, roomData, user, emit])
@@ -165,7 +157,7 @@ function RoomLobbyPage() {
           // Always store game_started data; include role data if available
           sessionStorage.setItem(
             `ibg-game-init-${game_id}`,
-            JSON.stringify({ roleData: roleDataRef.current, players: playerNames, mayor, roomId: roomData?.id }),
+            JSON.stringify({ roleData: roleDataRef.current, players: playerNames, mayor, roomId: roomData?.id, ownerId: roomData?.owner_id }),
           )
           navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
         }
@@ -173,8 +165,18 @@ function RoomLobbyPage() {
         if (roleDataRef.current) {
           doNavigate()
         } else {
-          // role_assigned may not have been processed yet — wait briefly
-          setTimeout(() => doNavigate(), 150)
+          // role_assigned may not have been processed yet — wait with exponential backoff
+          let attempts = 0
+          const maxAttempts = 4
+          const checkRole = () => {
+            if (roleDataRef.current || attempts >= maxAttempts) {
+              doNavigate()
+            } else {
+              attempts++
+              setTimeout(checkRole, 50 * Math.pow(2, attempts))
+            }
+          }
+          setTimeout(checkRole, 50)
         }
       }
     })

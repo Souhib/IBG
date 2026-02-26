@@ -10,12 +10,14 @@ from ibg.socketio.controllers.undercover_game import (
     check_if_a_team_has_win,
     create_undercover_game,
     eliminate_player_based_on_votes,
+    get_winning_team,
     set_vote,
     start_new_turn,
 )
 from ibg.socketio.models.shared import IBGSocket
 from ibg.socketio.models.socket import StartGame, StartNewTurn, UndercoverGame, VoteForAPerson
 from ibg.socketio.routes.shared import send_event_to_client, socketio_exception_handler
+from ibg.socketio.utils.disconnect_tasks import cancel_disconnect_cleanup
 
 
 class GetUndercoverState(BaseModel):
@@ -92,13 +94,17 @@ def undercover_events(sio: IBGSocket) -> None:
         # Function Logic
         await start_new_turn(sio, db_room, db_game, redis_game)
 
-        # Send Notification to Room that a new turn has started
-        await send_event_to_client(
-            sio,
-            "notification",
-            {"message": "Starting a new turn."},
-            room=str(db_room.public_id),
-        )
+        # Re-fetch game to get updated turn state
+        redis_game = await UndercoverGame.get(start_new_turn_data.game_id)
+
+        # Send notification to each player's SID directly
+        # (room broadcasts can be missed if sockets reconnected without rejoining the SIO room)
+        notification_payload = {"message": "Starting a new turn."}
+        for p in redis_game.players:
+            if p.sid:
+                await send_event_to_client(
+                    sio, "notification", notification_payload, room=p.sid,
+                )
 
     @sio.event
     @socketio_exception_handler(sio)
@@ -110,24 +116,28 @@ def undercover_events(sio: IBGSocket) -> None:
         except NotFoundError:
             raise GameNotFoundError(game_id=data.game_id) from None
 
-        player_to_vote, voted_player = await set_vote(game, data)
+        # Fetch db_room to get public_id for Socket.IO room broadcasts
+        db_room = await sio.room_controller.get_room_by_id(data.room_id)
 
-        # Re-fetch game after vote to get latest state
-        game = await UndercoverGame.get(data.game_id)
+        player_to_vote, voted_player, game, all_voted = await set_vote(game, data)
 
-        if len(game.turns[-1].votes) == len(game.players) - len(game.eliminated_players):
+        if all_voted:
             eliminated_player, number_of_vote = await eliminate_player_based_on_votes(game)
 
-            # Send Notification to Room that a player has been eliminated
-            await send_event_to_client(
-                sio,
-                "player_eliminated",
-                {
-                    "message": f"Player {eliminated_player.username} is eliminated with {number_of_vote} votes against him.",
-                    "eliminated_player_role": eliminated_player.role,
-                },
-                room=data.room_id,
-            )
+            elimination_payload = {
+                "message": f"Player {eliminated_player.username} is eliminated with {number_of_vote} votes against him.",
+                "eliminated_player_role": eliminated_player.role.value,
+                "eliminated_player_username": eliminated_player.username,
+                "eliminated_player_user_id": str(eliminated_player.user_id),
+            }
+
+            # Send elimination to each player's SID directly
+            # (room broadcasts can be missed if sockets reconnected without rejoining the SIO room)
+            for p in game.players:
+                if p.sid:
+                    await send_event_to_client(
+                        sio, "player_eliminated", elimination_payload, room=p.sid,
+                    )
 
             # Send Notification to the eliminated player
             await send_event_to_client(
@@ -137,27 +147,28 @@ def undercover_events(sio: IBGSocket) -> None:
                 room=eliminated_player.sid,
             )
             team_that_won = await check_if_a_team_has_win(game)
+            game_over_payload = None
             if team_that_won == UndercoverRole.CIVILIAN:
-                await send_event_to_client(
-                    sio,
-                    "game_over",
-                    {
-                        "data": "The civilians have won the game.",
-                    },
-                    room=data.room_id,
-                )
+                game_over_payload = {
+                    "data": "The civilians have won the game.",
+                    "winner": "civilians",
+                }
             elif team_that_won == UndercoverRole.UNDERCOVER:
-                await send_event_to_client(
-                    sio,
-                    "game_over",
-                    {
-                        "data": "The undercovers have won the game.",
-                    },
-                    room=data.room_id,
-                )
+                game_over_payload = {
+                    "data": "The undercovers have won the game.",
+                    "winner": "undercovers",
+                }
+
+            if game_over_payload:
+                # Send game_over to each player's SID directly
+                for p in game.players:
+                    if p.sid:
+                        await send_event_to_client(
+                            sio, "game_over", game_over_payload, room=p.sid,
+                        )
 
         else:
-            players_that_voted = [player for player in game.players if player.user_id in game.turns[-1].votes.values()]
+            players_that_voted = [player for player in game.players if player.user_id in game.turns[-1].votes]
             await send_event_to_client(
                 sio,
                 "vote_casted",
@@ -192,6 +203,9 @@ def undercover_events(sio: IBGSocket) -> None:
         """
         state_data = GetUndercoverState(**data)
 
+        # Cancel any pending disconnect cleanup (player reconnecting via page reload)
+        cancel_disconnect_cleanup(state_data.user_id)
+
         try:
             game = await UndercoverGame.get(state_data.game_id)
         except NotFoundError:
@@ -208,6 +222,11 @@ def undercover_events(sio: IBGSocket) -> None:
                 game_id=state_data.game_id,
             )
 
+        # Update player SID if reconnected with a new socket
+        if player.sid != sid:
+            player.sid = sid
+            await game.save()
+
         # Determine word based on role
         if player.role == UndercoverRole.MR_WHITE:
             my_word = "You are Mr. White. You have to guess the word."
@@ -223,6 +242,21 @@ def undercover_events(sio: IBGSocket) -> None:
             current_turn = game.turns[-1]
             current_turn_votes = {str(voter_id): str(voted_id) for voter_id, voted_id in current_turn.votes.items()}
             has_voted = UUID(state_data.user_id) in current_turn.votes
+
+        # Detect game-over state for reconnecting players
+        winning_team = get_winning_team(game)
+        winner = None
+        if winning_team == UndercoverRole.CIVILIAN:
+            winner = "civilians"
+        elif winning_team == UndercoverRole.UNDERCOVER:
+            winner = "undercovers"
+
+        # Ensure the (possibly reconnected) socket is in the correct SIO room
+        try:
+            db_room = await sio.room_controller.get_room_by_id(game.room_id)
+            sio.enter_room(sid, str(db_room.public_id))
+        except Exception:
+            pass  # Best-effort room rejoin
 
         await send_event_to_client(
             sio,
@@ -253,6 +287,7 @@ def undercover_events(sio: IBGSocket) -> None:
                 "turn_number": len(game.turns),
                 "votes": current_turn_votes,
                 "has_voted": has_voted,
+                "winner": winner,
             },
             room=sid,
         )

@@ -1,3 +1,5 @@
+from loguru import logger
+
 from ibg.api.constants import (
     EVENT_CODENAMES_CARD_REVEALED,
     EVENT_CODENAMES_CLUE_GIVEN,
@@ -8,6 +10,7 @@ from ibg.api.constants import (
 from ibg.socketio.controllers.codenames import (
     end_turn as controller_end_turn,
 )
+from ibg.socketio.utils.disconnect_tasks import cancel_disconnect_cleanup
 from ibg.socketio.controllers.codenames import (
     get_board_for_player,
     get_codenames_game,
@@ -35,6 +38,11 @@ from ibg.socketio.routes.shared import send_event_to_client, socketio_exception_
 
 
 def codenames_events(sio: IBGSocket) -> None:
+
+    async def _get_sio_room(game) -> str:
+        """Get the SIO room name (public_id) for broadcasting game events."""
+        db_room = await sio.room_controller.get_room_by_id(game.room_id)
+        return str(db_room.public_id)
 
     @sio.event
     @socketio_exception_handler(sio)
@@ -102,20 +110,28 @@ def codenames_events(sio: IBGSocket) -> None:
             clue_number=clue_data.clue_number,
         )
 
-        # Broadcast clue to all players in the game
-        for player in game.players:
-            await send_event_to_client(
-                sio,
-                EVENT_CODENAMES_CLUE_GIVEN,
-                {
-                    "game_id": game.id,
-                    "team": game.current_team.value,
-                    "clue_word": clue_data.clue_word,
-                    "clue_number": clue_data.clue_number,
-                    "max_guesses": game.current_turn.max_guesses,
-                },
-                room=player.sid,
-            )
+        # Update acting player's SID
+        player = get_player_from_game(game, clue_data.user_id)
+        if player and player.sid != sid:
+            player.sid = sid
+            await game.save()
+
+        # Ensure sender is in the SIO room, then broadcast
+        sio_room = await _get_sio_room(game)
+        logger.info(f"[give_clue] sid={sid} room={sio_room} clue={clue_data.clue_word}")
+        sio.enter_room(sid, sio_room)
+        await send_event_to_client(
+            sio,
+            EVENT_CODENAMES_CLUE_GIVEN,
+            {
+                "game_id": game.id,
+                "team": game.current_team.value,
+                "clue_word": clue_data.clue_word,
+                "clue_number": clue_data.clue_number,
+                "max_guesses": game.current_turn.max_guesses,
+            },
+            room=sio_room,
+        )
 
     @sio.event
     @socketio_exception_handler(sio)
@@ -135,7 +151,15 @@ def codenames_events(sio: IBGSocket) -> None:
             card_index=guess_data.card_index,
         )
 
-        # Send card revealed event to all players
+        # Update acting player's SID and ensure they're in the SIO room
+        acting_player = get_player_from_game(game, guess_data.user_id)
+        if acting_player and acting_player.sid != sid:
+            acting_player.sid = sid
+            await game.save()
+        sio_room = await _get_sio_room(game)
+        sio.enter_room(sid, sio_room)
+
+        # Send card revealed event to all players (role-specific board view)
         for player in game.players:
             board_view = get_board_for_player(game, str(player.user_id))
             await send_event_to_client(
@@ -157,9 +181,8 @@ def codenames_events(sio: IBGSocket) -> None:
                 room=player.sid,
             )
 
-        # If the game is over, send game over event
+        # If the game is over, broadcast game over to SIO room
         if game.status == CodenamesGameStatus.FINISHED:
-            # Send full board to all players (game is over, no secrets)
             full_board = [
                 {
                     "index": i,
@@ -169,32 +192,30 @@ def codenames_events(sio: IBGSocket) -> None:
                 }
                 for i, card in enumerate(game.board)
             ]
-            for player in game.players:
-                await send_event_to_client(
-                    sio,
-                    EVENT_CODENAMES_GAME_OVER,
-                    {
-                        "game_id": game.id,
-                        "winner": game.winner.value if game.winner else None,
-                        "reason": result,
-                        "board": full_board,
-                    },
-                    room=player.sid,
-                )
+            await send_event_to_client(
+                sio,
+                EVENT_CODENAMES_GAME_OVER,
+                {
+                    "game_id": game.id,
+                    "winner": game.winner.value if game.winner else None,
+                    "reason": result,
+                    "board": full_board,
+                },
+                room=sio_room,
+            )
 
-        # If turn ended (not game over), send turn ended event
+        # If turn ended (not game over), broadcast to SIO room
         elif result in ("opponent_card", "neutral", "max_guesses"):
-            for player in game.players:
-                await send_event_to_client(
-                    sio,
-                    EVENT_CODENAMES_TURN_ENDED,
-                    {
-                        "game_id": game.id,
-                        "reason": result,
-                        "current_team": game.current_team.value,
-                    },
-                    room=player.sid,
-                )
+            await send_event_to_client(
+                sio,
+                EVENT_CODENAMES_TURN_ENDED,
+                {
+                    "game_id": game.id,
+                    "reason": result,
+                    "current_team": game.current_team.value,
+                },
+                room=sio_room,
+            )
 
     @sio.event
     @socketio_exception_handler(sio)
@@ -213,18 +234,24 @@ def codenames_events(sio: IBGSocket) -> None:
             user_id=end_turn_data.user_id,
         )
 
-        # Broadcast turn ended to all players
-        for player in game.players:
-            await send_event_to_client(
-                sio,
-                EVENT_CODENAMES_TURN_ENDED,
-                {
-                    "game_id": game.id,
-                    "reason": "voluntary",
-                    "current_team": game.current_team.value,
-                },
-                room=player.sid,
-            )
+        # Update acting player's SID and ensure they're in the SIO room
+        acting_player = get_player_from_game(game, end_turn_data.user_id)
+        if acting_player and acting_player.sid != sid:
+            acting_player.sid = sid
+            await game.save()
+        sio_room = await _get_sio_room(game)
+        sio.enter_room(sid, sio_room)
+
+        await send_event_to_client(
+            sio,
+            EVENT_CODENAMES_TURN_ENDED,
+            {
+                "game_id": game.id,
+                "reason": "voluntary",
+                "current_team": game.current_team.value,
+            },
+            room=sio_room,
+        )
 
     @sio.event
     @socketio_exception_handler(sio)
@@ -237,12 +264,27 @@ def codenames_events(sio: IBGSocket) -> None:
         # Validation
         board_data = GetBoard(**data)
 
+        # Cancel any pending disconnect cleanup (player reconnecting via page reload)
+        cancel_disconnect_cleanup(board_data.user_id)
+
         # Function Logic
         game = await get_codenames_game(board_data.game_id)
         board_view = get_board_for_player(game, board_data.user_id)
 
         # Find the requesting player to include their team/role
         player = get_player_from_game(game, board_data.user_id)
+
+        # Update player SID if reconnected with a new socket
+        if player.sid != sid:
+            player.sid = sid
+            await game.save()
+
+        # Ensure the (possibly reconnected) socket is in the correct SIO room
+        try:
+            db_room = await sio.room_controller.get_room_by_id(game.room_id)
+            sio.enter_room(sid, str(db_room.public_id))
+        except Exception:
+            pass  # Best-effort room rejoin
 
         # Send board state to the requesting player
         await send_event_to_client(

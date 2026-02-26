@@ -128,6 +128,82 @@ export async function apiGetRoom(
   return getJSON<RoomResponse>(`/api/v1/rooms/${roomId}`, token);
 }
 
+export async function apiJoinRoom(
+  roomId: string,
+  userId: string,
+  password: string,
+  token: string,
+): Promise<RoomResponse> {
+  return patchJSON<RoomResponse>(
+    "/api/v1/rooms/join",
+    { room_id: roomId, user_id: userId, password },
+    token,
+  );
+}
+
+// ─── Room Leave API ─────────────────────────────────────────
+
+async function patchJSON<T>(
+  path: string,
+  body: Record<string, unknown>,
+  token?: string,
+): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`PATCH ${path} failed (${res.status}): ${text}`);
+  }
+
+  return res.json();
+}
+
+export async function apiLeaveRoom(
+  roomId: string,
+  userId: string,
+  token: string,
+): Promise<void> {
+  await patchJSON(
+    "/api/v1/rooms/leave",
+    { room_id: roomId, user_id: userId },
+    token,
+  );
+}
+
+/**
+ * Ensure a user is not in any room before creating/joining a new one.
+ * Fetches all rooms and leaves any the user is currently in.
+ */
+export async function apiLeaveAllRooms(
+  userId: string,
+  token: string,
+): Promise<void> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const rooms = await getJSON<RoomResponse[]>("/api/v1/rooms", token);
+      const myRooms = rooms.filter((r) => r.users?.some((u) => u.id === userId));
+      if (myRooms.length === 0) return; // Clean
+      for (const room of myRooms) {
+        await apiLeaveRoom(room.id, userId, token).catch(() => {});
+      }
+    } catch {
+      // Token might be expired, rooms endpoint might fail
+      return;
+    }
+  }
+}
+
 // ─── Health Checks ──────────────────────────────────────────
 
 export async function waitForBackend(

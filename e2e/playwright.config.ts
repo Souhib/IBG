@@ -10,8 +10,9 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   workers: 1,
+  globalTimeout: 3_600_000, // 60 minutes for full suite
   reporter: process.env.CI
     ? [["html", { open: "never" }], ["github"]]
     : [["html", { open: "on-failure" }]],

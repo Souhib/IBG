@@ -6,6 +6,9 @@ import {
   TEST_PLAYER,
   ROUTES,
 } from "../../helpers/constants";
+import { flushRedis } from "../../helpers/test-setup";
+
+test.beforeAll(() => { flushRedis() });
 
 test.describe("Rooms — Disconnect / Reconnect", () => {
   test("player disconnect shows reconnecting status, reconnect clears it", async ({

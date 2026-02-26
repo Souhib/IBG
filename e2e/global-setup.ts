@@ -2,6 +2,21 @@ import { execSync } from "child_process";
 import { waitForBackend, waitForFrontend } from "./helpers/api-client";
 import { FRONTEND_URL } from "./helpers/constants";
 
+function runDockerExec(command: string, timeout = 120_000): void {
+  try {
+    execSync(command, { stdio: "inherit", timeout });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    // If it's a timeout, retry once
+    if (msg.includes("ETIMEDOUT") || msg.includes("timed out")) {
+      console.log("[E2E Setup] Command timed out, retrying...");
+      execSync(command, { stdio: "inherit", timeout });
+    } else {
+      throw error;
+    }
+  }
+}
+
 async function globalSetup(): Promise<void> {
   console.log("[E2E Setup] Waiting for backend to be healthy...");
   await waitForBackend();
@@ -11,16 +26,25 @@ async function globalSetup(): Promise<void> {
   await waitForFrontend(FRONTEND_URL);
   console.log("[E2E Setup] Frontend is reachable.");
 
+  // Terminate stale DB connections before dropping tables (prevents lock deadlocks)
+  console.log("[E2E Setup] Terminating stale DB connections...");
+  try {
+    execSync(
+      'docker exec ibg-e2e-db psql -U ibg -d ibg -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"',
+      { stdio: "inherit", timeout: 15_000 },
+    );
+  } catch {
+    // Ignore — DB might not have stale connections
+  }
+
   console.log("[E2E Setup] Resetting and seeding database via docker exec...");
-  execSync(
+  runDockerExec(
     "docker exec -w /app ibg-e2e-backend " +
       "env PYTHONPATH=/app python scripts/generate_fake_data.py --delete",
-    { stdio: "inherit", timeout: 60_000 },
   );
-  execSync(
+  runDockerExec(
     "docker exec -w /app ibg-e2e-backend " +
       "env PYTHONPATH=/app python scripts/generate_fake_data.py --create-db",
-    { stdio: "inherit", timeout: 120_000 },
   );
   console.log("[E2E Setup] Database seeded.");
 

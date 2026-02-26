@@ -22,8 +22,7 @@ test.describe("Auth — Login Validation", () => {
     await page.locator('button[type="submit"]').click();
 
     // Should remain on login page
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/auth\/login/);
+    await expect(page).toHaveURL(/\/auth\/login/, { timeout: 3_000 });
   });
 
   test("submit with only password shows validation or stays on page", async ({
@@ -34,8 +33,7 @@ test.describe("Auth — Login Validation", () => {
     await page.locator('button[type="submit"]').click();
 
     // Should remain on login page
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/auth\/login/);
+    await expect(page).toHaveURL(/\/auth\/login/, { timeout: 3_000 });
   });
 
   test("invalid email format is rejected", async ({ page }) => {
@@ -44,8 +42,7 @@ test.describe("Auth — Login Validation", () => {
     await page.locator('button[type="submit"]').click();
 
     // Should stay on login page (HTML5 email validation or API error)
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/auth\/login/);
+    await expect(page).toHaveURL(/\/auth\/login/, { timeout: 3_000 });
   });
 });
 
@@ -58,8 +55,7 @@ test.describe("Auth — Register Validation", () => {
   test("submit with empty fields stays on page", async ({ page }) => {
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/auth\/register/);
+    await expect(page).toHaveURL(/\/auth\/register/, { timeout: 3_000 });
   });
 
   test("submit without username stays on page", async ({ page }) => {
@@ -67,8 +63,7 @@ test.describe("Auth — Register Validation", () => {
     await page.locator('input[id="password"]').fill("TestPass123!");
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/auth\/register/);
+    await expect(page).toHaveURL(/\/auth\/register/, { timeout: 3_000 });
   });
 
   test("short password is rejected", async ({ page }) => {
@@ -78,8 +73,7 @@ test.describe("Auth — Register Validation", () => {
     await page.locator('button[type="submit"]').click();
 
     // Should stay on register page (minlength=8 or API validation)
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/auth\/register/);
+    await expect(page).toHaveURL(/\/auth\/register/, { timeout: 3_000 });
   });
 
   test("duplicate username shows error", async ({ page }) => {

@@ -179,18 +179,19 @@ async def handle_codenames_disconnect(
             }
             for i, card in enumerate(redis_game.board)
         ]
-        for p in redis_game.players:
-            await send_event_to_client(
-                sio,
-                EVENT_CODENAMES_GAME_OVER,
-                {
-                    "game_id": redis_game.id,
-                    "winner": other_team.value,
-                    "reason": "team_empty",
-                    "board": full_board,
-                },
-                room=p.sid,
-            )
+        # Broadcast to SIO room (not individual SIDs) — game is over,
+        # no role-specific filtering needed, and SIDs may be stale
+        await send_event_to_client(
+            sio,
+            EVENT_CODENAMES_GAME_OVER,
+            {
+                "game_id": redis_game.id,
+                "winner": other_team.value,
+                "reason": "team_empty",
+                "board": full_board,
+            },
+            room=redis_room.public_id,
+        )
 
         redis_room.active_game_id = None
         redis_room.active_game_type = None

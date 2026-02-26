@@ -118,7 +118,30 @@
     "yourWord": "Your Word",
     "gameOver": "Game Over",
     "winner": "Winner",
-    "playAgain": "Play Again"
+    "playAgain": "Play Again",
+    "undercover": {
+      "iUnderstand": "I Understand",
+      "nextRound": "Next Round",
+      "youAreDead": "You have been eliminated",
+      "waitingForVotes": "Waiting for other players to vote...",
+      "votedFor": "You voted for {{username}}",
+      "mayorLabel": "Mayor",
+      "voted": "Voted",
+      "yourWordReminder": "Your word",
+      "discussAndVote": "Discuss and vote to eliminate"
+    },
+    "codenames": {
+      "giveClue": "Give a Clue",
+      "cluePlaceholder": "One word clue",
+      "sending": "Sending...",
+      "endTurn": "End Turn",
+      "wins": "wins!",
+      "youAre": "You are a",
+      "yourTurn": "It's your turn!",
+      "waitingForClue": "Waiting for spymaster's clue...",
+      "guessesRemaining": "Guesses: {{made}} / {{max}}",
+      "players": "Players"
+    }
   },
   "stats": {
     "title": "Statistics",

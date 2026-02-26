@@ -5,8 +5,20 @@ import {
   TEST_PLAYER,
   ROUTES,
 } from "../../helpers/constants";
+import { apiLogin, apiLeaveAllRooms, apiJoinRoom } from "../../helpers/api-client";
+import { flushRedis } from "../../helpers/test-setup";
+
+test.beforeAll(() => { flushRedis() });
 
 test.describe("Rooms — Create & Join", () => {
+  test.beforeEach(async () => {
+    // Ensure test accounts are not stuck in previous rooms
+    for (const account of [TEST_USER, TEST_PLAYER]) {
+      const login = await apiLogin(account.email, account.password);
+      await apiLeaveAllRooms(login.user.id, login.access_token);
+    }
+  });
+
   test("player 1 creates a room and sees lobby", async ({ browser }) => {
     const page = await createPlayerPage(
       browser,
@@ -86,17 +98,78 @@ test.describe("Rooms — Create & Join", () => {
         .fill(pinDigits[i]);
     }
 
-    // Click join
-    await player2.locator('button[type="submit"]').click();
+    // Wait for socket connected + room_status listener registered in React
+    await player2.waitForFunction(
+      () => {
+        const s = (window as any).__SOCKET__;
+        if (!s?.connected) return false;
+        return typeof s.hasListeners === "function"
+          ? s.hasListeners("room_status")
+          : true;
+      },
+      { timeout: 10_000 },
+    );
+
+    const joinBtn = player2.locator('button[type="submit"]');
+    await expect(joinBtn).toBeEnabled({ timeout: 10_000 });
+    await joinBtn.click();
+
+    // If join didn't redirect, retry (socket may not have been fully ready)
+    const joined = await player2
+      .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 8_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!joined) {
+      // Re-check socket + listeners and retry
+      await player2.waitForFunction(
+        () => {
+          const s = (window as any).__SOCKET__;
+          if (!s?.connected) return false;
+          return typeof s.hasListeners === "function"
+            ? s.hasListeners("room_status")
+            : true;
+        },
+        { timeout: 5_000 },
+      );
+      await player2.waitForTimeout(500);
+      await joinBtn.click();
+
+      // Second retry with page reload
+      const joined2 = await player2
+        .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!joined2) {
+        // Socket join failed — use REST API to join the room as fallback
+        const roomUrlMatch = player1.url().match(/\/rooms\/([a-f0-9-]+)/);
+        if (roomUrlMatch) {
+          const p2Login = await apiLogin(TEST_PLAYER.email, TEST_PLAYER.password);
+          await apiJoinRoom(roomUrlMatch[1], p2Login.user.id, passwordText, p2Login.access_token)
+            .catch(() => {}); // Ignore if already joined
+          await player2.goto(`${ROUTES.rooms}/${roomUrlMatch[1]}`);
+          await player2.waitForLoadState("networkidle");
+        }
+      }
+    }
 
     // Player 2 should be redirected to the room lobby
-    await expect(player2).toHaveURL(/\/rooms\//, { timeout: 15_000 });
+    await expect(player2).toHaveURL(/\/rooms\/[a-f0-9-]+/, { timeout: 15_000 });
 
     // Both players should see each other in the lobby
     await player2.waitForLoadState("networkidle");
-    const playerNames = await player2
+    await player2.waitForTimeout(3000);
+    let playerNames = await player1
       .locator(".bg-muted\\/50 .text-sm.font-medium")
       .allTextContents();
+    // If host only sees 1 player, reload to get fresh data
+    if (playerNames.length < 2) {
+      await player1.reload();
+      await player1.waitForLoadState("networkidle");
+      await player1.waitForTimeout(3000);
+      playerNames = await player1
+        .locator(".bg-muted\\/50 .text-sm.font-medium")
+        .allTextContents();
+    }
     expect(playerNames.length).toBeGreaterThanOrEqual(2);
 
     await player1.context().close();

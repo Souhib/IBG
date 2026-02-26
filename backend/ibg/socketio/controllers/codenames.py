@@ -23,7 +23,7 @@ from ibg.socketio.models.codenames import (
     CodenamesTurn,
 )
 from ibg.socketio.models.room import Room as RedisRoom
-from ibg.socketio.models.shared import IBGSocket
+from ibg.socketio.models.shared import IBGSocket, redis_connection
 from ibg.socketio.utils.redis_ttl import set_game_finished_ttl
 
 
@@ -261,12 +261,13 @@ async def start_codenames_game(
 
     db_room = await sio.room_controller.get_room_by_id(room_id)
 
-    try:
-        redis_room = await RedisRoom.get(str(db_room.id))
-    except NotFoundError:
-        raise RoomNotFoundError(room_id=room_id)
+    async with redis_connection.lock(f"room:{db_room.id}:join", timeout=5):
+        try:
+            redis_room = await RedisRoom.get(str(db_room.id))
+        except NotFoundError:
+            raise RoomNotFoundError(room_id=room_id)
 
-    room_users = redis_room.users
+        room_users = redis_room.users
 
     if len(room_users) < 4:
         raise NotEnoughPlayersError(player_count=len(room_users))

@@ -206,18 +206,15 @@ class RoomController:
             db_room.type = RoomType.INACTIVE
             self.session.add(db_room)
 
-        try:
-            user_room_link = (await self.session.exec(
-                select(RoomUserLink)
-                .where(RoomUserLink.room_id == room_leave.room_id)
-                .where(RoomUserLink.user_id == db_user.id)
-            )).one()
-        except NoResultFound:
+        user_room_link = (await self.session.exec(
+            select(RoomUserLink)
+            .where(RoomUserLink.room_id == room_leave.room_id)
+            .where(RoomUserLink.user_id == db_user.id)
+            .where(RoomUserLink.connected == True)  # noqa: E712
+        )).first()
+        if not user_room_link:
             raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
-        if user_room_link.connected:
-            user_room_link.connected = False
-        else:
-            raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
+        user_room_link.connected = False
         self.session.add(user_room_link)
         await self.session.commit()
         room = (await self.session.exec(

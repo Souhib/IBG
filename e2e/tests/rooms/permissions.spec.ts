@@ -7,6 +7,9 @@ import {
   TEST_ALI,
   ROUTES,
 } from "../../helpers/constants";
+import { flushRedis } from "../../helpers/test-setup";
+
+test.beforeAll(() => { flushRedis() });
 
 test.describe("Rooms — Host Permissions", () => {
   test("only host sees game type selector and start button", async ({
@@ -24,7 +27,10 @@ test.describe("Rooms — Host Permissions", () => {
     );
     await host.goto(ROUTES.room(room.id));
     await host.waitForLoadState("networkidle");
-    await host.waitForTimeout(2000);
+    await host.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Non-host joins
     const nonHost = await createPlayerPage(
@@ -73,7 +79,10 @@ test.describe("Rooms — Host Permissions", () => {
     );
     await host.goto(ROUTES.room(room.id));
     await host.waitForLoadState("networkidle");
-    await host.waitForTimeout(2000);
+    await host.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Only 1 player (host), start button should be disabled
     const startButton = host.locator('button:has-text("Start")');
@@ -99,7 +108,10 @@ test.describe("Rooms — Host Permissions", () => {
     );
     await host.goto(ROUTES.room(room.id));
     await host.waitForLoadState("networkidle");
-    await host.waitForTimeout(2000);
+    await host.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Select Codenames
     await host.locator('button:has-text("Codenames")').click();
@@ -128,7 +140,10 @@ test.describe("Rooms — Host Permissions", () => {
     );
     await host.goto(ROUTES.room(room.id));
     await host.waitForLoadState("networkidle");
-    await host.waitForTimeout(2000);
+    await host.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Start should be disabled with 1 player
     await expect(host.locator('button:has-text("Start")')).toBeDisabled();
@@ -191,7 +206,10 @@ test.describe("Rooms — Host Permissions", () => {
     );
     await host.goto(ROUTES.room(room.id));
     await host.waitForLoadState("networkidle");
-    await host.waitForTimeout(2000);
+    await host.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Switch to Codenames
     const codenamesButton = host.locator('button:has-text("Codenames")');
@@ -299,7 +317,10 @@ test.describe("Rooms — Join Edge Cases", () => {
     );
     await host.goto(ROUTES.room(room.id));
     await host.waitForLoadState("networkidle");
-    await host.waitForTimeout(2000);
+    await host.waitForFunction(
+      () => /Players \(\d+/.test(document.body.innerText),
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     // Room code button should be visible and clickable
     const roomCodeButton = host.locator(

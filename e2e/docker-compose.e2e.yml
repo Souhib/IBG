@@ -60,9 +60,10 @@ services:
       CORS_ORIGINS: "*"
       LOG_LEVEL: DEBUG
       DISCONNECT_GRACE_PERIOD_SECONDS: "3"
+      GAME_FINISHED_TTL: "5"
       RATE_LIMIT_ENABLED: "false"
-      SIO_PING_INTERVAL: "3"
-      SIO_PING_TIMEOUT: "2"
+      SIO_PING_INTERVAL: "10"
+      SIO_PING_TIMEOUT: "5"
     depends_on:
       db:
         condition: service_healthy

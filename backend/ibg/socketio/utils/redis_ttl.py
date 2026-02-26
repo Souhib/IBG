@@ -1,9 +1,11 @@
+import os
+
 from loguru import logger
 
 from ibg.socketio.models.shared import redis_connection
 
 # TTL constants in seconds
-GAME_FINISHED_TTL = 3600  # 1 hour after game ends
+GAME_FINISHED_TTL = int(os.environ.get("GAME_FINISHED_TTL", "3600"))  # default: 1 hour after game ends
 ROOM_ACTIVITY_TTL = 86400  # 24 hours of inactivity
 USER_ACTIVITY_TTL = 86400  # 24 hours (match room TTL — user key must outlive room)
 

@@ -118,7 +118,30 @@
     "yourWord": "كلمتك",
     "gameOver": "انتهت اللعبة",
     "winner": "الفائز",
-    "playAgain": "العب مرة أخرى"
+    "playAgain": "العب مرة أخرى",
+    "undercover": {
+      "iUnderstand": "فهمت",
+      "nextRound": "الجولة التالية",
+      "youAreDead": "تم إقصاؤك",
+      "waitingForVotes": "في انتظار تصويت اللاعبين الآخرين...",
+      "votedFor": "صوّتت ضد {{username}}",
+      "mayorLabel": "العمدة",
+      "voted": "صوّت",
+      "yourWordReminder": "كلمتك",
+      "discussAndVote": "ناقش وصوّت للإقصاء"
+    },
+    "codenames": {
+      "giveClue": "أعطِ تلميحاً",
+      "cluePlaceholder": "تلميح بكلمة واحدة",
+      "sending": "جاري الإرسال...",
+      "endTurn": "إنهاء الدور",
+      "wins": "فاز!",
+      "youAre": "أنت",
+      "yourTurn": "دورك الآن!",
+      "waitingForClue": "في انتظار تلميح رئيس الجواسيس...",
+      "guessesRemaining": "التخمينات: {{made}} / {{max}}",
+      "players": "اللاعبون"
+    }
   },
   "stats": {
     "title": "الإحصائيات",

@@ -60,11 +60,12 @@ async def create_undercover_game(
 ) -> tuple[Room, Game, UndercoverGame]:
     """Create an undercover game, assign roles to players, and save the game to Redis."""
     db_room = await sio.room_controller.get_room_by_id(start_game_input.room_id)
-    try:
-        room = await RedisRoom.get(str(db_room.id))
-    except NotFoundError:
-        raise RoomNotFoundError(room_id=start_game_input.room_id) from None
-    players = room.users
+    async with redis_connection.lock(f"room:{db_room.id}:join", timeout=5):
+        try:
+            room = await RedisRoom.get(str(db_room.id))
+        except NotFoundError:
+            raise RoomNotFoundError(room_id=start_game_input.room_id) from None
+        players = room.users
     num_players = len(players)
     num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
     num_undercover = max(2, num_players // 4)
@@ -129,7 +130,7 @@ async def eliminate_player_based_on_votes(
     # If there is a tie, check if the mayor's vote can break the tie
     if len(players_with_max_votes) > 1:
         mayor_vote = next(
-            (votes[player.user_id] for player in game.players if player.is_mayor),
+            (votes.get(player.user_id) for player in game.players if player.is_mayor),
             None,
         )
         if mayor_vote in players_with_max_votes:
@@ -147,8 +148,15 @@ async def eliminate_player_based_on_votes(
     return eliminated_player, vote_counts[player_with_most_vote]
 
 
-async def set_vote(game: UndercoverGame, data: VoteForAPerson) -> tuple[UndercoverSocketPlayer, UndercoverSocketPlayer]:
-    """Validate and record a vote. Uses a Redis lock for atomicity."""
+async def set_vote(
+    game: UndercoverGame, data: VoteForAPerson
+) -> tuple[UndercoverSocketPlayer, UndercoverSocketPlayer, UndercoverGame, bool]:
+    """Validate and record a vote. Uses a Redis lock for atomicity.
+
+    Returns (voter, voted_for, game, all_voted) where all_voted is True only
+    when this vote was the last one needed. Computed inside the lock to prevent
+    double-elimination race conditions.
+    """
     async with redis_connection.lock(f"game:{data.game_id}:vote", timeout=5):
         # Re-fetch game inside lock to get latest state
         game = await UndercoverGame.get(data.game_id)
@@ -171,7 +179,32 @@ async def set_vote(game: UndercoverGame, data: VoteForAPerson) -> tuple[Undercov
         game.turns[-1].votes[UUID(data.user_id)] = voted_player.user_id
         await game.save()
 
-    return player_to_vote, voted_player
+        # Check if all alive players have voted (inside lock for atomicity)
+        alive_count = sum(1 for p in game.players if p.is_alive)
+        all_voted = len(game.turns[-1].votes) == alive_count
+
+    return player_to_vote, voted_player, game, all_voted
+
+
+def get_winning_team(game: UndercoverGame) -> UndercoverRole | None:
+    """Determine if a team has won based on alive player counts.
+
+    Returns the winning role or None if the game is still in progress.
+    """
+    num_alive_undercover = sum(
+        1 for p in game.players if p.role == UndercoverRole.UNDERCOVER and p.is_alive
+    )
+    num_alive_civilian = sum(
+        1 for p in game.players if p.role == UndercoverRole.CIVILIAN and p.is_alive
+    )
+    num_alive_mr_white = sum(
+        1 for p in game.players if p.role == UndercoverRole.MR_WHITE and p.is_alive
+    )
+    if num_alive_undercover == 0 and num_alive_mr_white == 0:
+        return UndercoverRole.CIVILIAN
+    if num_alive_civilian == 0 or num_alive_mr_white == 0:
+        return UndercoverRole.UNDERCOVER
+    return None
 
 
 async def check_if_a_team_has_win(game: UndercoverGame) -> UndercoverRole | None:
@@ -179,20 +212,7 @@ async def check_if_a_team_has_win(game: UndercoverGame) -> UndercoverRole | None
 
     If a team has won, also clears the active_game_id on the Redis room.
     """
-    num_alive_undercover = len(
-        [player for player in game.players if player.role == UndercoverRole.UNDERCOVER and player.is_alive]
-    )
-    num_alive_civilian = len(
-        [player for player in game.players if player.role == UndercoverRole.CIVILIAN and player.is_alive]
-    )
-    num_alive_mr_white = len(
-        [player for player in game.players if player.role == UndercoverRole.MR_WHITE and player.is_alive]
-    )
-    winner = None
-    if num_alive_undercover == 0 and num_alive_mr_white == 0:
-        winner = UndercoverRole.CIVILIAN
-    elif num_alive_civilian == 0 or num_alive_mr_white == 0:
-        winner = UndercoverRole.UNDERCOVER
+    winner = get_winning_team(game)
 
     if winner:
         await set_game_finished_ttl(game)

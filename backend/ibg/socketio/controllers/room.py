@@ -68,7 +68,7 @@ class SocketRoomController:
             db_room = await self._room_controller.get_room_by_id(db_room.id)
 
         # Atomic Redis room update with distributed lock
-        async with redis_connection.lock(f"room:{db_room.id}:join", timeout=5):
+        async with redis_connection.lock(f"room:{db_room.id}:members", timeout=5):
             # Get or create Redis room (REST creation doesn't create one)
             try:
                 redis_room = await RedisRoom.get(str(db_room.id))
@@ -180,7 +180,7 @@ class SocketRoomController:
         )
 
         # Atomic Redis room update with distributed lock
-        async with redis_connection.lock(f"room:{leave_room_user.room_id}:leave", timeout=5):
+        async with redis_connection.lock(f"room:{leave_room_user.room_id}:members", timeout=5):
             try:
                 redis_room = await RedisRoom.get(str(leave_room_user.room_id))
             except NotFoundError:

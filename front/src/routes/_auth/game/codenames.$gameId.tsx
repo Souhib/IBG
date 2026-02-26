@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { LogOut } from "lucide-react"
+import { LogOut, Users } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -18,6 +18,14 @@ interface CodenamesTurn {
   clue_word: string | null
   clue_number: number
   guesses_made: number
+  max_guesses: number | null
+}
+
+interface CodenamesPlayer {
+  user_id: string
+  username: string
+  team: string
+  role: string
 }
 
 interface CodenamesGameState {
@@ -30,6 +38,7 @@ interface CodenamesGameState {
   blue_remaining: number
   status: "waiting" | "in_progress" | "finished"
   winner: "red" | "blue" | null
+  players: CodenamesPlayer[]
 }
 
 export const Route = createFileRoute("/_auth/game/codenames/$gameId")({
@@ -57,6 +66,14 @@ function CodenamesGamePage() {
   useEffect(() => {
     if (!isConnected || !user) return
     emit("get_board", { game_id: gameId, user_id: user.id })
+
+    // Retry if no state received within 2s (socket may have missed the initial emit)
+    const retryTimer = setTimeout(() => {
+      if (!gameState && isConnected) {
+        emit("get_board", { game_id: gameId, user_id: user.id })
+      }
+    }, 2000)
+    return () => clearTimeout(retryTimer)
   }, [isConnected, user, emit, gameId])
 
   useEffect(() => {
@@ -71,7 +88,7 @@ function CodenamesGamePage() {
         red_remaining: number
         blue_remaining: number
         board: CodenamesCard[]
-        players: { user_id: string; username: string; team: string; role: string }[]
+        players: CodenamesPlayer[]
       }
       setGameState({
         board: d.board,
@@ -83,6 +100,7 @@ function CodenamesGamePage() {
         blue_remaining: d.blue_remaining,
         status: "in_progress",
         winner: null,
+        players: d.players || [],
       })
     })
 
@@ -99,8 +117,9 @@ function CodenamesGamePage() {
         status: string
         current_turn: CodenamesTurn | null
         winner: "red" | "blue" | null
+        players?: CodenamesPlayer[]
       }
-      setGameState({
+      setGameState((prev) => ({
         board: d.board,
         current_team: d.current_team,
         current_turn: d.current_turn,
@@ -110,7 +129,8 @@ function CodenamesGamePage() {
         blue_remaining: d.blue_remaining,
         status: d.status as "waiting" | "in_progress" | "finished",
         winner: d.winner,
-      })
+        players: d.players || prev?.players || [],
+      }))
     })
 
     const offClueGiven = on("codenames_clue_given", (data: unknown) => {
@@ -127,6 +147,7 @@ function CodenamesGamePage() {
                 clue_word: d.clue_word,
                 clue_number: d.clue_number,
                 guesses_made: 0,
+                max_guesses: d.max_guesses,
               },
             }
           : prev,
@@ -155,7 +176,7 @@ function CodenamesGamePage() {
           red_remaining: d.red_remaining,
           blue_remaining: d.blue_remaining,
           current_turn: prev.current_turn
-            ? { ...prev.current_turn, guesses_made: d.guesses_made }
+            ? { ...prev.current_turn, guesses_made: d.guesses_made, max_guesses: d.max_guesses }
             : prev.current_turn,
         }
       })
@@ -190,10 +211,13 @@ function CodenamesGamePage() {
 
     // error: catch backend errors (e.g. game not found, invalid move)
     const offError = on("error", (data: unknown) => {
-      const payload = data as { frontend_message?: string; message?: string }
+      const payload = data as { frontend_message?: string; message?: string; status_code?: number }
       const msg = payload.frontend_message || payload.message || "An error occurred"
       toast.error(msg)
-      setErrorMessage(msg)
+      // Only show fatal error state for non-validation errors (e.g. game not found)
+      if (payload.status_code !== 422) {
+        setErrorMessage(msg)
+      }
     })
 
     return () => {
@@ -206,7 +230,7 @@ function CodenamesGamePage() {
       offGameCancelled()
       offError()
     }
-  }, [isConnected, on, navigate])
+  }, [isConnected, on, navigate, t])
 
   // Loading timeout: if gameState is still null after 15s, show error
   useEffect(() => {
@@ -221,6 +245,7 @@ function CodenamesGamePage() {
     if (!clueWord.trim() || isSubmittingClue) return
     setIsSubmittingClue(true)
     emit("give_clue", {
+      room_id: roomIdRef.current,
       game_id: gameId,
       user_id: user?.id,
       clue_word: clueWord.trim(),
@@ -232,13 +257,13 @@ function CodenamesGamePage() {
 
   const handleGuessCard = useCallback(
     (index: number) => {
-      emit("guess_card", { game_id: gameId, user_id: user?.id, card_index: index })
+      emit("guess_card", { room_id: roomIdRef.current, game_id: gameId, user_id: user?.id, card_index: index })
     },
     [emit, gameId, user?.id],
   )
 
   const handleEndTurn = useCallback(() => {
-    emit("end_turn", { game_id: gameId, user_id: user?.id })
+    emit("end_turn", { room_id: roomIdRef.current, game_id: gameId, user_id: user?.id })
   }, [emit, gameId, user?.id])
 
   const handleLeaveRoom = useCallback(() => {
@@ -305,7 +330,7 @@ function CodenamesGamePage() {
     }
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">Loading game...</p>
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </div>
     )
   }
@@ -314,6 +339,9 @@ function CodenamesGamePage() {
   const isSpymaster = gameState.my_role === "spymaster"
   const canGiveClue = isMyTurn && isSpymaster && !gameState.current_turn?.clue_word
   const canGuess = isMyTurn && !isSpymaster && !!gameState.current_turn?.clue_word
+
+  const redPlayers = gameState.players.filter((p) => p.team === "red")
+  const bluePlayers = gameState.players.filter((p) => p.team === "blue")
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -332,6 +360,13 @@ function CodenamesGamePage() {
         </div>
       </div>
 
+      {/* Your Turn Indicator */}
+      {isMyTurn && gameState.status !== "finished" && (
+        <div className="mb-4 rounded-lg bg-primary/10 border border-primary/30 p-3 text-center animate-pulse">
+          <span className="font-semibold text-primary">{t("game.codenames.yourTurn")}</span>
+        </div>
+      )}
+
       {/* Turn Info */}
       <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center">
         <span
@@ -347,6 +382,14 @@ function CodenamesGamePage() {
         {gameState.current_turn?.clue_word && (
           <span className="ml-2 text-muted-foreground">
             — {gameState.current_turn.clue_word} ({gameState.current_turn.clue_number})
+            {gameState.current_turn.max_guesses != null && (
+              <span className="ml-2 text-xs">
+                {t("game.codenames.guessesRemaining", {
+                  made: gameState.current_turn.guesses_made,
+                  max: gameState.current_turn.max_guesses,
+                })}
+              </span>
+            )}
           </span>
         )}
       </div>
@@ -405,13 +448,13 @@ function CodenamesGamePage() {
       {/* Spymaster Clue Input */}
       {canGiveClue && (
         <div className="rounded-xl border bg-card p-4 mb-4">
-          <h3 className="font-semibold mb-3">Give a Clue</h3>
+          <h3 className="font-semibold mb-3">{t("game.codenames.giveClue")}</h3>
           <div className="flex gap-3">
             <input
               type="text"
               value={clueWord}
               onChange={(e) => setClueWord(e.target.value)}
-              placeholder="One word clue"
+              placeholder={t("game.codenames.cluePlaceholder")}
               className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
@@ -431,7 +474,7 @@ function CodenamesGamePage() {
                 isSubmittingClue && "opacity-50 cursor-not-allowed",
               )}
             >
-              {isSubmittingClue ? "Sending..." : "Send"}
+              {isSubmittingClue ? t("game.codenames.sending") : t("common.submit")}
             </button>
           </div>
         </div>
@@ -444,7 +487,7 @@ function CodenamesGamePage() {
           onClick={handleEndTurn}
           className="w-full rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5 transition-colors"
         >
-          End Turn
+          {t("game.codenames.endTurn")}
         </button>
       )}
 
@@ -461,7 +504,7 @@ function CodenamesGamePage() {
             {gameState.winner === "red"
               ? t("games.codenames.teams.red")
               : t("games.codenames.teams.blue")}{" "}
-            wins!
+            {t("game.codenames.wins")}
           </p>
           <button
             type="button"
@@ -474,9 +517,53 @@ function CodenamesGamePage() {
         </div>
       )}
 
+      {/* Player List */}
+      {gameState.players.length > 0 && (
+        <div className="mt-6 rounded-xl border bg-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold text-sm">{t("game.codenames.players")}</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Red Team */}
+            <div>
+              <h4 className="text-xs font-semibold text-red-600 dark:text-red-400 mb-2">
+                {t("games.codenames.teams.red")}
+              </h4>
+              <div className="space-y-1">
+                {redPlayers.map((p) => (
+                  <div key={p.user_id} className="flex items-center justify-between rounded px-2 py-1 bg-red-50 dark:bg-red-950/20 text-sm">
+                    <span>{p.username}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {p.role === "spymaster" ? t("games.codenames.roles.spymaster") : t("games.codenames.roles.operative")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Blue Team */}
+            <div>
+              <h4 className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
+                {t("games.codenames.teams.blue")}
+              </h4>
+              <div className="space-y-1">
+                {bluePlayers.map((p) => (
+                  <div key={p.user_id} className="flex items-center justify-between rounded px-2 py-1 bg-blue-50 dark:bg-blue-950/20 text-sm">
+                    <span>{p.username}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {p.role === "spymaster" ? t("games.codenames.roles.spymaster") : t("games.codenames.roles.operative")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* My Info */}
       <div className="mt-6 rounded-lg bg-muted/50 p-3 text-center text-sm text-muted-foreground">
-        You are a{" "}
+        {t("game.codenames.youAre")}{" "}
         <span
           className={cn(
             "font-semibold",
