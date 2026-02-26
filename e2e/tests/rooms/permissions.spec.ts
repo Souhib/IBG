@@ -9,7 +9,7 @@ import {
 } from "../../helpers/constants";
 import { flushRedis } from "../../helpers/test-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Rooms — Host Permissions", () => {
   test("only host sees game type selector and start button", async ({
@@ -26,7 +26,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_USER.password,
     );
     await host.goto(ROUTES.room(room.id));
-    await host.waitForLoadState("networkidle");
+    await host.waitForLoadState("domcontentloaded");
     await host.waitForFunction(
       () => /Players \(\d+/.test(document.body.innerText),
       { timeout: 10_000 },
@@ -39,7 +39,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_PLAYER.password,
     );
     await nonHost.goto(ROUTES.rooms);
-    await nonHost.waitForLoadState("networkidle");
+    await nonHost.waitForLoadState("domcontentloaded");
     await nonHost.locator('input[id="room-code"]').fill(roomDetails.public_id);
     const pinDigits = roomDetails.password.split("");
     for (let i = 0; i < 4; i++) {
@@ -78,7 +78,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_USER.password,
     );
     await host.goto(ROUTES.room(room.id));
-    await host.waitForLoadState("networkidle");
+    await host.waitForLoadState("domcontentloaded");
     await host.waitForFunction(
       () => /Players \(\d+/.test(document.body.innerText),
       { timeout: 10_000 },
@@ -107,7 +107,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_USER.password,
     );
     await host.goto(ROUTES.room(room.id));
-    await host.waitForLoadState("networkidle");
+    await host.waitForLoadState("domcontentloaded");
     await host.waitForFunction(
       () => /Players \(\d+/.test(document.body.innerText),
       { timeout: 10_000 },
@@ -139,7 +139,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_USER.password,
     );
     await host.goto(ROUTES.room(room.id));
-    await host.waitForLoadState("networkidle");
+    await host.waitForLoadState("domcontentloaded");
     await host.waitForFunction(
       () => /Players \(\d+/.test(document.body.innerText),
       { timeout: 10_000 },
@@ -155,7 +155,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_PLAYER.password,
     );
     await player2.goto(ROUTES.rooms);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
     await player2.locator('input[id="room-code"]').fill(roomDetails.public_id);
     const pinDigits = roomDetails.password.split("");
     for (let i = 0; i < 4; i++) {
@@ -174,7 +174,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_ALI.password,
     );
     await player3.goto(ROUTES.rooms);
-    await player3.waitForLoadState("networkidle");
+    await player3.waitForLoadState("domcontentloaded");
     await player3.locator('input[id="room-code"]').fill(roomDetails.public_id);
     for (let i = 0; i < 4; i++) {
       await player3
@@ -205,7 +205,7 @@ test.describe("Rooms — Host Permissions", () => {
       TEST_USER.password,
     );
     await host.goto(ROUTES.room(room.id));
-    await host.waitForLoadState("networkidle");
+    await host.waitForLoadState("domcontentloaded");
     await host.waitForFunction(
       () => /Players \(\d+/.test(document.body.innerText),
       { timeout: 10_000 },
@@ -236,7 +236,7 @@ test.describe("Rooms — Join Edge Cases", () => {
       TEST_USER.password,
     );
     await player.goto(ROUTES.rooms);
-    await player.waitForLoadState("networkidle");
+    await player.waitForLoadState("domcontentloaded");
 
     const roomCodeInput = player.locator('input[id="room-code"]');
     await roomCodeInput.fill("ABCDEFGH"); // Try 8 chars
@@ -254,7 +254,7 @@ test.describe("Rooms — Join Edge Cases", () => {
       TEST_USER.password,
     );
     await player.goto(ROUTES.rooms);
-    await player.waitForLoadState("networkidle");
+    await player.waitForLoadState("domcontentloaded");
 
     // Type first digit
     const pin1 = player.locator('input[aria-label="Password digit 1"]');
@@ -274,7 +274,7 @@ test.describe("Rooms — Join Edge Cases", () => {
       TEST_USER.password,
     );
     await player.goto(ROUTES.rooms);
-    await player.waitForLoadState("networkidle");
+    await player.waitForLoadState("domcontentloaded");
 
     const pin1 = player.locator('input[aria-label="Password digit 1"]');
     await pin1.fill("a");
@@ -295,7 +295,7 @@ test.describe("Rooms — Join Edge Cases", () => {
       TEST_USER.password,
     );
     await player.goto(ROUTES.rooms);
-    await player.waitForLoadState("networkidle");
+    await player.waitForLoadState("domcontentloaded");
 
     // Only fill room code, no password
     await player.locator('input[id="room-code"]').fill("ABCDE");
@@ -316,7 +316,7 @@ test.describe("Rooms — Join Edge Cases", () => {
       TEST_USER.password,
     );
     await host.goto(ROUTES.room(room.id));
-    await host.waitForLoadState("networkidle");
+    await host.waitForLoadState("domcontentloaded");
     await host.waitForFunction(
       () => /Players \(\d+/.test(document.body.innerText),
       { timeout: 10_000 },

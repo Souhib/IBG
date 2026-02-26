@@ -272,13 +272,13 @@ export async function castVotes(
       user_id: voterId,
       voted_user_id: votedForId,
     });
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 100));
   }
 
   const eliminated = await eliminatedPromise;
 
   // Give time for game_over to arrive (if applicable)
-  await new Promise((r) => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 500));
   listenerSocket.off(SOCKET_EVENTS.GAME_OVER, gameOverHandler);
 
   return { eliminated, gameOver: gameOverData };

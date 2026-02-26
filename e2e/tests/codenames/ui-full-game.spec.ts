@@ -14,7 +14,7 @@ import {
   type PlayerContext,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 // ─── Types & Helpers ────────────────────────────────────────
 
@@ -483,7 +483,7 @@ test.describe("Codenames — UI Full Game Flow", () => {
           .catch(() => false);
         if (!visible) {
           await pr.player.page.reload();
-          await pr.player.page.waitForLoadState("networkidle");
+          await pr.player.page.waitForLoadState("domcontentloaded");
           await pr.player.page.waitForFunction(
             () => (window as any).__SOCKET__?.connected === true,
             { timeout: 10_000 },

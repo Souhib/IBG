@@ -27,13 +27,8 @@ export default defineConfig({
     video: "retain-on-failure",
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
+    ...devices["Desktop Chrome"],
   },
   globalSetup: "./global-setup.ts",
   globalTeardown: "./global-teardown.ts",
-  projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-  ],
 });

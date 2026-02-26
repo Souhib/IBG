@@ -110,11 +110,13 @@ class RoomController:
 
     async def get_rooms(self) -> Sequence[Room]:
         """
-        Get all rooms. If no rooms exist, return an empty list.
-        :return: A list of all rooms.
+        Get all active rooms with users eagerly loaded.
+        :return: A list of active rooms.
         """
         return (await self.session.exec(
-            select(Room).options(selectinload(Room.users), selectinload(Room.games))
+            select(Room)
+            .where(Room.type == RoomType.ACTIVE)
+            .options(selectinload(Room.users))
         )).all()
 
     async def get_room_by_id(self, room_id: UUID) -> Room:

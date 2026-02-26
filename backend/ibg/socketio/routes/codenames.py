@@ -110,16 +110,16 @@ def codenames_events(sio: IBGSocket) -> None:
             clue_number=clue_data.clue_number,
         )
 
-        # Update acting player's SID
+        # Ensure sender is in the SIO room first, then update SID
+        sio_room = await _get_sio_room(game)
+        logger.info(f"[give_clue] sid={sid} room={sio_room} clue={clue_data.clue_word}")
+        sio.enter_room(sid, sio_room)
+
+        # Update acting player's SID after room join succeeds
         player = get_player_from_game(game, clue_data.user_id)
         if player and player.sid != sid:
             player.sid = sid
             await game.save()
-
-        # Ensure sender is in the SIO room, then broadcast
-        sio_room = await _get_sio_room(game)
-        logger.info(f"[give_clue] sid={sid} room={sio_room} clue={clue_data.clue_word}")
-        sio.enter_room(sid, sio_room)
         await send_event_to_client(
             sio,
             EVENT_CODENAMES_CLUE_GIVEN,
@@ -151,13 +151,14 @@ def codenames_events(sio: IBGSocket) -> None:
             card_index=guess_data.card_index,
         )
 
-        # Update acting player's SID and ensure they're in the SIO room
+        # Ensure sender is in the SIO room first, then update SID
+        sio_room = await _get_sio_room(game)
+        sio.enter_room(sid, sio_room)
+
         acting_player = get_player_from_game(game, guess_data.user_id)
         if acting_player and acting_player.sid != sid:
             acting_player.sid = sid
             await game.save()
-        sio_room = await _get_sio_room(game)
-        sio.enter_room(sid, sio_room)
 
         # Send card revealed event to all players (role-specific board view)
         for player in game.players:
@@ -234,13 +235,14 @@ def codenames_events(sio: IBGSocket) -> None:
             user_id=end_turn_data.user_id,
         )
 
-        # Update acting player's SID and ensure they're in the SIO room
+        # Ensure sender is in the SIO room first, then update SID
+        sio_room = await _get_sio_room(game)
+        sio.enter_room(sid, sio_room)
+
         acting_player = get_player_from_game(game, end_turn_data.user_id)
         if acting_player and acting_player.sid != sid:
             acting_player.sid = sid
             await game.save()
-        sio_room = await _get_sio_room(game)
-        sio.enter_room(sid, sio_room)
 
         await send_event_to_client(
             sio,

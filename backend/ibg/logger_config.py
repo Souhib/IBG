@@ -16,8 +16,11 @@ def configure_logger(log_level: str = "DEBUG", serialize: bool = False) -> None:
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
         "<cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+        "{extra[request_id]}{extra[user_id]}{extra[game_id]}"
         "<level>{message}</level>"
     )
+
+    logger.configure(extra={"request_id": "", "user_id": "", "game_id": ""})
 
     logger.add(
         stderr,

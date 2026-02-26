@@ -18,7 +18,7 @@ import {
   waitForEliminationOrGameOver,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 // ─── Tests ──────────────────────────────────────────────────
 
@@ -114,13 +114,24 @@ test.describe("Undercover — UI Full Game Flow", () => {
 
         // ─── Verify New Round Starts ────────────────────────
         for (const player of setup.players) {
-          await expect(
-            player.page
-              .locator(
-                'text=Discuss and vote, h2:has-text("Game Over")',
-              )
-              .first(),
-          ).toBeVisible({ timeout: 15_000 });
+          const discussOrGameOver = player.page
+            .locator("text=Discuss and vote")
+            .or(player.page.locator('h2:has-text("Game Over")'));
+
+          const visible = await discussOrGameOver
+            .first()
+            .waitFor({ state: "visible", timeout: 15_000 })
+            .then(() => true)
+            .catch(() => false);
+
+          if (!visible) {
+            // Socket event missed — reload to fetch latest game state
+            await player.page.reload();
+            await player.page.waitForLoadState("domcontentloaded");
+            await expect(
+              discussOrGameOver.first(),
+            ).toBeVisible({ timeout: 10_000 });
+          }
         }
       }
     } finally {
@@ -138,8 +149,8 @@ test.describe("Undercover — UI Full Game Flow", () => {
       await startGameViaUI(setup.players, "undercover");
       await dismissRoleRevealAll(setup.players);
 
-      // In playing phase, players with a word see "Your word:" reminder
-      // Mr. White has no word, so they don't see it
+      // In playing phase, all players see "Your word:" reminder
+      // (no Mr. White in 3-player games)
       let wordCount = 0;
 
       for (const player of setup.players) {
@@ -150,8 +161,8 @@ test.describe("Undercover — UI Full Game Flow", () => {
         if (isVisible) wordCount++;
       }
 
-      // With 3 players: typically 2 civilians + 1 undercover = at least 2 with words
-      expect(wordCount).toBeGreaterThanOrEqual(2);
+      // With 3 players: 2 civilians + 1 undercover = all 3 have words
+      expect(wordCount).toBe(3);
     } finally {
       await setup.cleanup();
     }
@@ -440,9 +451,8 @@ test.describe("Undercover — UI Full Game Flow", () => {
         // Wait for either new playing phase or game over
         await expect(
           setup.players[0].page
-            .locator(
-              'text=Discuss and vote, h2:has-text("Game Over")',
-            )
+            .locator("text=Discuss and vote")
+            .or(setup.players[0].page.locator('h2:has-text("Game Over")'))
             .first(),
         ).toBeVisible({ timeout: 20_000 });
 

@@ -211,6 +211,75 @@ async def test_no_winner_yet(make_undercover_game, make_redis_room):
     assert winner is None
 
 
+async def test_no_winner_3_player_no_mr_white(make_undercover_game, make_redis_room):
+    """No winner in a 3-player game with no Mr. White (2 civilians + 1 undercover)."""
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN, alive=True),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN, alive=True),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER, alive=True),
+    ]
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-win-no-mw-1",
+        room_id=ROOM_ID,
+        players=players,
+    )
+
+    # Act
+    winner = await check_if_a_team_has_win(game)
+
+    # Assert — no Mr. White in game, all roles alive → no winner
+    assert winner is None
+
+
+async def test_civilians_win_3_player_no_mr_white(make_undercover_game, make_redis_room):
+    """Civilians win in a 3-player game when the undercover is eliminated (no Mr. White)."""
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN, alive=True),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN, alive=True),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER, alive=False),
+    ]
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-win-no-mw-2",
+        room_id=ROOM_ID,
+        players=players,
+    )
+
+    # Act
+    winner = await check_if_a_team_has_win(game)
+
+    # Assert
+    assert winner == UndercoverRole.CIVILIAN
+
+
+async def test_undercovers_win_3_player_no_mr_white(make_undercover_game, make_redis_room):
+    """Undercovers win in a 3-player game when all civilians are eliminated (no Mr. White)."""
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN, alive=False),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN, alive=False),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER, alive=True),
+    ]
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-win-no-mw-3",
+        room_id=ROOM_ID,
+        players=players,
+    )
+
+    # Act
+    winner = await check_if_a_team_has_win(game)
+
+    # Assert
+    assert winner == UndercoverRole.UNDERCOVER
+
+
 # ========== Undercover logic edge cases ==========
 
 

@@ -58,7 +58,7 @@ services:
       IBG_ENV: development
       JWT_SECRET_KEY: e2e-secret-key
       CORS_ORIGINS: "*"
-      LOG_LEVEL: DEBUG
+      LOG_LEVEL: WARNING
       DISCONNECT_GRACE_PERIOD_SECONDS: "3"
       GAME_FINISHED_TTL: "5"
       RATE_LIMIT_ENABLED: "false"

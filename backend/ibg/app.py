@@ -55,7 +55,8 @@ def create_app(lifespan) -> socketio.ASGIApp:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # Middleware stack (order matters: first added = outermost)
-    app.add_middleware(SecurityMiddleware)
+    # Pure ASGI middleware — no BaseHTTPMiddleware overhead
+    app.add_middleware(SecurityMiddleware, is_production=settings.environment == "production")
     app.add_middleware(RequestIDMiddleware)
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(

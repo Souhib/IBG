@@ -22,7 +22,7 @@ import {
   type CodenamesPlayerRole,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Codenames — Multi-Player Games (UI)", () => {
   test("6-player team assignment is balanced (3v3) via UI", async ({

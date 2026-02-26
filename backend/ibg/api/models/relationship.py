@@ -8,8 +8,8 @@ from ibg.api.models.shared import DBModel
 
 class RoomUserLink(DBModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    room_id: UUID | None = Field(default=None, foreign_key="room.id")
-    user_id: UUID | None = Field(default=None, foreign_key="user.id")
+    room_id: UUID | None = Field(default=None, foreign_key="room.id", index=True)
+    user_id: UUID | None = Field(default=None, foreign_key="user.id", index=True)
     joined_at: datetime = Field(default_factory=datetime.now)
     connected: bool = True
 

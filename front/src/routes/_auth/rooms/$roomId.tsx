@@ -147,6 +147,7 @@ function RoomLobbyPage() {
 
     // game_started: undercover game started, navigate to game page with role data
     const offGameStarted = on("game_started", (data: unknown) => {
+      if (navigatingToGameRef.current) return
       toast.success(t("toast.gameStarting"))
       navigatingToGameRef.current = true
       const { game_id, game_type, players: playerNames, mayor } = data as {
@@ -162,32 +163,43 @@ function RoomLobbyPage() {
           navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
         }
 
-        if (roleDataRef.current) {
-          doNavigate()
-        } else {
-          // role_assigned may not have been processed yet — wait with exponential backoff
-          let attempts = 0
-          const maxAttempts = 4
-          const checkRole = () => {
-            if (roleDataRef.current || attempts >= maxAttempts) {
-              doNavigate()
-            } else {
-              attempts++
-              setTimeout(checkRole, 50 * Math.pow(2, attempts))
+        try {
+          if (roleDataRef.current) {
+            doNavigate()
+          } else {
+            // role_assigned may not have been processed yet — wait with exponential backoff
+            let attempts = 0
+            const maxAttempts = 4
+            const checkRole = () => {
+              if (roleDataRef.current || attempts >= maxAttempts) {
+                doNavigate()
+              } else {
+                attempts++
+                setTimeout(checkRole, 50 * Math.pow(2, attempts))
+              }
             }
+            setTimeout(checkRole, 50)
           }
-          setTimeout(checkRole, 50)
+        } catch {
+          navigatingToGameRef.current = false
         }
+      } else {
+        navigatingToGameRef.current = false
       }
     })
 
     // codenames_game_started: codenames game started, navigate to game page
     const offCodenamesStarted = on("codenames_game_started", (data: unknown) => {
+      if (navigatingToGameRef.current) return
       toast.success(t("toast.gameStarting"))
       navigatingToGameRef.current = true
-      const { game_id } = data as { game_id: string }
-      sessionStorage.setItem(`ibg-game-room-${game_id}`, roomData?.id || "")
-      navigate({ to: "/game/codenames/$gameId", params: { gameId: game_id } })
+      try {
+        const { game_id } = data as { game_id: string }
+        sessionStorage.setItem(`ibg-game-room-${game_id}`, roomData?.id || "")
+        navigate({ to: "/game/codenames/$gameId", params: { gameId: game_id } })
+      } catch {
+        navigatingToGameRef.current = false
+      }
     })
 
     // player_disconnected: a player's connection dropped (grace period active)

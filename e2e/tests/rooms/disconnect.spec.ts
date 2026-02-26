@@ -8,7 +8,7 @@ import {
 } from "../../helpers/constants";
 import { flushRedis } from "../../helpers/test-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Rooms — Disconnect / Reconnect", () => {
   test("player disconnect shows reconnecting status, reconnect clears it", async ({
@@ -25,7 +25,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
       TEST_USER.password,
     );
     await player1.goto(ROUTES.room(room.id));
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
     await player1.waitForTimeout(2000);
 
     // Player 2 joins
@@ -61,7 +61,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     );
 
     await player2.goto(ROUTES.rooms);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
     await player2.locator('input[id="room-code"]').fill(roomDetails.public_id);
     const pinDigits = roomDetails.password.split("");
     for (let i = 0; i < 4; i++) {
@@ -109,7 +109,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
       TEST_USER.password,
     );
     await player1.goto(ROUTES.room(room.id));
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
     await player1.waitForTimeout(2000);
 
     // Player 2 joins
@@ -119,7 +119,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
       TEST_PLAYER.password,
     );
     await player2.goto(ROUTES.rooms);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
     await player2.locator('input[id="room-code"]').fill(roomDetails.public_id);
     const pinDigits = roomDetails.password.split("");
     for (let i = 0; i < 4; i++) {

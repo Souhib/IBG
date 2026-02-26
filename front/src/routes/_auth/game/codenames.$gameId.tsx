@@ -80,123 +80,148 @@ function CodenamesGamePage() {
     if (!isConnected) return
 
     const offGameStarted = on("codenames_game_started", (data: unknown) => {
-      const d = data as {
-        game_id: string
-        team: "red" | "blue"
-        role: "spymaster" | "operative"
-        current_team: "red" | "blue"
-        red_remaining: number
-        blue_remaining: number
-        board: CodenamesCard[]
-        players: CodenamesPlayer[]
+      try {
+        const d = data as {
+          game_id: string
+          team: "red" | "blue"
+          role: "spymaster" | "operative"
+          current_team: "red" | "blue"
+          red_remaining: number
+          blue_remaining: number
+          board: CodenamesCard[]
+          players: CodenamesPlayer[]
+        }
+        setGameState({
+          board: d.board,
+          current_team: d.current_team,
+          current_turn: null,
+          my_team: d.team,
+          my_role: d.role,
+          red_remaining: d.red_remaining,
+          blue_remaining: d.blue_remaining,
+          status: "in_progress",
+          winner: null,
+          players: d.players || [],
+        })
+      } catch {
+        toast.error(t("common.error"))
       }
-      setGameState({
-        board: d.board,
-        current_team: d.current_team,
-        current_turn: null,
-        my_team: d.team,
-        my_role: d.role,
-        red_remaining: d.red_remaining,
-        blue_remaining: d.blue_remaining,
-        status: "in_progress",
-        winner: null,
-        players: d.players || [],
-      })
     })
 
     // codenames_board: response from get_board request (used on mount to fetch initial state)
     const offBoard = on("codenames_board", (data: unknown) => {
-      const d = data as {
-        game_id: string
-        team: "red" | "blue"
-        role: "spymaster" | "operative"
-        board: CodenamesCard[]
-        current_team: "red" | "blue"
-        red_remaining: number
-        blue_remaining: number
-        status: string
-        current_turn: CodenamesTurn | null
-        winner: "red" | "blue" | null
-        players?: CodenamesPlayer[]
+      try {
+        const d = data as {
+          game_id: string
+          team: "red" | "blue"
+          role: "spymaster" | "operative"
+          board: CodenamesCard[]
+          current_team: "red" | "blue"
+          red_remaining: number
+          blue_remaining: number
+          status: string
+          current_turn: CodenamesTurn | null
+          winner: "red" | "blue" | null
+          players?: CodenamesPlayer[]
+        }
+        setGameState((prev) => ({
+          board: d.board,
+          current_team: d.current_team,
+          current_turn: d.current_turn,
+          my_team: d.team,
+          my_role: d.role,
+          red_remaining: d.red_remaining,
+          blue_remaining: d.blue_remaining,
+          status: d.status as "waiting" | "in_progress" | "finished",
+          winner: d.winner,
+          players: d.players || prev?.players || [],
+        }))
+      } catch {
+        toast.error(t("common.error"))
       }
-      setGameState((prev) => ({
-        board: d.board,
-        current_team: d.current_team,
-        current_turn: d.current_turn,
-        my_team: d.team,
-        my_role: d.role,
-        red_remaining: d.red_remaining,
-        blue_remaining: d.blue_remaining,
-        status: d.status as "waiting" | "in_progress" | "finished",
-        winner: d.winner,
-        players: d.players || prev?.players || [],
-      }))
     })
 
     const offClueGiven = on("codenames_clue_given", (data: unknown) => {
-      const d = data as { clue_word: string; clue_number: number; team: "red" | "blue"; max_guesses: number }
-      const teamName = d.team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
-      toast.info(t("toast.clueGiven", { team: teamName, word: d.clue_word, number: d.clue_number }))
-      setIsSubmittingClue(false)
-      setGameState((prev) =>
-        prev
-          ? {
-              ...prev,
-              current_turn: {
-                team: d.team,
-                clue_word: d.clue_word,
-                clue_number: d.clue_number,
-                guesses_made: 0,
-                max_guesses: d.max_guesses,
-              },
-            }
-          : prev,
-      )
+      try {
+        const d = data as { clue_word: string; clue_number: number; team: "red" | "blue"; max_guesses: number }
+        const teamName = d.team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
+        toast.info(t("toast.clueGiven", { team: teamName, word: d.clue_word, number: d.clue_number }))
+        setIsSubmittingClue(false)
+        setGameState((prev) =>
+          prev
+            ? {
+                ...prev,
+                current_turn: {
+                  team: d.team,
+                  clue_word: d.clue_word,
+                  clue_number: d.clue_number,
+                  guesses_made: 0,
+                  max_guesses: d.max_guesses,
+                },
+              }
+            : prev,
+        )
+      } catch {
+        toast.error(t("common.error"))
+        setIsSubmittingClue(false)
+      }
     })
 
     const offCardRevealed = on("codenames_card_revealed", (data: unknown) => {
-      const d = data as {
-        board: CodenamesCard[]
-        current_team: "red" | "blue"
-        red_remaining: number
-        blue_remaining: number
-        guesses_made: number
-        max_guesses: number
-        word?: string
-      }
-      if (d.word) {
-        toast(t("toast.cardRevealed", { word: d.word }))
-      }
-      setGameState((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          board: d.board,
-          current_team: d.current_team,
-          red_remaining: d.red_remaining,
-          blue_remaining: d.blue_remaining,
-          current_turn: prev.current_turn
-            ? { ...prev.current_turn, guesses_made: d.guesses_made, max_guesses: d.max_guesses }
-            : prev.current_turn,
+      try {
+        const d = data as {
+          board: CodenamesCard[]
+          current_team: "red" | "blue"
+          red_remaining: number
+          blue_remaining: number
+          guesses_made: number
+          max_guesses: number
+          word?: string
         }
-      })
+        if (d.word) {
+          toast(t("toast.cardRevealed", { word: d.word }))
+        }
+        setGameState((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            board: d.board,
+            current_team: d.current_team,
+            red_remaining: d.red_remaining,
+            blue_remaining: d.blue_remaining,
+            current_turn: prev.current_turn
+              ? { ...prev.current_turn, guesses_made: d.guesses_made, max_guesses: d.max_guesses }
+              : prev.current_turn,
+          }
+        })
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     const offTurnEnded = on("codenames_turn_ended", (data: unknown) => {
-      const d = data as { current_team: "red" | "blue"; reason: string }
-      const teamName = d.current_team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
-      toast.info(t("toast.turnEnded", { team: teamName }))
-      setGameState((prev) =>
-        prev ? { ...prev, current_team: d.current_team, current_turn: null } : prev,
-      )
+      try {
+        const d = data as { current_team: "red" | "blue"; reason: string }
+        const teamName = d.current_team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
+        toast.info(t("toast.turnEnded", { team: teamName }))
+        setGameState((prev) =>
+          prev ? { ...prev, current_team: d.current_team, current_turn: null } : prev,
+        )
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     const offGameOver = on("codenames_game_over", (data: unknown) => {
-      toast.success(t("toast.gameOver"))
-      const d = data as { winner: "red" | "blue"; board: CodenamesCard[] }
-      setGameState((prev) =>
-        prev ? { ...prev, status: "finished", winner: d.winner, board: d.board } : prev,
-      )
+      try {
+        toast.success(t("toast.gameOver"))
+        const d = data as { winner: "red" | "blue"; board: CodenamesCard[] }
+        setGameState((prev) =>
+          prev ? { ...prev, status: "finished", winner: d.winner, board: d.board } : prev,
+        )
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     // game_cancelled: not enough players, navigate back

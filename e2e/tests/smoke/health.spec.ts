@@ -36,7 +36,7 @@ authTest.describe("Smoke Tests — Authenticated Navigation", () => {
     "authenticated user can navigate to rooms",
     async ({ authenticatedPage }) => {
       await authenticatedPage.goto(ROUTES.rooms);
-      await authenticatedPage.waitForLoadState("networkidle");
+      await authenticatedPage.waitForLoadState("domcontentloaded");
       // Rooms page should have the "Create Room" link and "Join Room" form
       await expect(authenticatedPage.locator('input[id="room-code"]')).toBeVisible();
     },

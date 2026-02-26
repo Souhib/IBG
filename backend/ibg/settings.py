@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
 
     # CORS
-    cors_origins: str = "*"
+    cors_origins: str = ""
 
     # Socket.IO
     sio_ping_interval: int = 25

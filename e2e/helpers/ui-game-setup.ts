@@ -72,7 +72,7 @@ export async function setupRoomWithPlayers(
     accounts[0].password,
   );
   await hostPage.goto(ROUTES.room(room.id));
-  await hostPage.waitForLoadState("networkidle");
+  await hostPage.waitForLoadState("domcontentloaded");
   // Wait for room page to render with player count
   await hostPage.waitForFunction(
     () => /Players \(\d+/.test(document.body.innerText),
@@ -110,7 +110,7 @@ export async function setupRoomWithPlayers(
     };
 
     await page.goto(ROUTES.rooms);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Wait for socket connected + room_status listener registered in React
     await page.waitForFunction(
@@ -125,46 +125,10 @@ export async function setupRoomWithPlayers(
       { timeout: 10_000 },
     );
 
-    // First attempt
+    // Attempt 1: UI join
     let joined = await fillAndJoin();
 
-    // Retry: re-check socket + listeners and click again
-    if (!joined) {
-      await page.waitForFunction(
-        () => {
-          const s = (window as any).__SOCKET__;
-          if (!s?.connected) return false;
-          return typeof s.hasListeners === "function"
-            ? s.hasListeners("room_status")
-            : true;
-        },
-        { timeout: 5_000 },
-      );
-      await page.locator('button[type="submit"]').click();
-      joined = await page
-        .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 8_000 })
-        .then(() => true)
-        .catch(() => false);
-    }
-
-    // Final retry: reload page for clean socket + fresh React mount
-    if (!joined) {
-      await page.goto(ROUTES.rooms);
-      await page.waitForLoadState("networkidle");
-      await page.waitForFunction(
-        () => {
-          const s = (window as any).__SOCKET__;
-          if (!s?.connected) return false;
-          return typeof s.hasListeners === "function"
-            ? s.hasListeners("room_status")
-            : true;
-        },
-        { timeout: 10_000 },
-      );
-      joined = await fillAndJoin();
-    }
-
-    // Last resort: use REST API to join the room directly
+    // Attempt 2: API fallback + direct navigation
     if (!joined) {
       await apiJoinRoom(
         room.id,
@@ -173,22 +137,13 @@ export async function setupRoomWithPlayers(
         logins[i].access_token,
       ).catch(() => {}); // Ignore if already joined
       await page.goto(ROUTES.room(room.id));
-      await page.waitForLoadState("networkidle");
-      // Wait for Socket.IO to connect
+      await page.waitForLoadState("domcontentloaded");
       await page.waitForFunction(
-        () => {
-          const s = (window as any).__SOCKET__;
-          return s?.connected === true;
-        },
+        () => (window as any).__SOCKET__?.connected === true,
         { timeout: 10_000 },
       );
-      // Wait for room_status event to confirm player is in the Socket.IO room
-      // (critical: the player must be in the Socket.IO room for game start to include them)
       await page.waitForFunction(
-        () => {
-          const text = document.body.innerText;
-          return /Players \(\d+/.test(text);
-        },
+        () => /Players \(\d+/.test(document.body.innerText),
         { timeout: 15_000 },
       );
     }
@@ -211,7 +166,7 @@ export async function setupRoomWithPlayers(
   ).catch(async () => {
     // Reload host page and retry
     await players[0].page.reload();
-    await players[0].page.waitForLoadState("networkidle");
+    await players[0].page.waitForLoadState("domcontentloaded");
     await players[0].page.waitForFunction(
       (count: number) => {
         const text = document.body.innerText;
@@ -237,7 +192,7 @@ export async function setupRoomWithPlayers(
       )
       .catch(async () => {
         await player.page.reload();
-        await player.page.waitForLoadState("networkidle");
+        await player.page.waitForLoadState("domcontentloaded");
         await player.page
           .waitForFunction(
             () => (window as any).__SOCKET__?.connected === true,
@@ -264,7 +219,7 @@ export async function setupRoomWithPlayers(
     if (!seesAllPlayers) {
       // Player's socket likely didn't join the Socket.IO room — reload to trigger join_room again
       await player.page.reload();
-      await player.page.waitForLoadState("networkidle");
+      await player.page.waitForLoadState("domcontentloaded");
       await player.page
         .waitForFunction(
           () => (window as any).__SOCKET__?.connected === true,
@@ -319,7 +274,7 @@ export async function startGameViaUI(
   if (!playersVisible) {
     // Reload host page to get latest room state
     await hostPage.reload();
-    await hostPage.waitForLoadState("networkidle");
+    await hostPage.waitForLoadState("domcontentloaded");
   }
   await expect(
     hostPage.locator(`text=${playerCountText}`),
@@ -348,65 +303,21 @@ export async function startGameViaUI(
       ? /\/game\/undercover\//
       : /\/game\/codenames\//;
 
-  // Wait for ANY player to reach the game page (host may have lost socket room)
+  // Wait for ANY player to reach the game page (host first, then others)
   let gameUrl = "";
-  for (const player of players) {
-    const navigated = await player.page
-      .waitForURL(urlPattern, { timeout: 5_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (navigated) {
-      gameUrl = player.page.url();
-      break;
-    }
-  }
-
-  // If no player navigated, retry the start
-  if (!gameUrl) {
-    // Check for error message on host page (e.g., "At least 4 players are needed")
-    const errorVisible = await hostPage
-      .locator(".bg-destructive\\/10, .text-destructive")
-      .isVisible()
-      .catch(() => false);
-    if (errorVisible) {
-      // Reload all player pages to re-establish Socket.IO connections
-      for (const player of players) {
-        await player.page.reload();
-        await player.page.waitForLoadState("networkidle");
-        // Wait for Socket.IO to reconnect and join the room
-        await player.page
-          .waitForFunction(
-            () => (window as any).__SOCKET__?.connected === true,
-            { timeout: 10_000 },
-          )
-          .catch(() => {});
-      }
-      // Verify host sees all players before retrying start
-      await hostPage
-        .waitForFunction(
-          (count: number) => {
-            const text = document.body.innerText;
-            const match = text.match(/Players \((\d+)/);
-            return match && parseInt(match[1]) >= count;
-          },
-          expectedCount,
-          { timeout: 10_000 },
-        )
-        .catch(() => {});
-      // Re-click start
-      const newStartButton = hostPage.locator('button:has-text("Start")');
-      await expect(newStartButton).toBeEnabled({ timeout: 10_000 });
-      if (gameType === "codenames") {
-        await hostPage.locator('button:has-text("Codenames")').click();
-      }
-      await newStartButton.click();
-    } else {
-      await startButton.click();
-    }
-
+  // Check host first with a longer timeout — host is most likely to navigate
+  const hostNavigated = await hostPage
+    .waitForURL(urlPattern, { timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (hostNavigated) {
+    gameUrl = hostPage.url();
+  } else {
+    // Check other players with shorter timeouts
     for (const player of players) {
+      if (player.page === hostPage) continue;
       const navigated = await player.page
-        .waitForURL(urlPattern, { timeout: 10_000 })
+        .waitForURL(urlPattern, { timeout: 3_000 })
         .then(() => true)
         .catch(() => false);
       if (navigated) {
@@ -416,14 +327,13 @@ export async function startGameViaUI(
     }
   }
 
-  // Final retry: reload all pages, wait for Socket.IO, and try start once more
+  // Retry: reload all pages once, re-establish sockets, and try start again
   if (!gameUrl) {
     for (const player of players) {
       const alive = await player.page.evaluate(() => true).catch(() => false);
       if (!alive) continue;
       await player.page.reload();
-      await player.page.waitForLoadState("networkidle");
-      // Wait for Socket.IO to reconnect
+      await player.page.waitForLoadState("domcontentloaded");
       await player.page
         .waitForFunction(
           () => (window as any).__SOCKET__?.connected === true,
@@ -431,41 +341,35 @@ export async function startGameViaUI(
         )
         .catch(() => {});
     }
-    // Check host page is still alive before using it
-    const hostAlive = await hostPage
-      .evaluate(() => true)
+    // Verify host sees all players before retrying start
+    await hostPage
+      .waitForFunction(
+        (count: number) => {
+          const text = document.body.innerText;
+          const match = text.match(/Players \((\d+)/);
+          return match && parseInt(match[1]) >= count;
+        },
+        players.length,
+        { timeout: 10_000 },
+      )
+      .catch(() => {});
+    const retryStartButton = hostPage.locator('button:has-text("Start")');
+    const canRetry = await retryStartButton
+      .isEnabled({ timeout: 5_000 })
       .catch(() => false);
-    if (hostAlive) {
-      // Wait for host to see all players in Socket.IO room
-      await hostPage
-        .waitForFunction(
-          (count: number) => {
-            const text = document.body.innerText;
-            const match = text.match(/Players \((\d+)/);
-            return match && parseInt(match[1]) >= count;
-          },
-          expectedCount,
-          { timeout: 10_000 },
-        )
-        .catch(() => {});
-      const finalStartButton = hostPage.locator('button:has-text("Start")');
-      const canStart = await finalStartButton
-        .isEnabled({ timeout: 5_000 })
-        .catch(() => false);
-      if (canStart) {
-        if (gameType === "codenames") {
-          await hostPage.locator('button:has-text("Codenames")').click();
-        }
-        await finalStartButton.click();
-        for (const player of players) {
-          const navigated = await player.page
-            .waitForURL(urlPattern, { timeout: 15_000 })
-            .then(() => true)
-            .catch(() => false);
-          if (navigated) {
-            gameUrl = player.page.url();
-            break;
-          }
+    if (canRetry) {
+      if (gameType === "codenames") {
+        await hostPage.locator('button:has-text("Codenames")').click();
+      }
+      await retryStartButton.click();
+      for (const player of players) {
+        const navigated = await player.page
+          .waitForURL(urlPattern, { timeout: 15_000 })
+          .then(() => true)
+          .catch(() => false);
+        if (navigated) {
+          gameUrl = player.page.url();
+          break;
         }
       }
     }
@@ -564,8 +468,11 @@ export async function startGameViaUI(
           player.page.locator("h1:has-text('Undercover')"),
         ).toBeVisible({ timeout: 15_000 });
       }
-      // Stagger to avoid concurrent DB operations on the backend
-      await player.page.waitForTimeout(500);
+      // Wait for socket connection before processing next player
+      await player.page.waitForFunction(
+        () => (window as any).__SOCKET__?.connected === true,
+        { timeout: 5_000 },
+      ).catch(() => {});
     }
   }
 
@@ -783,7 +690,8 @@ export async function voteForPlayer(
   // Wait for vote to be processed by backend before next voter
   // (concurrent votes cause IllegalStateChangeError in backend DB sessions)
   await voterPage
-    .locator("text=Voted, text=Waiting for other players")
+    .locator("text=Voted")
+    .or(voterPage.locator("text=Waiting for other players"))
     .first()
     .waitFor({ state: "visible", timeout: 5_000 })
     .catch(() => {});
@@ -835,15 +743,41 @@ export async function getUndercoverWord(page: Page): Promise<string> {
 
 /**
  * Wait for either elimination or game over to appear on screen.
+ *
+ * Detects three indicators:
+ * 1. Skull icon (.lucide-skull) — elimination screen
+ * 2. "Game Over" heading — game ended
+ * 3. "Eliminated" text in player list — elimination happened but screen was replaced
+ *    by playing phase (get_undercover_state overrides phase to "playing" on reconnect)
  */
 export async function waitForEliminationOrGameOver(page: Page): Promise<"elimination" | "game_over"> {
-  // Try to see skull (elimination) or Game Over without reload
-  let resultVisible = await page
+  const resultLocator = page
     .locator(".lucide-skull, h2:has-text('Game Over')")
-    .first()
+    .first();
+
+  // Try to see skull (elimination) or Game Over without reload
+  let resultVisible = await resultLocator
     .waitFor({ state: "visible", timeout: 15_000 })
     .then(() => true)
     .catch(() => false);
+
+  // If not visible, check if elimination happened but screen was replaced by playing phase
+  // (get_undercover_state response overrides phase to "playing" on socket reconnection)
+  if (!resultVisible) {
+    const hasEliminatedInList = await page
+      .locator("text=Eliminated")
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (hasEliminatedInList) {
+      // Elimination happened — check for game over
+      const isGameOver = await page
+        .locator("h2:has-text('Game Over')")
+        .isVisible()
+        .catch(() => false);
+      return isGameOver ? "game_over" : "elimination";
+    }
+  }
 
   // If not visible, reload to fetch fresh state from the server
   // (Socket.IO may have missed the player_eliminated / game_over event)
@@ -851,21 +785,61 @@ export async function waitForEliminationOrGameOver(page: Page): Promise<"elimina
     await page.reload();
     await page.waitForLoadState("domcontentloaded");
 
-    resultVisible = await page
-      .locator(".lucide-skull, h2:has-text('Game Over')")
-      .first()
+    resultVisible = await resultLocator
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
+
+    // After reload, get_undercover_state may show "Eliminated" in player list
+    // instead of the skull (phase set to "playing" not "elimination")
+    if (!resultVisible) {
+      const hasEliminatedInList = await page
+        .locator("text=Eliminated")
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (hasEliminatedInList) {
+        const isGameOver = await page
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
+        return isGameOver ? "game_over" : "elimination";
+      }
+    }
   }
 
   if (!resultVisible) {
     // Last resort: reload once more
     await page.reload();
     await page.waitForLoadState("domcontentloaded");
-    await expect(
-      page.locator(".lucide-skull, h2:has-text('Game Over')").first(),
-    ).toBeVisible({ timeout: 15_000 });
+
+    // Check for any elimination indicator (skull, Game Over, or Eliminated in list)
+    const anyIndicator = await page
+      .locator(".lucide-skull, h2:has-text('Game Over')")
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!anyIndicator) {
+      // Final check: "Eliminated" in player list
+      const hasEliminatedInList = await page
+        .locator("text=Eliminated")
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (hasEliminatedInList) {
+        const isGameOver = await page
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
+        return isGameOver ? "game_over" : "elimination";
+      }
+      // Truly nothing found — throw
+      await expect(
+        page.locator(".lucide-skull, h2:has-text('Game Over'), text=Eliminated").first(),
+      ).toBeVisible({ timeout: 5_000 });
+    }
   }
 
   // Wait briefly for game_over to potentially arrive after elimination
@@ -998,8 +972,6 @@ export async function giveClueViaUI(
       () => (window as any).__SOCKET__?.connected === true,
       { timeout: 5_000 },
     ).catch(() => {});
-    // Brief wait for socket to settle before retrying
-    await page.waitForTimeout(500);
   }
 }
 

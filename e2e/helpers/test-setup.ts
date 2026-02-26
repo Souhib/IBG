@@ -1,17 +1,39 @@
-import { execSync } from "child_process"
+import Redis from "ioredis"
 import { apiLeaveAllRooms, type LoginResponse } from "./api-client"
+
+const REDIS_URL = process.env.REDIS_URL || "redis://localhost:63799"
+
+let redisClient: Redis | null = null
+
+function getRedisClient(): Redis {
+  if (!redisClient || redisClient.status === "end") {
+    redisClient = new Redis(REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3_000,
+    })
+  }
+  return redisClient
+}
 
 /**
  * Flush the E2E Redis database to remove stale game/room state between test files.
  */
-export function flushRedis(): void {
+export async function flushRedis(): Promise<void> {
   try {
-    execSync("docker exec ibg-e2e-redis redis-cli FLUSHDB", {
-      timeout: 5_000,
-      stdio: "pipe",
-    })
+    const client = getRedisClient()
+    await client.flushdb()
   } catch {
     // Redis might not be available — tests will still work
+  }
+}
+
+/**
+ * Disconnect the Redis client (call in global teardown).
+ */
+export async function disconnectRedis(): Promise<void> {
+  if (redisClient) {
+    await redisClient.quit().catch(() => {})
+    redisClient = null
   }
 }
 

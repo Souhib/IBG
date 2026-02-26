@@ -5,6 +5,7 @@
 
 import ky, { type HTTPError, type KyResponse } from "ky"
 import i18n from "@/i18n"
+import { disconnectSocket } from "@/lib/socket"
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin
 
@@ -126,6 +127,7 @@ const kyInstance = ky.create({
           localStorage.removeItem("ibg-user-data")
 
           if (hadToken && typeof window !== "undefined" && !window.location.pathname.includes("/auth/login")) {
+            disconnectSocket()
             window.location.href = "/auth/login"
           }
         }

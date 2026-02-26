@@ -2,6 +2,7 @@ from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
@@ -44,7 +45,9 @@ class UserController:
         :return: The user with the given id.
         """
         try:
-            return (await self.session.exec(select(User).where(User.id == user_id))).one()
+            return (await self.session.exec(
+                select(User).where(User.id == user_id).options(selectinload(User.rooms), selectinload(User.games))
+            )).one()
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 

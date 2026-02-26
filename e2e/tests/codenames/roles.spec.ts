@@ -18,7 +18,7 @@ import {
   type CodenamesPlayerRole,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Codenames — Role Restrictions (UI)", () => {
   test("operative does not see clue input form", async ({ browser }) => {

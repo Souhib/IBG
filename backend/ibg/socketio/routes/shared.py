@@ -9,8 +9,8 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from ibg.api.models.error import BaseError
-from ibg.socketio.models.shared import IBGSocket
 from ibg.socketio.models.room import Room as RedisRoom
+from ibg.socketio.models.shared import IBGSocket
 from ibg.socketio.models.user import User as RedisUser
 from ibg.socketio.utils.redis_ttl import refresh_room_ttl, refresh_user_ttl
 
@@ -37,8 +37,25 @@ async def send_event_to_client(sio: IBGSocket, event_name: str, data: dict[str, 
     await sio.emit(event_name, data, room=room)
 
 
+# Track event counts per SID to reduce TTL refresh frequency
+_sid_event_counter: dict[str, int] = {}
+_TTL_REFRESH_INTERVAL = 10
+
+
+def cleanup_sid_counter(sid: str) -> None:
+    """Remove a SID from the event counter on disconnect to prevent memory leaks."""
+    _sid_event_counter.pop(sid, None)
+
+
 async def _refresh_ttl_for_sid(sio: IBGSocket, sid: str) -> None:
-    """Refresh Redis TTL for the user associated with this socket session."""
+    """Refresh Redis TTL for the user associated with this socket session.
+
+    Only refreshes every 10th event per SID to reduce Redis round-trips.
+    """
+    count = _sid_event_counter.get(sid, 0) + 1
+    _sid_event_counter[sid] = count
+    if count % _TTL_REFRESH_INTERVAL != 1:
+        return
     try:
         sio_session = await sio.get_session(sid)
         user_id = sio_session.get("user_id") if sio_session else None
