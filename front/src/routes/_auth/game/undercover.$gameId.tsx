@@ -104,14 +104,18 @@ function UndercoverGamePage() {
     if (!isConnected) return
 
     const offRoleAssigned = on("role_assigned", (data: unknown) => {
-      const roleData = data as { role: string; word: string | null }
-      setGameState((prev) => ({
-        ...prev,
-        my_role: roleData.role,
-        my_word: roleData.word || undefined,
-        phase: "role_reveal",
-      }))
-      setIsLoadingState(false)
+      try {
+        const roleData = data as { role: string; word: string | null }
+        setGameState((prev) => ({
+          ...prev,
+          my_role: roleData.role,
+          my_word: roleData.word || undefined,
+          phase: "role_reveal",
+        }))
+        setIsLoadingState(false)
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     // vote_casted: your vote was recorded
@@ -121,127 +125,152 @@ function UndercoverGamePage() {
 
     // waiting_other_votes: shows who has voted
     const offWaitingVotes = on("waiting_other_votes", (data: unknown) => {
-      const d = data as { message: string; players_that_voted: { username: string; user_id: string }[] }
-      setGameState((prev) => ({
-        ...prev,
-        votedPlayers: d.players_that_voted.map((p) => p.user_id),
-      }))
+      try {
+        const d = data as { message: string; players_that_voted: { username: string; user_id: string }[] }
+        setGameState((prev) => ({
+          ...prev,
+          votedPlayers: d.players_that_voted.map((p) => p.user_id),
+        }))
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     // you_died: you were eliminated
     const offYouDied = on("you_died", (data: unknown) => {
-      const d = data as { message: string }
-      toast.error(d.message)
-      setGameState((prev) => ({
-        ...prev,
-        players: prev.players.map((p) =>
-          p.id === user?.id ? { ...p, is_alive: false } : p,
-        ),
-      }))
+      try {
+        const d = data as { message: string }
+        toast.error(d.message)
+        setGameState((prev) => ({
+          ...prev,
+          players: prev.players.map((p) =>
+            p.id === user?.id ? { ...p, is_alive: false } : p,
+          ),
+        }))
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     // notification: turn updates from backend
     const offNotification = on("notification", (data: unknown) => {
-      const d = data as { message: string }
-      toast.info(d.message)
-      setGameState((prev) => ({
-        ...prev,
-        phase: "playing",
-        round: prev.round + 1,
-        votedPlayers: [],
-        eliminated_player_username: undefined,
-        eliminated_player_role: undefined,
-      }))
-      setHasVoted(false)
-      setSelectedVote(null)
+      try {
+        const d = data as { message: string }
+        toast.info(d.message)
+        setGameState((prev) => ({
+          ...prev,
+          phase: "playing",
+          round: prev.round + 1,
+          votedPlayers: [],
+          eliminated_player_username: undefined,
+          eliminated_player_role: undefined,
+        }))
+        setHasVoted(false)
+        setSelectedVote(null)
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     const offPlayerEliminated = on("player_eliminated", (data: unknown) => {
-      toast.warning(t("toast.playerEliminated"))
-      const d = data as {
-        message: string
-        eliminated_player_role: string
-        eliminated_player_username: string
-        eliminated_player_user_id: string
+      try {
+        toast.warning(t("toast.playerEliminated"))
+        const d = data as {
+          message: string
+          eliminated_player_role: string
+          eliminated_player_username: string
+          eliminated_player_user_id: string
+        }
+        setGameState((prev) => ({
+          ...prev,
+          phase: "elimination",
+          eliminated_player_username: d.eliminated_player_username,
+          eliminated_player_role: d.eliminated_player_role,
+          players: prev.players.map((p) =>
+            p.id === d.eliminated_player_user_id ? { ...p, is_alive: false } : p,
+          ),
+        }))
+      } catch {
+        toast.error(t("common.error"))
       }
-      setGameState((prev) => ({
-        ...prev,
-        phase: "elimination",
-        eliminated_player_username: d.eliminated_player_username,
-        eliminated_player_role: d.eliminated_player_role,
-        players: prev.players.map((p) =>
-          p.id === d.eliminated_player_user_id ? { ...p, is_alive: false } : p,
-        ),
-      }))
     })
 
     const offGameOver = on("game_over", (data: unknown) => {
-      toast.success(t("toast.gameOver"))
-      const d = data as { data: string; winner: string }
-      setGameState((prev) => ({
-        ...prev,
-        phase: "game_over",
-        winner: d.winner,
-      }))
+      try {
+        toast.success(t("toast.gameOver"))
+        const d = data as { data: string; winner: string }
+        setGameState((prev) => ({
+          ...prev,
+          phase: "game_over",
+          winner: d.winner,
+        }))
+      } catch {
+        toast.error(t("common.error"))
+      }
     })
 
     // undercover_game_state: full state recovery for reconnecting players
     const offUndercoverState = on("undercover_game_state", (data: unknown) => {
-      const d = data as {
-        my_role: string
-        my_word: string
-        is_alive: boolean
-        players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
-        eliminated_players: { user_id: string; username: string; role: string }[]
-        turn_number: number
-        has_voted: boolean
-        room_id?: string
-        votes?: Record<string, string>
-        winner?: string | null
-      }
-      if (d.room_id) roomIdRef.current = d.room_id
-      const votedPlayerIds = d.votes ? Object.keys(d.votes) : []
+      try {
+        const d = data as {
+          my_role: string
+          my_word: string
+          is_alive: boolean
+          players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
+          eliminated_players: { user_id: string; username: string; role: string }[]
+          turn_number: number
+          has_voted: boolean
+          room_id?: string
+          votes?: Record<string, string>
+          winner?: string | null
+        }
+        if (d.room_id) roomIdRef.current = d.room_id
+        const votedPlayerIds = d.votes ? Object.keys(d.votes) : []
 
-      // Determine phase: game_over if winner exists, otherwise playing/role_reveal
-      let phase: GameState["phase"]
-      if (d.winner) {
-        phase = "game_over"
-      } else if (d.turn_number > 0) {
-        phase = "playing"
-      } else {
-        phase = "role_reveal"
-      }
+        // Determine phase: game_over if winner exists, otherwise playing/role_reveal
+        let phase: GameState["phase"]
+        if (d.winner) {
+          phase = "game_over"
+        } else if (d.turn_number > 0) {
+          phase = "playing"
+        } else {
+          phase = "role_reveal"
+        }
 
-      // Only reset vote state when the round actually changes (e.g., reconnecting
-      // to a new round after missing the notification event). This avoids a race
-      // condition where the initial mount response resets a vote already cast locally.
-      const roundChanged = d.turn_number !== lastServerRoundRef.current
-      lastServerRoundRef.current = d.turn_number
+        // Only reset vote state when the round actually changes (e.g., reconnecting
+        // to a new round after missing the notification event). This avoids a race
+        // condition where the initial mount response resets a vote already cast locally.
+        const roundChanged = d.turn_number !== lastServerRoundRef.current
+        lastServerRoundRef.current = d.turn_number
 
-      setGameState((prev) => ({
-        ...prev,
-        my_role: d.my_role,
-        my_word: d.my_word,
-        round: d.turn_number,
-        phase,
-        winner: d.winner || prev.winner,
-        votedPlayers: votedPlayerIds,
-        players: d.players.map((p) => ({
-          id: p.user_id,
-          username: p.username,
-          is_alive: p.is_alive,
-          is_mayor: p.is_mayor,
-        })),
-      }))
-      setIsLoadingState(false)
+        setGameState((prev) => ({
+          ...prev,
+          my_role: d.my_role,
+          my_word: d.my_word,
+          round: d.turn_number,
+          phase,
+          winner: d.winner || prev.winner,
+          votedPlayers: votedPlayerIds,
+          players: d.players.map((p) => ({
+            id: p.user_id,
+            username: p.username,
+            is_alive: p.is_alive,
+            is_mayor: p.is_mayor,
+          })),
+        }))
+        setIsLoadingState(false)
 
-      if (roundChanged || d.winner) {
-        // New round or game over: reset vote state from server
-        setHasVoted(d.has_voted)
-        setSelectedVote(null)
-      } else if (d.has_voted) {
-        // Same round, server confirms we voted
-        setHasVoted(true)
+        if (roundChanged || d.winner) {
+          // New round or game over: reset vote state from server
+          setHasVoted(d.has_voted)
+          setSelectedVote(null)
+        } else if (d.has_voted) {
+          // Same round, server confirms we voted
+          setHasVoted(true)
+        }
+      } catch {
+        toast.error(t("common.error"))
+        setIsLoadingState(false)
       }
     })
 

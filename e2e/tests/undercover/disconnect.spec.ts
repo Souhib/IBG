@@ -11,7 +11,7 @@ import {
   startGameViaUI,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Undercover — Disconnect During Game (UI)", () => {
   test("game is cancelled when players drop below minimum (< 3)", async ({
@@ -170,7 +170,7 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
           .catch(() => false);
         if (!headingVisible) {
           await player.page.reload();
-          await player.page.waitForLoadState("networkidle");
+          await player.page.waitForLoadState("domcontentloaded");
           await player.page.waitForTimeout(2000);
         }
         await expect(
@@ -190,7 +190,7 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
 
       // Player 2 reloads the game page (reconnect)
       await setup.players[1].page.goto(gameUrl);
-      await setup.players[1].page.waitForLoadState("networkidle");
+      await setup.players[1].page.waitForLoadState("domcontentloaded");
 
       // Player 2 should still see the game page with role info
       await expect(setup.players[1].page).toHaveURL(/\/game\/undercover\//, { timeout: 10_000 });

@@ -18,7 +18,7 @@ import {
   type CodenamesPlayerRole,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Codenames — Full Game Flow (UI)", () => {
   test("4-player game: start, board shown, clue, guess, game progresses", async ({
@@ -115,7 +115,7 @@ test.describe("Codenames — Full Game Flow (UI)", () => {
       if (!clueOnSpymaster) {
         // Clue might not have been processed — reload to get fresh state
         await spymaster!.player.page.reload();
-        await spymaster!.player.page.waitForLoadState("networkidle");
+        await spymaster!.player.page.waitForLoadState("domcontentloaded");
         await spymaster!.player.page.waitForTimeout(3000);
       }
       await expect(
@@ -150,7 +150,7 @@ test.describe("Codenames — Full Game Flow (UI)", () => {
           .catch(() => false);
         if (!clueVisible) {
           await player.page.reload();
-          await player.page.waitForLoadState("networkidle");
+          await player.page.waitForLoadState("domcontentloaded");
           await player.page.waitForTimeout(3000);
           clueVisible = await clueLoc
             .waitFor({ state: "visible", timeout: 5_000 })
@@ -158,7 +158,7 @@ test.describe("Codenames — Full Game Flow (UI)", () => {
             .catch(() => false);
           if (!clueVisible) {
             await player.page.reload();
-            await player.page.waitForLoadState("networkidle");
+            await player.page.waitForLoadState("domcontentloaded");
             await player.page.waitForTimeout(3000);
           }
         }

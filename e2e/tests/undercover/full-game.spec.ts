@@ -14,7 +14,7 @@ import {
   clickNextRound,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Undercover — Full Game Flow (UI)", () => {
   test("3-player game: start → playing phase → vote → elimination/game over", async ({
@@ -78,7 +78,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
       await startGameViaUI(setup.players, "undercover");
       await dismissRoleRevealAll(setup.players);
 
-      // Each player should see their word reminder (except Mr. White)
+      // Each player should see their word reminder (no Mr. White in 3-player games)
       let wordCount = 0;
       for (const player of setup.players) {
         const wordReminder = player.page.locator("text=Your word").first();
@@ -87,8 +87,8 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
           .catch(() => false);
         if (isVisible) wordCount++;
       }
-      // At least 2 out of 3 players should see their word (Mr. White may not)
-      expect(wordCount).toBeGreaterThanOrEqual(2);
+      // All 3 players should see their word (2 civilians + 1 undercover)
+      expect(wordCount).toBe(3);
 
       // Players list should show all 3 players
       for (const player of setup.players) {

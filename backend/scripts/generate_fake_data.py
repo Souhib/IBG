@@ -122,6 +122,43 @@ TEST_USERS = [
         "password": "hamza123",
         "country": "PAK",
     },
+    # Pool B accounts (for parallel E2E test execution)
+    {
+        "username": "user_b",
+        "email_address": "user_b@test.com",
+        "password": "user1234",
+        "country": "ARE",
+    },
+    {
+        "username": "player_b",
+        "email_address": "player_b@test.com",
+        "password": "player123",
+        "country": "MAR",
+    },
+    {
+        "username": "ali_b",
+        "email_address": "ali_b@test.com",
+        "password": "ali12345",
+        "country": "EGY",
+    },
+    {
+        "username": "fatima_b",
+        "email_address": "fatima_b@test.com",
+        "password": "fatima12",
+        "country": "TUN",
+    },
+    {
+        "username": "omar_b",
+        "email_address": "omar_b@test.com",
+        "password": "omar1234",
+        "country": "DZA",
+    },
+    {
+        "username": "aisha_b",
+        "email_address": "aisha_b@test.com",
+        "password": "aisha123",
+        "country": "JOR",
+    },
 ]
 
 

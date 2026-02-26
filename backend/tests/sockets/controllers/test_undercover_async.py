@@ -57,11 +57,12 @@ async def test_set_vote_success(make_undercover_game, make_redis_room):
     vote_data = VoteForAPerson(room_id=ROOM_ID, game_id=GAME_ID, user_id=P1, voted_user_id=P2)
 
     # Act
-    voter, voted = await set_vote(game, vote_data)
+    voter, voted, updated_game, all_voted = await set_vote(game, vote_data)
 
     # Assert
     assert str(voter.user_id) == P1
     assert str(voted.user_id) == P2
+    assert isinstance(all_voted, bool)
 
     # Verify persisted in Redis
     refreshed = await UndercoverGame.get(GAME_ID)
@@ -369,7 +370,7 @@ async def test_create_undercover_game_10_players(mock_get_words, mock_start_turn
 @patch("ibg.socketio.controllers.undercover_game.start_new_turn", new_callable=AsyncMock)
 @patch("ibg.socketio.controllers.undercover_game.get_civilian_and_undercover_words", new_callable=AsyncMock)
 async def test_create_undercover_game_3_players_minimum(mock_get_words, mock_start_turn, make_redis_room):  # noqa: ARG001
-    """With 3 players (minimum), game has 1 mr_white, 1 undercover, 1 civilian."""
+    """With 3 players (minimum), game has 0 mr_white, 1 undercover, 2 civilians."""
 
     # Arrange
     room_id = uuid4()
@@ -401,9 +402,7 @@ async def test_create_undercover_game_3_players_minimum(mock_get_words, mock_sta
     # Act
     _, _, redis_game = await create_undercover_game(mock_sio, start_input)
 
-    # Assert — 3 players: 1 mr_white, max(2, 3//4)=2 undercover, 0 civilian
-    # Actually: num_undercover = max(2, 3//4) = 2, but total roles = 1 + 2 = 3 = num_players
-    # So civilian = 3 - 1 - 2 = 0
+    # Assert — 3 players: no Mr. White, 1 undercover, 2 civilians
     from ibg.api.models.undercover import UndercoverRole
 
     role_counts = {}
@@ -411,4 +410,6 @@ async def test_create_undercover_game_3_players_minimum(mock_get_words, mock_sta
         role_counts[p.role] = role_counts.get(p.role, 0) + 1
 
     assert len(redis_game.players) == 3
-    assert role_counts.get(UndercoverRole.MR_WHITE, 0) == 1
+    assert role_counts.get(UndercoverRole.MR_WHITE, 0) == 0
+    assert role_counts.get(UndercoverRole.UNDERCOVER, 0) == 1
+    assert role_counts.get(UndercoverRole.CIVILIAN, 0) == 2

@@ -17,6 +17,10 @@ export function getSocket(): Socket {
     autoConnect: false,
     auth: token ? { token } : undefined,
     transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
   })
 
   // Expose for e2e testing

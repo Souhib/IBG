@@ -21,7 +21,7 @@ import {
 } from "../../helpers/constants";
 import { flushRedis } from "../../helpers/test-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Cross-Flow — Full Journey", () => {
   test.beforeEach(async () => {
@@ -46,7 +46,7 @@ test.describe("Cross-Flow — Full Journey", () => {
     const password = "Journey123!";
 
     await page1.goto(ROUTES.register);
-    await page1.waitForLoadState("networkidle");
+    await page1.waitForLoadState("domcontentloaded");
 
     await page1.locator('input[id="username"]').fill(uniqueUsername);
     await page1.locator('input[id="email"]').fill(uniqueEmail);
@@ -62,7 +62,7 @@ test.describe("Cross-Flow — Full Journey", () => {
 
     // Navigate to login page (in case registration didn't auto-login)
     await page1.goto(ROUTES.login);
-    await page1.waitForLoadState("networkidle");
+    await page1.waitForLoadState("domcontentloaded");
 
     await page1.locator('input[id="email"]').fill(uniqueEmail);
     await page1.locator('input[id="password"]').fill(password);
@@ -81,14 +81,14 @@ test.describe("Cross-Flow — Full Journey", () => {
     // ─── Step 3: Create a room ──────────────────────────────
 
     await page1.goto(ROUTES.createRoom);
-    await page1.waitForLoadState("networkidle");
+    await page1.waitForLoadState("domcontentloaded");
 
     // Select Undercover (default) and create
     await page1.locator('button[type="submit"]').click();
 
     // Should redirect to room lobby
     await expect(page1).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-    await page1.waitForLoadState("networkidle");
+    await page1.waitForLoadState("domcontentloaded");
 
     // Extract room code and password
     await page1.waitForTimeout(2000);
@@ -114,7 +114,7 @@ test.describe("Cross-Flow — Full Journey", () => {
     );
 
     await player2.goto(ROUTES.rooms);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
 
     // Wait for socket connected + room_status listener registered in React
     await player2.waitForFunction(
@@ -171,7 +171,7 @@ test.describe("Cross-Flow — Full Journey", () => {
           await apiJoinRoom(roomUrlMatch[1], p2Login.user.id, passwordText, p2Login.access_token)
             .catch(() => {}); // Ignore if already joined
           await player2.goto(`${ROUTES.rooms}/${roomUrlMatch[1]}`);
-          await player2.waitForLoadState("networkidle");
+          await player2.waitForLoadState("domcontentloaded");
         }
       }
     }
@@ -188,7 +188,7 @@ test.describe("Cross-Flow — Full Journey", () => {
     );
 
     await player3.goto(ROUTES.rooms);
-    await player3.waitForLoadState("networkidle");
+    await player3.waitForLoadState("domcontentloaded");
 
     // Wait for socket connected + room_status listener registered in React
     await player3.waitForFunction(
@@ -242,7 +242,7 @@ test.describe("Cross-Flow — Full Journey", () => {
           await apiJoinRoom(roomUrlMatch[1], p3Login.user.id, passwordText, p3Login.access_token)
             .catch(() => {}); // Ignore if already joined
           await player3.goto(`${ROUTES.rooms}/${roomUrlMatch[1]}`);
-          await player3.waitForLoadState("networkidle");
+          await player3.waitForLoadState("domcontentloaded");
         }
       }
     }
@@ -260,7 +260,7 @@ test.describe("Cross-Flow — Full Journey", () => {
     // If not all players visible yet, reload and recheck
     if (playerCount < 3) {
       await page1.reload();
-      await page1.waitForLoadState("networkidle");
+      await page1.waitForLoadState("domcontentloaded");
       await page1.waitForTimeout(3000);
       playerCount = await playerElements.count();
     }
@@ -293,7 +293,7 @@ test.describe("Cross-Flow — Full Journey", () => {
       // Reload all pages to re-establish Socket.IO connections
       for (const player of [page1, player2, player3]) {
         await player.reload();
-        await player.waitForLoadState("networkidle");
+        await player.waitForLoadState("domcontentloaded");
       }
       await page1.waitForTimeout(5000);
 
@@ -322,7 +322,7 @@ test.describe("Cross-Flow — Full Journey", () => {
       for (const player of [page1, player2, player3]) {
         if (!/\/game\/undercover\//.test(player.url())) {
           await player.goto(gameUrl);
-          await player.waitForLoadState("networkidle");
+          await player.waitForLoadState("domcontentloaded");
           await player.waitForTimeout(3000);
         }
       }
@@ -338,7 +338,7 @@ test.describe("Cross-Flow — Full Journey", () => {
           .catch(() => false);
         if (!headingVisible) {
           await player.reload();
-          await player.waitForLoadState("networkidle");
+          await player.waitForLoadState("domcontentloaded");
           await player.waitForTimeout(3000);
         }
         await expect(heading).toBeVisible({ timeout: 15_000 });
@@ -371,7 +371,7 @@ test.describe("Cross-Flow — Full Journey", () => {
       TEST_PLAYER.password,
     );
     await player1.goto(ROUTES.createRoom);
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
     await player1.locator('button[type="submit"]').click();
     await expect(player1).toHaveURL(/\/rooms\//, { timeout: 15_000 });
 
@@ -382,7 +382,7 @@ test.describe("Cross-Flow — Full Journey", () => {
       TEST_ALI.password,
     );
     await player2.goto(ROUTES.createRoom);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
     await player2.locator('button[type="submit"]').click();
     await expect(player2).toHaveURL(/\/rooms\//, { timeout: 15_000 });
 
@@ -390,8 +390,8 @@ test.describe("Cross-Flow — Full Journey", () => {
     expect(player1.url()).not.toBe(player2.url());
 
     // Both should show their own lobby
-    await player1.waitForLoadState("networkidle");
-    await player2.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
+    await player2.waitForLoadState("domcontentloaded");
 
     for (const player of [player1, player2]) {
       await expect(player.getByText("Room Code")).toBeVisible();

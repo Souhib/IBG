@@ -8,7 +8,7 @@ import {
 import { apiLogin, apiLeaveAllRooms, apiJoinRoom } from "../../helpers/api-client";
 import { flushRedis } from "../../helpers/test-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Rooms — Create & Join", () => {
   test.beforeEach(async () => {
@@ -28,7 +28,7 @@ test.describe("Rooms — Create & Join", () => {
 
     // Navigate to create room page
     await page.goto(ROUTES.createRoom);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Select Undercover and create room
     await page.locator('button[type="submit"]').click();
@@ -54,12 +54,12 @@ test.describe("Rooms — Create & Join", () => {
     );
 
     await player1.goto(ROUTES.createRoom);
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
     await player1.locator('button[type="submit"]').click();
     await expect(player1).toHaveURL(/\/rooms\//, { timeout: 15_000 });
 
     // Wait for room data to load
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
 
     // Extract room code and password from the lobby page
     const roomCodeButton = player1.locator(
@@ -85,7 +85,7 @@ test.describe("Rooms — Create & Join", () => {
     );
 
     await player2.goto(ROUTES.rooms);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
 
     // Fill room code
     await player2.locator('input[id="room-code"]').fill(roomCode);
@@ -147,7 +147,7 @@ test.describe("Rooms — Create & Join", () => {
           await apiJoinRoom(roomUrlMatch[1], p2Login.user.id, passwordText, p2Login.access_token)
             .catch(() => {}); // Ignore if already joined
           await player2.goto(`${ROUTES.rooms}/${roomUrlMatch[1]}`);
-          await player2.waitForLoadState("networkidle");
+          await player2.waitForLoadState("domcontentloaded");
         }
       }
     }
@@ -156,7 +156,7 @@ test.describe("Rooms — Create & Join", () => {
     await expect(player2).toHaveURL(/\/rooms\/[a-f0-9-]+/, { timeout: 15_000 });
 
     // Both players should see each other in the lobby
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
     await player2.waitForTimeout(3000);
     let playerNames = await player1
       .locator(".bg-muted\\/50 .text-sm.font-medium")
@@ -164,7 +164,7 @@ test.describe("Rooms — Create & Join", () => {
     // If host only sees 1 player, reload to get fresh data
     if (playerNames.length < 2) {
       await player1.reload();
-      await player1.waitForLoadState("networkidle");
+      await player1.waitForLoadState("domcontentloaded");
       await player1.waitForTimeout(3000);
       playerNames = await player1
         .locator(".bg-muted\\/50 .text-sm.font-medium")
@@ -185,10 +185,10 @@ test.describe("Rooms — Create & Join", () => {
     );
 
     await player1.goto(ROUTES.createRoom);
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
     await player1.locator('button[type="submit"]').click();
     await expect(player1).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
 
     // Extract room code
     const roomCodeButton = player1.locator(
@@ -205,7 +205,7 @@ test.describe("Rooms — Create & Join", () => {
     );
 
     await player2.goto(ROUTES.rooms);
-    await player2.waitForLoadState("networkidle");
+    await player2.waitForLoadState("domcontentloaded");
 
     await player2.locator('input[id="room-code"]').fill(roomCode);
 
@@ -238,7 +238,7 @@ test.describe("Rooms — Create & Join", () => {
     );
 
     await player.goto(ROUTES.rooms);
-    await player.waitForLoadState("networkidle");
+    await player.waitForLoadState("domcontentloaded");
 
     // Enter non-existent room code
     await player.locator('input[id="room-code"]').fill("ZZZZZ");

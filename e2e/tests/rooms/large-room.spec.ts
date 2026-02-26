@@ -23,7 +23,7 @@ import {
 } from "../../helpers/constants";
 import { flushRedis } from "../../helpers/test-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 const SIX_ACCOUNTS = [
   TEST_USER,
@@ -50,7 +50,7 @@ test.describe("Rooms — Large Room (4-6 Players)", () => {
       TEST_USER.password,
     );
     await player1.goto(ROUTES.room(room.id));
-    await player1.waitForLoadState("networkidle");
+    await player1.waitForLoadState("domcontentloaded");
     await player1.waitForTimeout(2000);
 
     // Players 2-6 join via room code + password
@@ -62,7 +62,7 @@ test.describe("Rooms — Large Room (4-6 Players)", () => {
         account.password,
       );
       await page.goto(ROUTES.rooms);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await page.locator('input[id="room-code"]').fill(roomDetails.public_id);
       const pinDigits = roomDetails.password.split("");
       for (let i = 0; i < 4; i++) {

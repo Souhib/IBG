@@ -15,7 +15,7 @@ authTest.describe("Auth — Token Management", () => {
 
       // Reload the page
       await authenticatedPage.reload();
-      await authenticatedPage.waitForLoadState("networkidle");
+      await authenticatedPage.waitForLoadState("domcontentloaded");
 
       // Token should still be present
       const tokenAfter = await authenticatedPage.evaluate(
@@ -36,7 +36,7 @@ authTest.describe("Auth — Token Management", () => {
       expect(userDataBefore).toBeTruthy();
 
       await authenticatedPage.reload();
-      await authenticatedPage.waitForLoadState("networkidle");
+      await authenticatedPage.waitForLoadState("domcontentloaded");
 
       const userDataAfter = await authenticatedPage.evaluate(
         (key) => localStorage.getItem(key),

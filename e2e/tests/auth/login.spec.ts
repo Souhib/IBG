@@ -4,7 +4,7 @@ import { TEST_USER, ROUTES, STORAGE_KEYS } from "../../helpers/constants";
 test.describe("Auth — Login", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(ROUTES.login);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("successful login navigates to home", async ({ page }) => {

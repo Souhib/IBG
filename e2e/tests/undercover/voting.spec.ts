@@ -14,7 +14,7 @@ import {
   waitForEliminationOrGameOver,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Undercover — Voting Rules (UI)", () => {
   test("voting buttons do not include the current player (no self-vote)", async ({
@@ -45,7 +45,7 @@ test.describe("Undercover — Voting Rules (UI)", () => {
       await startGameViaUI(setup.players, "undercover");
       await dismissRoleRevealAll(setup.players);
 
-      // At least 2 of 3 players should see "Your word:" reminder (Mr. White may not)
+      // All 3 players should see "Your word:" reminder (no Mr. White in 3-player games)
       let wordCount = 0;
       for (const player of setup.players) {
         const wordReminder = player.page.locator("text=Your word").first();
@@ -54,7 +54,7 @@ test.describe("Undercover — Voting Rules (UI)", () => {
           .catch(() => false);
         if (isVisible) wordCount++;
       }
-      expect(wordCount).toBeGreaterThanOrEqual(2);
+      expect(wordCount).toBe(3);
     } finally {
       await setup.cleanup();
     }

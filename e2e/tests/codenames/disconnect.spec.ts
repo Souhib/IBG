@@ -14,7 +14,7 @@ import {
   type CodenamesPlayerRole,
 } from "../../helpers/ui-game-setup";
 
-test.beforeAll(() => { flushRedis() });
+test.beforeAll(async () => { await flushRedis() });
 
 test.describe("Codenames — Disconnect During Game (UI)", () => {
   test("team empty after disconnect triggers other team win via UI", async ({

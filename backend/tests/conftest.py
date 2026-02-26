@@ -48,7 +48,7 @@ def get_test_settings() -> Settings:
         log_level="WARNING",
         logfire_token="fake",
         frontend_url="http://localhost:3000",
-        cors_origins="*",
+        cors_origins="http://localhost:3000",
     )
 
 

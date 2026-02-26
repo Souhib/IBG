@@ -47,11 +47,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<UserData | null>(null)
   const refreshTimerRef = useRef<number | null>(null)
+  const isRefreshingRef = useRef(false)
 
   const refreshAccessToken = useCallback(async (): Promise<boolean> => {
+    if (isRefreshingRef.current) return false
     const storedRefreshToken = localStorage.getItem("ibg-refresh-token")
     if (!storedRefreshToken) return false
 
+    isRefreshingRef.current = true
     try {
       const response = await apiClient({
         method: "POST",
@@ -70,6 +73,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return true
     } catch {
       return false
+    } finally {
+      isRefreshingRef.current = false
     }
   }, [])
 

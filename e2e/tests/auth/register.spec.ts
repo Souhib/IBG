@@ -4,7 +4,7 @@ import { TEST_USER, ROUTES } from "../../helpers/constants";
 test.describe("Auth — Register", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(ROUTES.register);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("successful registration", async ({ page }) => {

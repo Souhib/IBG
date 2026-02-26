@@ -4,7 +4,7 @@ import { ROUTES } from "../../helpers/constants";
 test.describe("Auth — Login Validation", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(ROUTES.login);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("submit button is disabled when fields are empty", async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe("Auth — Login Validation", () => {
 test.describe("Auth — Register Validation", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(ROUTES.register);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("submit with empty fields stays on page", async ({ page }) => {

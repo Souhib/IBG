@@ -3,7 +3,7 @@ from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import desc, select
 
@@ -58,7 +58,9 @@ class GameController:
         :param game_id: The id of the game to get.
         :return: The game.
         """
-        return (await self.session.exec(select(Game).where(Game.id == game_id))).one()
+        return (await self.session.exec(
+            select(Game).where(Game.id == game_id).options(selectinload(Game.turns), selectinload(Game.room))
+        )).one()
 
     async def update_game(self, game_id: UUID, game_update: GameUpdate) -> Game:
         """

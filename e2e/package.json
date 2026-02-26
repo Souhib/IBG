@@ -11,6 +11,7 @@
     "test:codenames": "playwright test tests/codenames/",
     "test:cross-flow": "playwright test tests/cross-flow/",
     "test:profile": "playwright test tests/profile/",
+    "test:parallel": "TEST_POOL=A npx playwright test --shard=1/2 & TEST_POOL=B npx playwright test --shard=2/2 & wait",
     "report": "playwright show-report",
     "docker:up": "docker compose -f docker-compose.e2e.yml up -d --build",
     "docker:down": "docker compose -f docker-compose.e2e.yml down -v",
@@ -20,6 +21,7 @@
     "@playwright/test": "^1.50.0",
     "@types/node": "^22.0.0",
     "dotenv": "^16.4.0",
+    "ioredis": "^5.4.0",
     "socket.io-client": "^4.7.0",
     "typescript": "^5.9.3"
   }

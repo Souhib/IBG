@@ -67,9 +67,22 @@ async def create_undercover_game(
             raise RoomNotFoundError(room_id=start_game_input.room_id) from None
         players = room.users
     num_players = len(players)
-    num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
-    num_undercover = max(2, num_players // 4)
-    num_civilians = num_players - num_mr_white - num_undercover
+    if num_players == 3:
+        # 3-player games: no Mr. White (too few players for that role)
+        num_mr_white = 0
+        num_undercover = 1
+        num_civilians = 2
+    else:
+        num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
+        num_undercover = max(2, num_players // 4)
+        num_civilians = num_players - num_mr_white - num_undercover
+        # Ensure at least 1 civilian — reduce undercover count if needed
+        while num_civilians < 1 and num_undercover > 1:
+            num_undercover -= 1
+            num_civilians += 1
+        while num_civilians < 1 and num_mr_white > 0:
+            num_mr_white -= 1
+            num_civilians += 1
     roles = (
         [UndercoverRole.UNDERCOVER] * num_undercover
         + [UndercoverRole.CIVILIAN] * num_civilians
@@ -200,9 +213,16 @@ def get_winning_team(game: UndercoverGame) -> UndercoverRole | None:
     num_alive_mr_white = sum(
         1 for p in game.players if p.role == UndercoverRole.MR_WHITE and p.is_alive
     )
+    total_mr_white = sum(1 for p in game.players if p.role == UndercoverRole.MR_WHITE)
+
+    # Civilians win: all undercovers (and Mr. Whites if any) are eliminated
     if num_alive_undercover == 0 and num_alive_mr_white == 0:
         return UndercoverRole.CIVILIAN
-    if num_alive_civilian == 0 or num_alive_mr_white == 0:
+    # Undercovers win: no civilians left
+    if num_alive_civilian == 0:
+        return UndercoverRole.UNDERCOVER
+    # Undercovers win: Mr. White eliminated (only in games that have Mr. White)
+    if total_mr_white > 0 and num_alive_mr_white == 0:
         return UndercoverRole.UNDERCOVER
     return None
 

@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from aredis_om import get_redis_connection
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -68,5 +70,8 @@ def get_redis_om_connection():
     from ibg.settings import Settings
 
     settings = Settings()  # type: ignore
-    host, port = settings.redis_om_url.split("//")[1].split(":")
-    return get_redis_connection(host=host, port=int(port), decode_responses=True, encoding="utf-8")
+    parsed = urlparse(settings.redis_om_url)
+    host = parsed.hostname or "localhost"
+    port = parsed.port or 6379
+    password = parsed.password or None
+    return get_redis_connection(host=host, port=port, password=password, decode_responses=True, encoding="utf-8")

@@ -2,6 +2,10 @@ export const API_URL = process.env.API_URL || "http://localhost:5049";
 export const FRONTEND_URL =
   process.env.FRONTEND_URL || "http://localhost:3049";
 
+// ─── Pool-based Account Selection ───────────────────────────
+
+const isPoolB = process.env.TEST_POOL === "B";
+
 // ─── Test Accounts (seeded by generate_fake_data.py) ───────
 
 export const TEST_ADMIN = {
@@ -10,32 +14,32 @@ export const TEST_ADMIN = {
 } as const;
 
 export const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL || "user@test.com",
+  email: process.env.TEST_USER_EMAIL || (isPoolB ? "user_b@test.com" : "user@test.com"),
   password: process.env.TEST_USER_PASSWORD || "user1234",
 } as const;
 
 export const TEST_PLAYER = {
-  email: process.env.TEST_PLAYER_EMAIL || "player@test.com",
+  email: process.env.TEST_PLAYER_EMAIL || (isPoolB ? "player_b@test.com" : "player@test.com"),
   password: process.env.TEST_PLAYER_PASSWORD || "player123",
 } as const;
 
 export const TEST_ALI = {
-  email: process.env.TEST_ALI_EMAIL || "ali@test.com",
+  email: process.env.TEST_ALI_EMAIL || (isPoolB ? "ali_b@test.com" : "ali@test.com"),
   password: process.env.TEST_ALI_PASSWORD || "ali12345",
 } as const;
 
 export const TEST_FATIMA = {
-  email: process.env.TEST_FATIMA_EMAIL || "fatima@test.com",
+  email: process.env.TEST_FATIMA_EMAIL || (isPoolB ? "fatima_b@test.com" : "fatima@test.com"),
   password: process.env.TEST_FATIMA_PASSWORD || "fatima12",
 } as const;
 
 export const TEST_OMAR = {
-  email: process.env.TEST_OMAR_EMAIL || "omar@test.com",
+  email: process.env.TEST_OMAR_EMAIL || (isPoolB ? "omar_b@test.com" : "omar@test.com"),
   password: process.env.TEST_OMAR_PASSWORD || "omar1234",
 } as const;
 
 export const TEST_AISHA = {
-  email: process.env.TEST_AISHA_EMAIL || "aisha@test.com",
+  email: process.env.TEST_AISHA_EMAIL || (isPoolB ? "aisha_b@test.com" : "aisha@test.com"),
   password: process.env.TEST_AISHA_PASSWORD || "aisha123",
 } as const;
 

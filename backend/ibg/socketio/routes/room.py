@@ -27,7 +27,12 @@ from ibg.socketio.models.room import Room as RedisRoom
 from ibg.socketio.models.shared import IBGSocket
 from ibg.socketio.models.socket import UndercoverGame
 from ibg.socketio.models.user import User
-from ibg.socketio.routes.shared import send_event_to_client, serialize_model, socketio_exception_handler
+from ibg.socketio.routes.shared import (
+    cleanup_sid_counter,
+    send_event_to_client,
+    serialize_model,
+    socketio_exception_handler,
+)
 from ibg.socketio.utils.disconnect_tasks import schedule_disconnect_cleanup
 from ibg.socketio.utils.redis_ttl import set_game_finished_ttl
 
@@ -224,6 +229,7 @@ def room_events(sio: IBGSocket) -> None:
             return
 
         logger.info(f"[SIO] Disconnected: sid={sid}, user_id={user_id}")
+        cleanup_sid_counter(sid)
 
         # Look up the Redis user to get their room_id directly
         try:

@@ -5,7 +5,7 @@ import { ROUTES } from "../../helpers/constants";
 test.describe("Profile — Authenticated Navigation", () => {
   test("profile page shows user info", async ({ authenticatedPage }) => {
     await authenticatedPage.goto(ROUTES.profile);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
 
     // Should see the user's avatar (initial letter circle)
     const avatar = authenticatedPage.locator(
@@ -23,7 +23,7 @@ test.describe("Profile — Authenticated Navigation", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto(ROUTES.profile);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
 
     // Stats link (in main content area, not nav)
     await expect(
@@ -45,7 +45,7 @@ test.describe("Profile — Authenticated Navigation", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto(ROUTES.profile);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
 
     await authenticatedPage.locator('main a[href="/rooms"]').click();
     await expect(authenticatedPage).toHaveURL(/\/rooms/, {
@@ -59,7 +59,7 @@ test.describe("Leaderboard — Public Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto(ROUTES.leaderboard);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
 
     // Should see the leaderboard title
     await expect(
@@ -93,22 +93,22 @@ test.describe("Navigation — Protected Routes", () => {
 
     // Rooms
     await authenticatedPage.goto(ROUTES.rooms);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
     await expect(authenticatedPage).toHaveURL(/\/rooms/);
 
     // Create Room
     await authenticatedPage.goto(ROUTES.createRoom);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
     await expect(authenticatedPage).toHaveURL(/\/rooms\/create/);
 
     // Profile
     await authenticatedPage.goto(ROUTES.profile);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
     await expect(authenticatedPage).toHaveURL(/\/profile/);
 
     // Leaderboard
     await authenticatedPage.goto(ROUTES.leaderboard);
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
     await expect(authenticatedPage).toHaveURL(/\/leaderboard/);
   });
 
@@ -118,7 +118,7 @@ test.describe("Navigation — Protected Routes", () => {
     await authenticatedPage.goto(
       "/game/undercover/00000000-0000-0000-0000-000000000000",
     );
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
     await authenticatedPage.waitForTimeout(3000);
 
     // Should either show an error, redirect, or show loading state
@@ -136,7 +136,7 @@ test.describe("Navigation — Protected Routes", () => {
     await authenticatedPage.goto(
       "/rooms/00000000-0000-0000-0000-000000000000",
     );
-    await authenticatedPage.waitForLoadState("networkidle");
+    await authenticatedPage.waitForLoadState("domcontentloaded");
     await authenticatedPage.waitForTimeout(3000);
 
     // Should show error state (not crash)
@@ -172,7 +172,7 @@ baseTest.describe("Navigation — Unauthenticated Redirects", () => {
     "unauthenticated user can access /leaderboard",
     async ({ page }) => {
       await page.goto("/leaderboard");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Leaderboard is a public page — should NOT redirect to login
       await baseExpect(page).toHaveURL(/\/leaderboard/);
