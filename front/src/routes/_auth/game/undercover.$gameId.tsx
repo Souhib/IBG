@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Crown, Loader2, LogOut, Shield, Skull, ThumbsUp, User } from "lucide-react"
+import { Crown, Loader2, LogOut, MessageCircle, Shield, Skull, ThumbsUp, User } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -15,9 +16,14 @@ interface UndercoverPlayer {
   role?: string
 }
 
+interface DescriptionOrderEntry {
+  user_id: string
+  username: string
+}
+
 interface GameState {
   players: UndercoverPlayer[]
-  phase: "role_reveal" | "playing" | "elimination" | "game_over"
+  phase: "role_reveal" | "describing" | "playing" | "elimination" | "game_over"
   round: number
   my_role?: string
   my_word?: string
@@ -26,6 +32,9 @@ interface GameState {
   winner?: string
   votedPlayers: string[]
   isHost: boolean
+  descriptionOrder: DescriptionOrderEntry[]
+  currentDescriberIndex: number
+  descriptions: Record<string, string>
 }
 
 export const Route = createFileRoute("/_auth/game/undercover/$gameId")({
@@ -49,6 +58,9 @@ function UndercoverGamePage() {
       round: 1,
       votedPlayers: [],
       isHost: false,
+      descriptionOrder: [],
+      currentDescriberIndex: 0,
+      descriptions: {},
     }
     try {
       const stored = sessionStorage.getItem(`ibg-game-init-${gameId}`)
@@ -85,6 +97,10 @@ function UndercoverGamePage() {
   const [isLoadingState, setIsLoadingState] = useState(!gameState.my_role)
   const [loadingTimedOut, setLoadingTimedOut] = useState(false)
   const lastServerRoundRef = useRef(0)
+  const [descriptionInput, setDescriptionInput] = useState("")
+  const [descriptionError, setDescriptionError] = useState("")
+  const [isSubmittingDescription, setIsSubmittingDescription] = useState(false)
+  const [showVotingTransition, setShowVotingTransition] = useState(false)
 
   // Always request authoritative state from server on mount
   useEffect(() => {
@@ -152,14 +168,93 @@ function UndercoverGamePage() {
       }
     })
 
-    // notification: turn updates from backend
+    // turn_started: new turn with description order
+    const offTurnStarted = on("turn_started", (data: unknown) => {
+      try {
+        const d = data as {
+          message: string
+          description_order: DescriptionOrderEntry[]
+          current_describer_index: number
+          phase: string
+        }
+        setGameState((prev) => ({
+          ...prev,
+          phase: "describing",
+          round: prev.round + 1,
+          votedPlayers: [],
+          eliminated_player_username: undefined,
+          eliminated_player_role: undefined,
+          descriptionOrder: d.description_order,
+          currentDescriberIndex: d.current_describer_index,
+          descriptions: {},
+        }))
+        setHasVoted(false)
+        setSelectedVote(null)
+        setDescriptionInput("")
+        setDescriptionError("")
+        setIsSubmittingDescription(false)
+      } catch {
+        toast.error(t("common.error"))
+      }
+    })
+
+    // description_submitted: a player submitted their word
+    const offDescriptionSubmitted = on("description_submitted", (data: unknown) => {
+      try {
+        const d = data as {
+          user_id: string
+          username: string
+          word: string
+          next_describer_id: string | null
+          next_describer_username: string | null
+        }
+        if (d.user_id === user?.id) {
+          toast.success(t("game.undercover.descriptionSubmitted"))
+        }
+        setGameState((prev) => ({
+          ...prev,
+          descriptions: { ...prev.descriptions, [d.user_id]: d.word },
+          currentDescriberIndex: prev.currentDescriberIndex + 1,
+        }))
+        setIsSubmittingDescription(false)
+        setDescriptionInput("")
+        setDescriptionError("")
+      } catch {
+        toast.error(t("common.error"))
+      }
+    })
+
+    // descriptions_complete: all descriptions submitted, transition to voting
+    const offDescriptionsComplete = on("descriptions_complete", (data: unknown) => {
+      try {
+        const d = data as { descriptions: Record<string, string> }
+        setShowVotingTransition(true)
+        setTimeout(() => {
+          setGameState((prev) => ({
+            ...prev,
+            phase: "playing",
+            descriptions: d.descriptions,
+          }))
+          setShowVotingTransition(false)
+        }, 2500)
+      } catch {
+        toast.error(t("common.error"))
+      }
+    })
+
+    // your_turn_to_describe: it's my turn
+    const offYourTurn = on("your_turn_to_describe", () => {
+      toast.info(t("game.undercover.yourTurn"))
+    })
+
+    // notification: legacy turn updates from backend (backward compat)
     const offNotification = on("notification", (data: unknown) => {
       try {
         const d = data as { message: string }
         toast.info(d.message)
         setGameState((prev) => ({
           ...prev,
-          phase: "playing",
+          phase: "describing",
           round: prev.round + 1,
           votedPlayers: [],
           eliminated_player_username: undefined,
@@ -223,23 +318,27 @@ function UndercoverGamePage() {
           room_id?: string
           votes?: Record<string, string>
           winner?: string | null
+          turn_phase?: string
+          description_order?: DescriptionOrderEntry[]
+          current_describer_index?: number
+          descriptions?: Record<string, string>
         }
         if (d.room_id) roomIdRef.current = d.room_id
         const votedPlayerIds = d.votes ? Object.keys(d.votes) : []
 
-        // Determine phase: game_over if winner exists, otherwise playing/role_reveal
+        // Determine phase based on server state
         let phase: GameState["phase"]
         if (d.winner) {
           phase = "game_over"
+        } else if (d.turn_phase === "describing") {
+          phase = "describing"
         } else if (d.turn_number > 0) {
           phase = "playing"
         } else {
           phase = "role_reveal"
         }
 
-        // Only reset vote state when the round actually changes (e.g., reconnecting
-        // to a new round after missing the notification event). This avoids a race
-        // condition where the initial mount response resets a vote already cast locally.
+        // Only reset vote state when the round actually changes
         const roundChanged = d.turn_number !== lastServerRoundRef.current
         lastServerRoundRef.current = d.turn_number
 
@@ -257,15 +356,16 @@ function UndercoverGamePage() {
             is_alive: p.is_alive,
             is_mayor: p.is_mayor,
           })),
+          descriptionOrder: d.description_order || [],
+          currentDescriberIndex: d.current_describer_index ?? 0,
+          descriptions: d.descriptions || {},
         }))
         setIsLoadingState(false)
 
         if (roundChanged || d.winner) {
-          // New round or game over: reset vote state from server
           setHasVoted(d.has_voted)
           setSelectedVote(null)
         } else if (d.has_voted) {
-          // Same round, server confirms we voted
           setHasVoted(true)
         }
       } catch {
@@ -289,6 +389,7 @@ function UndercoverGamePage() {
       const payload = data as { frontend_message?: string; message?: string }
       toast.error(payload.frontend_message || payload.message || "An error occurred")
       setIsLoadingState(false)
+      setIsSubmittingDescription(false)
     })
 
     return () => {
@@ -296,6 +397,10 @@ function UndercoverGamePage() {
       offVoteCasted()
       offWaitingVotes()
       offYouDied()
+      offTurnStarted()
+      offDescriptionSubmitted()
+      offDescriptionsComplete()
+      offYourTurn()
       offNotification()
       offPlayerEliminated()
       offGameOver()
@@ -314,24 +419,53 @@ function UndercoverGamePage() {
     return () => clearTimeout(timer)
   }, [isLoadingState])
 
-  const handleVote = useCallback(
+  const handleSelectPlayer = useCallback(
     (playerId: string) => {
-      if (hasVoted || !user) return
-      const votedPlayer = gameState.players.find((p) => p.id === playerId)
-      setSelectedVote(playerId)
-      setHasVoted(true)
-      if (votedPlayer) {
-        toast.info(t("game.undercover.votedFor", { username: votedPlayer.username }))
-      }
-      emit("vote_for_a_player", {
-        room_id: roomIdRef.current,
-        game_id: gameId,
-        user_id: user.id,
-        voted_user_id: playerId,
-      })
+      if (hasVoted) return
+      setSelectedVote((prev) => (prev === playerId ? null : playerId))
     },
-    [hasVoted, emit, gameId, user, gameState.players, t],
+    [hasVoted],
   )
+
+  const handleConfirmVote = useCallback(() => {
+    if (!selectedVote || hasVoted || !user) return
+    const votedPlayer = gameState.players.find((p) => p.id === selectedVote)
+    setHasVoted(true)
+    if (votedPlayer) {
+      toast.info(t("game.undercover.votedFor", { username: votedPlayer.username }))
+    }
+    emit("vote_for_a_player", {
+      room_id: roomIdRef.current,
+      game_id: gameId,
+      user_id: user.id,
+      voted_user_id: selectedVote,
+    })
+  }, [selectedVote, hasVoted, emit, gameId, user, gameState.players, t])
+
+  const handleSubmitDescription = useCallback(() => {
+    if (!user || isSubmittingDescription) return
+    const word = descriptionInput.trim()
+    if (!word) {
+      setDescriptionError(t("game.undercover.wordMustBeSingleWord"))
+      return
+    }
+    if (word.includes(" ")) {
+      setDescriptionError(t("game.undercover.wordMustBeSingleWord"))
+      return
+    }
+    if (word.length > 50) {
+      setDescriptionError(t("game.undercover.wordMustBeSingleWord"))
+      return
+    }
+    setDescriptionError("")
+    setIsSubmittingDescription(true)
+    emit("submit_description_event", {
+      room_id: roomIdRef.current,
+      game_id: gameId,
+      user_id: user.id,
+      word,
+    })
+  }, [descriptionInput, user, emit, gameId, isSubmittingDescription, t])
 
   const handleNextRound = useCallback(() => {
     emit("start_new_turn_event", {
@@ -341,7 +475,7 @@ function UndercoverGamePage() {
   }, [emit, gameId])
 
   const handleDismissRole = useCallback(() => {
-    setGameState((prev) => ({ ...prev, phase: "playing" }))
+    setGameState((prev) => ({ ...prev, phase: "describing" }))
   }, [])
 
   const handleLeaveRoom = useCallback(() => {
@@ -361,6 +495,19 @@ function UndercoverGamePage() {
   const myPlayer = gameState.players.find((p) => p.id === user?.id)
   const isAlive = myPlayer?.is_alive !== false
 
+  // Check if it's my turn to describe
+  const isMyTurnToDescribe =
+    gameState.phase === "describing" &&
+    gameState.descriptionOrder.length > 0 &&
+    gameState.currentDescriberIndex < gameState.descriptionOrder.length &&
+    gameState.descriptionOrder[gameState.currentDescriberIndex]?.user_id === user?.id
+
+  // Current describer info
+  const currentDescriber =
+    gameState.descriptionOrder.length > 0 && gameState.currentDescriberIndex < gameState.descriptionOrder.length
+      ? gameState.descriptionOrder[gameState.currentDescriberIndex]
+      : null
+
   if (cancelMessage) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
@@ -375,6 +522,44 @@ function UndercoverGamePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
+      {/* Voting Transition Overlay */}
+      <AnimatePresence>
+        {showVotingTransition && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
+          >
+            <motion.div className="text-center space-y-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+              >
+                <MessageCircle className="h-16 w-16 mx-auto text-primary" />
+              </motion.div>
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-2xl font-bold"
+              >
+                {t("game.undercover.allDescriptionsIn")}
+              </motion.h2>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="text-lg text-muted-foreground"
+              >
+                {t("game.undercover.timeToVote")}
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Game Header */}
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">{t("games.undercover.name")}</h1>
@@ -433,7 +618,122 @@ function UndercoverGamePage() {
         </div>
       )}
 
-      {/* Playing Phase */}
+      {/* Describing Phase */}
+      {gameState.phase === "describing" && (
+        <div className="mb-8">
+          {/* Role/Word reminder */}
+          {gameState.my_role && gameState.my_role !== "mr_white" && gameState.my_word && (
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-4 text-center">
+              <span className="text-sm text-muted-foreground">{t("game.undercover.yourWordReminder")}:</span>{" "}
+              <span className="font-bold text-primary">{gameState.my_word}</span>
+            </div>
+          )}
+
+          <h2 className="text-xl font-bold text-center mb-4">{t("game.undercover.describeYourWord")}</h2>
+
+          {/* Description Order */}
+          {gameState.descriptionOrder.length > 0 && (
+            <div className="rounded-lg border bg-card p-4 mb-4">
+              <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                {t("game.undercover.descriptionOrder")}
+              </h3>
+              <div className="space-y-1.5">
+                {gameState.descriptionOrder.map((entry, idx) => {
+                  const hasDescribed = !!gameState.descriptions[entry.user_id]
+                  const isCurrent = idx === gameState.currentDescriberIndex && !hasDescribed
+                  return (
+                    <div
+                      key={entry.user_id}
+                      className={cn(
+                        "flex items-center justify-between rounded-md px-3 py-1.5 text-sm",
+                        isCurrent && "bg-primary/10 border border-primary/30",
+                        hasDescribed && "opacity-60",
+                      )}
+                    >
+                      <span className={cn("font-medium", isCurrent && "text-primary")}>
+                        {idx + 1}. {entry.username}
+                        {entry.user_id === user?.id && " (you)"}
+                      </span>
+                      {hasDescribed && (
+                        <span className="text-xs bg-muted rounded-full px-2 py-0.5">
+                          {gameState.descriptions[entry.user_id]}
+                        </span>
+                      )}
+                      {isCurrent && !hasDescribed && (
+                        <span className="text-xs text-primary font-semibold">
+                          {entry.user_id === user?.id ? t("game.undercover.yourTurn") : "..."}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Description Input (my turn) */}
+          {isMyTurnToDescribe && isAlive && (
+            <div className="rounded-lg border bg-card p-4 mb-4">
+              <label htmlFor="description-input" className="block text-sm font-medium mb-2">
+                {t("game.undercover.describeYourWord")}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="description-input"
+                  type="text"
+                  value={descriptionInput}
+                  onChange={(e) => {
+                    setDescriptionInput(e.target.value)
+                    setDescriptionError("")
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSubmitDescription()
+                  }}
+                  placeholder={t("game.undercover.describeYourWord")}
+                  maxLength={50}
+                  disabled={isSubmittingDescription}
+                  className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleSubmitDescription}
+                  disabled={isSubmittingDescription || !descriptionInput.trim()}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  {isSubmittingDescription ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t("game.undercover.submitDescription")
+                  )}
+                </button>
+              </div>
+              {descriptionError && (
+                <p className="text-xs text-destructive mt-1">{descriptionError}</p>
+              )}
+            </div>
+          )}
+
+          {/* Waiting message (not my turn) */}
+          {!isMyTurnToDescribe && currentDescriber && (
+            <div className="rounded-lg bg-muted/50 p-3 mb-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {t("game.undercover.waitingForDescription", { username: currentDescriber.username })}
+              </p>
+            </div>
+          )}
+
+          {/* All descriptions done but event not received yet */}
+          {gameState.currentDescriberIndex >= gameState.descriptionOrder.length && gameState.descriptionOrder.length > 0 && (
+            <div className="rounded-lg bg-muted/50 p-3 mb-4 text-center">
+              <Loader2 className="h-4 w-4 inline animate-spin mr-2" />
+              <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Playing Phase (Voting) */}
       {gameState.phase === "playing" && (
         <div className="mb-8">
           {/* Role/Word reminder */}
@@ -444,6 +744,28 @@ function UndercoverGamePage() {
             </div>
           )}
 
+          {/* Show descriptions from the describing phase */}
+          {Object.keys(gameState.descriptions).length > 0 && (
+            <div className="rounded-lg border bg-card p-4 mb-4">
+              <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                {t("game.undercover.descriptionOrder")}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {gameState.descriptionOrder.map((entry) => {
+                  const word = gameState.descriptions[entry.user_id]
+                  if (!word) return null
+                  return (
+                    <div key={entry.user_id} className="rounded-md bg-muted px-3 py-1.5 text-sm">
+                      <span className="font-medium">{entry.username}:</span>{" "}
+                      <span className="text-primary font-semibold">{word}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {!isAlive && (
             <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 mb-4 text-center">
               <Skull className="h-5 w-5 inline mr-2 text-destructive" />
@@ -451,7 +773,8 @@ function UndercoverGamePage() {
             </div>
           )}
 
-          <h2 className="text-xl font-bold text-center mb-4">{t("game.undercover.discussAndVote")}</h2>
+          <h2 className="text-xl font-bold text-center mb-2">{t("game.undercover.discussAndVote")}</h2>
+          <p className="text-sm text-muted-foreground text-center mb-4">{t("game.undercover.selectPlayerToVote")}</p>
 
           {hasVoted && (
             <div className="rounded-lg bg-muted/50 p-3 mb-4 text-center">
@@ -468,12 +791,12 @@ function UndercoverGamePage() {
                   <button
                     key={player.id}
                     type="button"
-                    onClick={() => handleVote(player.id)}
+                    onClick={() => handleSelectPlayer(player.id)}
                     disabled={hasVoted || !isAlive}
                     className={cn(
                       "flex items-center gap-3 rounded-lg border p-4 transition-colors",
                       selectedVote === player.id
-                        ? "border-primary bg-primary/5"
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/30"
                         : "hover:border-primary/50",
                       (hasVoted || !isAlive) && "opacity-50 cursor-not-allowed",
                     )}
@@ -488,7 +811,13 @@ function UndercoverGamePage() {
                           <Crown className="h-3.5 w-3.5 text-yellow-500" />
                         )}
                       </div>
-                      {selectedVote === player.id && (
+                      {selectedVote === player.id && !hasVoted && (
+                        <div className="flex items-center gap-1 text-xs text-primary">
+                          <ThumbsUp className="h-3 w-3" />
+                          Selected
+                        </div>
+                      )}
+                      {hasVoted && selectedVote === player.id && (
                         <div className="flex items-center gap-1 text-xs text-primary">
                           <ThumbsUp className="h-3 w-3" />
                           {t("game.undercover.voted")}
@@ -504,6 +833,23 @@ function UndercoverGamePage() {
                 )
               })}
           </div>}
+
+          {/* Vote Confirmation Button */}
+          {isAlive && !hasVoted && (
+            <button
+              type="button"
+              onClick={handleConfirmVote}
+              disabled={!selectedVote}
+              className={cn(
+                "mt-4 w-full rounded-md px-6 py-3 text-sm font-semibold transition-colors",
+                selectedVote
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-muted text-muted-foreground cursor-not-allowed",
+              )}
+            >
+              {t("game.undercover.voteToEliminate")}
+            </button>
+          )}
         </div>
       )}
 
@@ -574,6 +920,20 @@ function UndercoverGamePage() {
           ))}
         </div>
       </div>
+
+      {/* Leave Game Button */}
+      {gameState.phase !== "game_over" && gameState.phase !== "role_reveal" && (
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={handleLeaveRoom}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            {t("game.undercover.leaveGame")}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

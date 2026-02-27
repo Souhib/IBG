@@ -128,7 +128,19 @@
       "mayorLabel": "Mayor",
       "voted": "Voted",
       "yourWordReminder": "Your word",
-      "discussAndVote": "Discuss and vote to eliminate"
+      "discussAndVote": "Discuss and vote to eliminate",
+      "describeYourWord": "Describe your word",
+      "waitingForDescription": "Waiting for {{username}} to describe...",
+      "submitDescription": "Submit",
+      "voteToEliminate": "Vote to Eliminate",
+      "selectPlayerToVote": "Select a player to vote for",
+      "descriptionOrder": "Description Order",
+      "yourTurn": "Your turn!",
+      "wordMustBeSingleWord": "Must be a single word (no spaces)",
+      "leaveGame": "Leave Game",
+      "descriptionSubmitted": "Your hint was submitted!",
+      "allDescriptionsIn": "All hints are in!",
+      "timeToVote": "Get ready to vote and eliminate..."
     },
     "codenames": {
       "giveClue": "Give a Clue",

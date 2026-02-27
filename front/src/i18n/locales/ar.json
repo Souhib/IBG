@@ -128,7 +128,19 @@
       "mayorLabel": "العمدة",
       "voted": "صوّت",
       "yourWordReminder": "كلمتك",
-      "discussAndVote": "ناقش وصوّت للإقصاء"
+      "discussAndVote": "ناقش وصوّت للإقصاء",
+      "describeYourWord": "صف كلمتك",
+      "waitingForDescription": "في انتظار {{username}} ليصف...",
+      "submitDescription": "إرسال",
+      "voteToEliminate": "صوّت للإقصاء",
+      "selectPlayerToVote": "اختر لاعباً للتصويت ضده",
+      "descriptionOrder": "ترتيب الوصف",
+      "yourTurn": "دورك!",
+      "wordMustBeSingleWord": "يجب أن تكون كلمة واحدة (بدون مسافات)",
+      "leaveGame": "مغادرة اللعبة",
+      "descriptionSubmitted": "!تم إرسال وصفك",
+      "allDescriptionsIn": "!تم جمع كل الأوصاف",
+      "timeToVote": "...استعدوا للتصويت والإقصاء"
     },
     "codenames": {
       "giveClue": "أعطِ تلميحاً",

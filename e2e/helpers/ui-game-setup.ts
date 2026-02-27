@@ -542,9 +542,10 @@ export async function dismissRoleRevealAll(
       continue;
     }
 
-    // Check if already in playing phase (no role reveal needed)
+    // Check if already in playing or describing phase (no role reveal needed)
     const alreadyPlaying = await player.page
       .locator("text=Discuss and vote")
+      .or(player.page.locator("text=Describe your word"))
       .first()
       .isVisible()
       .catch(() => false);
@@ -567,9 +568,10 @@ export async function dismissRoleRevealAll(
       await dismissButton.click({ timeout: 5_000 }).catch(() => {});
     }
 
-    // Wait for playing phase — vote buttons or "Discuss and vote" heading
+    // Wait for describing or playing phase
     let playingPhaseVisible = await player.page
       .locator("text=Discuss and vote")
+      .or(player.page.locator("text=Describe your word"))
       .first()
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
@@ -598,6 +600,7 @@ export async function dismissRoleRevealAll(
     // Final check — if still no game content, player is not in the game
     const hasGameContent = await player.page
       .locator("text=Discuss and vote")
+      .or(player.page.locator("text=Describe your word"))
       .first()
       .waitFor({ state: "visible", timeout: 8_000 })
       .then(() => true)
@@ -652,14 +655,11 @@ export async function voteForPlayer(
     if (gameOverNow) return false;
   }
 
-  // Find the vote button that contains the target username
-  // NOTE: Do NOT check for "Waiting for other players to vote" text — this text
-  // appears on ALL players when anyone votes (via waiting_other_votes broadcast),
-  // even if this player hasn't voted yet. Only check for the actual vote button.
-  const voteButton = voterPage.locator(
+  // Find the player card that contains the target username and select it
+  const playerCard = voterPage.locator(
     `button:has(.font-medium:text("${targetUsername}"))`,
   );
-  let buttonVisible = await voteButton
+  let buttonVisible = await playerCard
     .waitFor({ state: "visible", timeout: 8_000 })
     .then(() => true)
     .catch(() => false);
@@ -678,17 +678,27 @@ export async function voteForPlayer(
     if (nowGameOver) return false;
   }
 
-  // Final check: is the button visible and enabled?
-  const canVote = await voteButton.isVisible().catch(() => false);
+  // Final check: is the card visible and enabled?
+  const canVote = await playerCard.isVisible().catch(() => false);
   if (!canVote) return false;
 
-  const isEnabled = await voteButton.isEnabled().catch(() => false);
+  const isEnabled = await playerCard.isEnabled().catch(() => false);
   if (!isEnabled) return false;
 
-  await voteButton.click();
+  // Step 1: Select the player (click the card)
+  await playerCard.click();
+
+  // Step 2: Click "Vote to Eliminate" to confirm
+  const confirmBtn = voterPage.locator("button:has-text('Vote to Eliminate')");
+  const confirmVisible = await confirmBtn
+    .waitFor({ state: "visible", timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (confirmVisible) {
+    await confirmBtn.click();
+  }
 
   // Wait for vote to be processed by backend before next voter
-  // (concurrent votes cause IllegalStateChangeError in backend DB sessions)
   await voterPage
     .locator("text=Voted")
     .or(voterPage.locator("text=Waiting for other players"))
@@ -863,8 +873,9 @@ export async function clickNextRound(page: Page): Promise<void> {
   const btn = page.locator("button:has-text('Next Round')");
   await expect(btn).toBeVisible({ timeout: 10_000 });
   await btn.click();
-  // Wait for new round to start — "Discuss and vote" appears when the new round begins
-  await page.locator("text=Discuss and vote")
+  // Wait for new round to start — "Describe your word" (describing phase) or "Discuss and vote" (playing phase)
+  await page.locator("text=Describe your word")
+    .or(page.locator("text=Discuss and vote"))
     .first()
     .waitFor({ state: "visible", timeout: 10_000 })
     .catch(() => {});
@@ -895,6 +906,111 @@ export async function ensureOnUndercoverGamePage(
   await page.waitForLoadState("domcontentloaded");
 
   return /\/game\/undercover\//.test(page.url());
+}
+
+// ─── Description Phase Helpers ──────────────────────────────
+
+/**
+ * Submit descriptions for all players in the description order.
+ * Each player types a word (derived from their position) and submits.
+ */
+export async function submitDescriptionsForAllPlayers(
+  players: PlayerContext[],
+): Promise<void> {
+  // We need to iterate through description order. Each player who has the input
+  // should type a word and submit. We do rounds until no more inputs are visible.
+  const words = ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honey", "ice", "jam"];
+  let wordIdx = 0;
+
+  for (let round = 0; round < players.length + 2; round++) {
+    let found = false;
+    for (const player of players) {
+      const pageAlive = await player.page.evaluate(() => true).catch(() => false);
+      if (!pageAlive) continue;
+
+      const hasInput = await player.page
+        .locator("#description-input")
+        .isVisible({ timeout: 2_000 })
+        .catch(() => false);
+      if (hasInput) {
+        found = true;
+        const word = words[wordIdx % words.length];
+        wordIdx++;
+
+        // Fill and submit with retry logic — socket events (turn_started,
+        // description_submitted) can clear descriptionInput between fill and click,
+        // leaving the Submit button disabled. Strategy: fill + click with short
+        // timeout, catch error, re-fill and retry. This is faster and more reliable
+        // than checking isEnabled separately (which can pass then fail during click).
+        const submitBtn = player.page.locator("button:has-text('Submit')");
+        let submitted = false;
+        for (let attempt = 0; attempt < 10 && !submitted; attempt++) {
+          await player.page.locator("#description-input").fill(word);
+          try {
+            // Short timeout — fail fast if a socket event disabled the button
+            await submitBtn.click({ timeout: 1_000 });
+            submitted = true;
+          } catch {
+            // Button was likely disabled by a socket event clearing the input.
+            // Small delay before re-fill to let the event settle.
+            await player.page.waitForTimeout(200);
+          }
+        }
+
+        // Wait for the description to be processed
+        await player.page
+          .locator("#description-input")
+          .waitFor({ state: "hidden", timeout: 10_000 })
+          .catch(() => {});
+
+        // Small delay for event propagation
+        await player.page.waitForTimeout(500);
+        break; // Only one player has the input at a time
+      }
+    }
+
+    // Check if we've transitioned to voting (or transition overlay is showing)
+    const transitioned = await players[0].page
+      .locator("text=Discuss and vote")
+      .or(players[0].page.locator("text=All hints are in"))
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (transitioned || !found) break;
+  }
+
+  // Wait for transition animation to finish and voting phase to appear on ALL players
+  for (const player of players) {
+    await player.page
+      .locator("text=Discuss and vote")
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .catch(() => {});
+  }
+}
+
+/**
+ * Wait for the voting phase to appear on a page.
+ * Handles the transition from describing to playing phase.
+ */
+export async function waitForVotingPhase(page: Page): Promise<void> {
+  const visible = await page
+    .locator("text=Discuss and vote")
+    .first()
+    .waitFor({ state: "visible", timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false);
+
+  if (!visible) {
+    // Reload to get latest state
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+    await page
+      .locator("text=Discuss and vote")
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 })
+      .catch(() => {});
+  }
 }
 
 // ─── Codenames UI Helpers ───────────────────────────────────
