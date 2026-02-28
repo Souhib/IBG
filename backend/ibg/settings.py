@@ -66,7 +66,7 @@ class Settings(BaseSettings):
 
     # Socket.IO
     sio_ping_interval: int = 25
-    sio_ping_timeout: int = 20
+    sio_ping_timeout: int = 60
 
     @field_validator("cors_origins")
     @classmethod

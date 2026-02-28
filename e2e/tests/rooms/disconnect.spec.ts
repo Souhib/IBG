@@ -142,8 +142,8 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     // Player 2 permanently disconnects (close the context entirely)
     await player2.context().close();
 
-    // Wait for the grace period to expire (3 seconds in E2E + buffer)
-    await player1.waitForTimeout(6_000);
+    // Wait for the grace period to expire (5 seconds in E2E + buffer)
+    await player1.waitForTimeout(8_000);
 
     // Player 1 should see the permanently left toast
     // and the player count should decrease

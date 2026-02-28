@@ -28,6 +28,14 @@ interface UserStatsData {
   games_hosted: number
 }
 
+interface GameHistoryEntry {
+  id: string
+  type: "undercover" | "codenames"
+  start_time: string
+  end_time: string | null
+  number_of_players: number
+}
+
 export const Route = createFileRoute("/_auth/stats")({
   component: StatsPage,
 })
@@ -45,13 +53,20 @@ function StatsPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [stats, setStats] = useState<UserStatsData | null>(null)
+  const [games, setGames] = useState<GameHistoryEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!user?.id) return
 
-    apiClient({ method: "GET", url: `/api/v1/stats/users/${user.id}/stats` })
-      .then((res) => setStats(res.data as UserStatsData))
+    Promise.all([
+      apiClient({ method: "GET", url: `/api/v1/stats/users/${user.id}/stats` }),
+      apiClient({ method: "GET", url: `/api/v1/games/user/${user.id}` }),
+    ])
+      .then(([statsRes, gamesRes]) => {
+        setStats(statsRes.data as UserStatsData)
+        setGames(gamesRes.data as GameHistoryEntry[])
+      })
       .catch(() => {})
       .finally(() => setIsLoading(false))
   }, [user?.id])
@@ -94,8 +109,46 @@ function StatsPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3 mb-8">
         <StatCard label={t("stats.gamesPlayed")} value={stats?.codenames_games_played ?? 0} />
         <StatCard label={t("stats.gamesWon")} value={stats?.codenames_games_won ?? 0} />
-        <StatCard label="Rooms Created" value={stats?.rooms_created ?? 0} />
+        <StatCard label={t("stats.roomsCreated")} value={stats?.rooms_created ?? 0} />
       </div>
+
+      {/* Recent Games */}
+      <h2 className="text-xl font-semibold mb-4">{t("stats.recentGames")}</h2>
+      {games.length === 0 ? (
+        <p className="text-muted-foreground text-sm">{t("stats.noGames")}</p>
+      ) : (
+        <div className="space-y-2">
+          {games.map((game) => (
+            <div key={game.id} className="flex items-center justify-between rounded-lg border bg-card px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">
+                  {game.type === "undercover" ? "🕵️" : "🔤"}
+                </span>
+                <div>
+                  <p className="text-sm font-medium">
+                    {game.type === "undercover"
+                      ? t("games.undercover.name")
+                      : t("games.codenames.name")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(game.start_time).toLocaleDateString()} &middot;{" "}
+                    {game.number_of_players} {t("room.players").toLowerCase()}
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded ${
+                  game.end_time
+                    ? "bg-muted text-muted-foreground"
+                    : "bg-primary/10 text-primary"
+                }`}
+              >
+                {game.end_time ? t("game.gameOver") : t("common.loading")}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

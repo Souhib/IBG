@@ -1,7 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { motion } from "motion/react"
 import { Trophy } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
+import apiClient from "@/api/client"
+
+interface LeaderboardEntry {
+  user_id: string
+  username: string
+  total_games_played: number
+  total_games_won: number
+  win_rate: number
+  current_win_streak: number
+  longest_win_streak: number
+}
+
+type SortField = "total_games_won" | "win_rate" | "longest_win_streak"
 
 export const Route = createFileRoute("/leaderboard")({
   component: LeaderboardPage,
@@ -9,6 +23,27 @@ export const Route = createFileRoute("/leaderboard")({
 
 function LeaderboardPage() {
   const { t } = useTranslation()
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [sortField, setSortField] = useState<SortField>("total_games_won")
+
+  useEffect(() => {
+    setIsLoading(true)
+    apiClient({
+      method: "GET",
+      url: "/api/v1/stats/leaderboard",
+      params: { stat_field: sortField, limit: 50 },
+    })
+      .then((res) => setEntries(res.data as LeaderboardEntry[]))
+      .catch(() => setEntries([]))
+      .finally(() => setIsLoading(false))
+  }, [sortField])
+
+  const sortTabs: { field: SortField; label: string }[] = [
+    { field: "total_games_won", label: t("leaderboard.wins") },
+    { field: "win_rate", label: t("leaderboard.winRate") },
+    { field: "longest_win_streak", label: t("leaderboard.streak") },
+  ]
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -22,7 +57,24 @@ function LeaderboardPage() {
         <h1 className="text-3xl font-bold">{t("leaderboard.title")}</h1>
       </motion.div>
 
-      {/* Leaderboard table - will be populated from API */}
+      {/* Sort Tabs */}
+      <div className="flex gap-2 mb-4">
+        {sortTabs.map((tab) => (
+          <button
+            key={tab.field}
+            type="button"
+            onClick={() => setSortField(tab.field)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              sortField === tab.field
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -44,14 +96,45 @@ function LeaderboardPage() {
               <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
                 {t("leaderboard.games")}
               </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
+                {t("leaderboard.winRate")}
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
+                {t("leaderboard.streak")}
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
-                No players yet. Be the first to play!
-              </td>
-            </tr>
+            {isLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <tr key={i} className="border-b">
+                    <td colSpan={6} className="px-6 py-4">
+                      <div className="h-4 rounded bg-muted animate-pulse" />
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ) : entries.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                  {t("leaderboard.noPlayers")}
+                </td>
+              </tr>
+            ) : (
+              entries.map((entry, index) => (
+                <tr key={entry.user_id} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-3 text-sm font-medium">
+                    {index < 3 ? ["🥇", "🥈", "🥉"][index] : `#${index + 1}`}
+                  </td>
+                  <td className="px-6 py-3 text-sm font-medium">{entry.username}</td>
+                  <td className="px-6 py-3 text-sm text-right">{entry.total_games_won}</td>
+                  <td className="px-6 py-3 text-sm text-right">{entry.total_games_played}</td>
+                  <td className="px-6 py-3 text-sm text-right">{entry.win_rate}%</td>
+                  <td className="px-6 py-3 text-sm text-right">{entry.longest_win_streak}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </motion.div>

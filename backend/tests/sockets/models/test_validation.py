@@ -16,7 +16,7 @@ from ibg.socketio.models.codenames import (
     StartCodenamesGame,
 )
 from ibg.socketio.models.room import JoinRoomUser, LeaveRoomUser
-from ibg.socketio.models.socket import StartGame, VoteForAPerson
+from ibg.socketio.models.socket import StartGame, SubmitDescription, VoteForAPerson
 
 # ========== JoinRoomUser ==========
 
@@ -79,9 +79,39 @@ def test_start_game_invalid_uuid():
 
 
 def test_vote_for_a_person_valid():
-    """Valid VoteForAPerson."""
-    vote = VoteForAPerson(room_id="room-1", game_id="game-1", user_id="user-1", voted_user_id="user-2")
-    assert vote.user_id == "user-1"
+    """Valid VoteForAPerson with UUIDs."""
+    uid1 = uuid4()
+    uid2 = uuid4()
+    vote = VoteForAPerson(room_id=uuid4(), game_id=uuid4(), user_id=uid1, voted_user_id=uid2)
+    assert vote.user_id == uid1
+
+
+def test_vote_for_a_person_rejects_non_uuid():
+    """VoteForAPerson rejects non-UUID strings."""
+    with pytest.raises(ValidationError):
+        VoteForAPerson(room_id="not-a-uuid", game_id="not-a-uuid", user_id="not-a-uuid", voted_user_id="not-a-uuid")
+
+
+# ========== SubmitDescription ==========
+
+
+def test_submit_description_valid():
+    """Valid SubmitDescription with UUID fields and a word."""
+    desc = SubmitDescription(room_id=uuid4(), game_id=uuid4(), user_id=uuid4(), word="prayer")
+    assert desc.word == "prayer"
+
+
+def test_submit_description_accepts_uuid_strings():
+    """SubmitDescription auto-converts valid UUID strings."""
+    uid = "11111111-1111-1111-1111-111111111111"
+    desc = SubmitDescription(room_id=uid, game_id=uid, user_id=uid, word="test")
+    assert str(desc.user_id) == uid
+
+
+def test_submit_description_rejects_non_uuid():
+    """SubmitDescription rejects non-UUID strings."""
+    with pytest.raises(ValidationError):
+        SubmitDescription(room_id="bad", game_id="bad", user_id="bad", word="test")
 
 
 # ========== StartCodenamesGame ==========

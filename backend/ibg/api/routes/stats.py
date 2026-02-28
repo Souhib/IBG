@@ -1,11 +1,13 @@
-from typing import Annotated, Sequence
+from collections.abc import Sequence
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
 from ibg.api.controllers.achievement import AchievementController
 from ibg.api.controllers.stats import StatsController
-from ibg.api.models.stats import UserAchievement, UserStats
+from ibg.api.models.stats import UserStats
+from ibg.api.schemas.stats import AchievementWithProgress, LeaderboardEntry
 from ibg.dependencies import get_achievement_controller, get_stats_controller
 
 router = APIRouter(
@@ -25,24 +27,24 @@ async def get_user_stats(
     return await stats_controller.get_or_create_user_stats(user_id)
 
 
-@router.get("/users/{user_id}/achievements", response_model=Sequence[UserAchievement])
+@router.get("/users/{user_id}/achievements", response_model=Sequence[AchievementWithProgress])
 async def get_user_achievements(
     *,
     user_id: UUID,
     achievement_controller: Annotated[
         AchievementController, Depends(get_achievement_controller)
     ],
-) -> Sequence[UserAchievement]:
-    """Get all achievements (earned and in-progress) for a user."""
+) -> Sequence[AchievementWithProgress]:
+    """Get all achievements with definitions and user progress."""
     return await achievement_controller.get_user_achievements(user_id)
 
 
-@router.get("/leaderboard", response_model=Sequence[UserStats])
+@router.get("/leaderboard", response_model=Sequence[LeaderboardEntry])
 async def get_leaderboard(
     *,
     stats_controller: Annotated[StatsController, Depends(get_stats_controller)],
     stat_field: str = Query(default="total_games_won", description="Stat field to rank by"),
     limit: int = Query(default=10, ge=1, le=100, description="Number of results"),
-) -> Sequence[UserStats]:
+) -> Sequence[LeaderboardEntry]:
     """Get the leaderboard ranked by a specific stat field."""
     return await stats_controller.get_leaderboard(stat_field=stat_field, limit=limit)

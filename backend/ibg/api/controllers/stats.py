@@ -1,13 +1,15 @@
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.models.stats import UserStats
+from ibg.api.models.table import User
 from ibg.api.schemas.error import UserNotFoundError
+from ibg.api.schemas.stats import LeaderboardEntry
 
 
 class StatsController:
@@ -79,8 +81,7 @@ class StatsController:
         # Win streak tracking
         if won:
             stats.current_win_streak += 1
-            if stats.current_win_streak > stats.longest_win_streak:
-                stats.longest_win_streak = stats.current_win_streak
+            stats.longest_win_streak = max(stats.longest_win_streak, stats.current_win_streak)
         else:
             stats.current_win_streak = 0
 
@@ -96,8 +97,7 @@ class StatsController:
         else:
             stats.current_play_streak_days = 1
 
-        if stats.current_play_streak_days > stats.longest_play_streak_days:
-            stats.longest_play_streak_days = stats.current_play_streak_days
+        stats.longest_play_streak_days = max(stats.longest_play_streak_days, stats.current_play_streak_days)
 
         stats.last_played_at = now
 
@@ -146,12 +146,12 @@ class StatsController:
         self,
         stat_field: str = "total_games_won",
         limit: int = 10,
-    ) -> Sequence[UserStats]:
-        """Return the top users ranked by a given stat field.
+    ) -> Sequence[LeaderboardEntry]:
+        """Return the top users ranked by a given stat field, with usernames.
 
         :param stat_field: The name of the UserStats column to sort by (descending).
         :param limit: Maximum number of results to return.
-        :return: A list of UserStats ordered by the stat field descending.
+        :return: A list of LeaderboardEntry with username included.
         :raises ValueError: If the stat field does not exist on UserStats.
         """
         column = getattr(UserStats, stat_field, None)
@@ -159,6 +159,25 @@ class StatsController:
             raise ValueError(f"Invalid stat field: {stat_field}")
 
         results = await self.session.exec(
-            select(UserStats).order_by(col(column).desc()).limit(limit)
+            select(UserStats, User.username)
+            .join(User, UserStats.user_id == User.id)
+            .order_by(col(column).desc())
+            .limit(limit)
         )
-        return results.all()
+
+        entries: list[LeaderboardEntry] = []
+        for stats, username in results.all():
+            played = stats.total_games_played
+            win_rate = (stats.total_games_won / played * 100) if played > 0 else 0.0
+            entries.append(
+                LeaderboardEntry(
+                    user_id=stats.user_id,
+                    username=username,
+                    total_games_played=played,
+                    total_games_won=stats.total_games_won,
+                    win_rate=round(win_rate, 1),
+                    current_win_streak=stats.current_win_streak,
+                    longest_win_streak=stats.longest_win_streak,
+                )
+            )
+        return entries

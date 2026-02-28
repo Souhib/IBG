@@ -10,6 +10,7 @@ from starlette.testclient import TestClient
 from ibg.api.controllers.achievement import AchievementController
 from ibg.api.controllers.stats import StatsController
 from ibg.api.models.stats import UserAchievement, UserStats
+from ibg.api.schemas.stats import AchievementWithProgress, LeaderboardEntry
 from ibg.dependencies import get_achievement_controller, get_stats_controller
 
 
@@ -115,34 +116,33 @@ class TestUserAchievements:
     """Tests for the GET /api/v1/stats/users/{user_id}/achievements endpoint."""
 
     def test_get_user_achievements_success(self, test_app: FastAPI, client: TestClient):
-        """Fetching user achievements returns 200 and a list of UserAchievement objects."""
+        """Fetching user achievements returns 200 and AchievementWithProgress objects."""
         # Arrange
         user_id = uuid.uuid4()
-        achievement1_id = uuid.uuid4()
-        achievement2_id = uuid.uuid4()
-        ach_def1_id = uuid.uuid4()
-        ach_def2_id = uuid.uuid4()
-        now = datetime.now(UTC)
         mock_controller = Mock(spec=AchievementController)
         mock_controller.get_user_achievements = AsyncMock(
             return_value=[
-                UserAchievement(
-                    id=achievement1_id,
-                    user_id=user_id,
-                    achievement_id=ach_def1_id,
+                AchievementWithProgress(
+                    code="first_game",
+                    name="First Steps",
+                    description="Play your first game",
+                    icon="star",
+                    category="beginner",
+                    tier=1,
+                    threshold=1,
                     progress=1,
-                    unlocked_at=now,
-                    created_at=now,
-                    updated_at=now,
+                    unlocked=True,
                 ),
-                UserAchievement(
-                    id=achievement2_id,
-                    user_id=user_id,
-                    achievement_id=ach_def2_id,
+                AchievementWithProgress(
+                    code="civilian_wins_5",
+                    name="Good Citizen",
+                    description="Win 5 games as a Civilian",
+                    icon="shield",
+                    category="undercover_master",
+                    tier=1,
+                    threshold=5,
                     progress=3,
-                    unlocked_at=None,
-                    created_at=now,
-                    updated_at=now,
+                    unlocked=False,
                 ),
             ]
         )
@@ -155,16 +155,15 @@ class TestUserAchievements:
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 2
-        assert data[0]["id"] == str(achievement1_id)
-        assert data[0]["user_id"] == str(user_id)
-        assert data[0]["achievement_id"] == str(ach_def1_id)
+        assert data[0]["code"] == "first_game"
+        assert data[0]["name"] == "First Steps"
         assert data[0]["progress"] == 1
-        assert data[0]["unlocked_at"] is not None
-        assert data[1]["id"] == str(achievement2_id)
-        assert data[1]["user_id"] == str(user_id)
-        assert data[1]["achievement_id"] == str(ach_def2_id)
+        assert data[0]["unlocked"] is True
+        assert data[0]["tier"] == 1
+        assert data[0]["threshold"] == 1
+        assert data[1]["code"] == "civilian_wins_5"
         assert data[1]["progress"] == 3
-        assert data[1]["unlocked_at"] is None
+        assert data[1]["unlocked"] is False
 
         mock_controller.get_user_achievements.assert_awaited_once_with(user_id)
 
@@ -194,33 +193,30 @@ class TestLeaderboard:
     """Tests for the GET /api/v1/stats/leaderboard endpoint."""
 
     def test_get_leaderboard_success(self, test_app: FastAPI, client: TestClient):
-        """Fetching the leaderboard with defaults returns 200 and a list of UserStats."""
+        """Fetching the leaderboard with defaults returns 200 with username included."""
         # Arrange
         user1_id = uuid.uuid4()
         user2_id = uuid.uuid4()
-        stats1_id = uuid.uuid4()
-        stats2_id = uuid.uuid4()
-        now = datetime.now(UTC)
         mock_controller = Mock(spec=StatsController)
         mock_controller.get_leaderboard = AsyncMock(
             return_value=[
-                UserStats(
-                    id=stats1_id,
+                LeaderboardEntry(
                     user_id=user1_id,
-                    total_games_won=50,
+                    username="player_one",
                     total_games_played=80,
-                    total_games_lost=30,
-                    created_at=now,
-                    updated_at=now,
+                    total_games_won=50,
+                    win_rate=62.5,
+                    current_win_streak=3,
+                    longest_win_streak=8,
                 ),
-                UserStats(
-                    id=stats2_id,
+                LeaderboardEntry(
                     user_id=user2_id,
-                    total_games_won=30,
+                    username="player_two",
                     total_games_played=60,
-                    total_games_lost=30,
-                    created_at=now,
-                    updated_at=now,
+                    total_games_won=30,
+                    win_rate=50.0,
+                    current_win_streak=1,
+                    longest_win_streak=5,
                 ),
             ]
         )
@@ -233,11 +229,13 @@ class TestLeaderboard:
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 2
-        assert data[0]["id"] == str(stats1_id)
         assert data[0]["user_id"] == str(user1_id)
+        assert data[0]["username"] == "player_one"
         assert data[0]["total_games_won"] == 50
-        assert data[1]["id"] == str(stats2_id)
+        assert data[0]["win_rate"] == 62.5
+        assert data[0]["longest_win_streak"] == 8
         assert data[1]["user_id"] == str(user2_id)
+        assert data[1]["username"] == "player_two"
         assert data[1]["total_games_won"] == 30
 
         mock_controller.get_leaderboard.assert_awaited_once_with(stat_field="total_games_won", limit=10)
@@ -248,18 +246,17 @@ class TestLeaderboard:
         """Fetching the leaderboard with custom stat_field and limit returns 200."""
         # Arrange
         user_id = uuid.uuid4()
-        stats_id = uuid.uuid4()
-        now = datetime.now(UTC)
         mock_controller = Mock(spec=StatsController)
         mock_controller.get_leaderboard = AsyncMock(
             return_value=[
-                UserStats(
-                    id=stats_id,
+                LeaderboardEntry(
                     user_id=user_id,
+                    username="streak_master",
                     total_games_played=100,
+                    total_games_won=70,
+                    win_rate=70.0,
+                    current_win_streak=15,
                     longest_win_streak=15,
-                    created_at=now,
-                    updated_at=now,
                 ),
             ]
         )
@@ -275,8 +272,8 @@ class TestLeaderboard:
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
-        assert data[0]["id"] == str(stats_id)
         assert data[0]["user_id"] == str(user_id)
+        assert data[0]["username"] == "streak_master"
         assert data[0]["longest_win_streak"] == 15
 
         mock_controller.get_leaderboard.assert_awaited_once_with(stat_field="longest_win_streak", limit=5)

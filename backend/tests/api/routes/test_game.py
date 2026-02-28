@@ -11,6 +11,7 @@ from ibg.api.controllers.game import GameController
 from ibg.api.models.error import ErrorRoomIsNotActive
 from ibg.api.models.game import GameType
 from ibg.api.models.table import Game
+from ibg.api.schemas.game import GameHistoryEntry
 from ibg.dependencies import get_game_controller
 
 
@@ -336,5 +337,76 @@ async def test_delete_game_success(test_app: FastAPI, client: TestClient):
     assert response.status_code == 204
     assert response.content == b""
     mock_controller.delete_game.assert_called_once()
+
+    test_app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_games_by_user_success(test_app: FastAPI, client: TestClient):
+    """GET /api/v1/games/user/{user_id} returns 200 with the user's game history."""
+    # Arrange
+    user_id = uuid4()
+    game1_id = uuid4()
+    game2_id = uuid4()
+    start_time = datetime.now()
+    end_time = datetime.now()
+
+    mock_controller = Mock(spec=GameController)
+    mock_controller.get_games_by_user = AsyncMock(
+        return_value=[
+            GameHistoryEntry(
+                id=game1_id,
+                type=GameType.UNDERCOVER,
+                start_time=start_time,
+                end_time=end_time,
+                number_of_players=5,
+            ),
+            GameHistoryEntry(
+                id=game2_id,
+                type=GameType.CODENAMES,
+                start_time=start_time,
+                end_time=None,
+                number_of_players=8,
+            ),
+        ]
+    )
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
+
+    # Act
+    response = client.get(f"/api/v1/games/user/{user_id}")
+
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["id"] == str(game1_id)
+    assert data[0]["type"] == GameType.UNDERCOVER.value
+    assert data[0]["number_of_players"] == 5
+    assert data[0]["end_time"] is not None
+    assert data[1]["id"] == str(game2_id)
+    assert data[1]["type"] == GameType.CODENAMES.value
+    assert data[1]["number_of_players"] == 8
+    assert data[1]["end_time"] is None
+    mock_controller.get_games_by_user.assert_awaited_once_with(user_id, limit=20)
+
+    test_app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_games_by_user_empty(test_app: FastAPI, client: TestClient):
+    """GET /api/v1/games/user/{user_id} returns 200 and empty list for new user."""
+    # Arrange
+    user_id = uuid4()
+    mock_controller = Mock(spec=GameController)
+    mock_controller.get_games_by_user = AsyncMock(return_value=[])
+    test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
+
+    # Act
+    response = client.get(f"/api/v1/games/user/{user_id}")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == []
+    mock_controller.get_games_by_user.assert_awaited_once_with(user_id, limit=20)
 
     test_app.dependency_overrides.clear()

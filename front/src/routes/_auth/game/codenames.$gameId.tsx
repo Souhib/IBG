@@ -531,14 +531,25 @@ function CodenamesGamePage() {
               : t("games.codenames.teams.blue")}{" "}
             {t("game.codenames.wins")}
           </p>
-          <button
-            type="button"
-            onClick={handleLeaveRoom}
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            {t("room.leave")}
-          </button>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            {roomIdRef.current && (
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/rooms/$roomId", params: { roomId: roomIdRef.current! } })}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                {t("game.backToRoom")}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleLeaveRoom}
+              className="inline-flex items-center gap-2 rounded-md border px-6 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              {t("room.leave")}
+            </button>
+          </div>
         </div>
       )}
 

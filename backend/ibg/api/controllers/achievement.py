@@ -1,9 +1,9 @@
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import UUID
 
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.models.stats import (
     AchievementCategory,
@@ -11,6 +11,7 @@ from ibg.api.models.stats import (
     UserAchievement,
     UserStats,
 )
+from ibg.api.schemas.stats import AchievementWithProgress
 
 # All achievement definitions to seed into the database
 ACHIEVEMENT_DEFINITIONS: list[dict] = [
@@ -472,16 +473,49 @@ class AchievementController:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_user_achievements(self, user_id: UUID) -> Sequence[UserAchievement]:
-        """Get all achievement records (earned and in-progress) for a user.
+    async def get_user_achievements(self, user_id: UUID) -> Sequence[AchievementWithProgress]:
+        """Get all achievements with definitions and user progress.
+
+        Returns all achievement definitions. For each, includes the user's
+        current progress and unlock status.
 
         :param user_id: The id of the user.
-        :return: A list of UserAchievement records.
+        :return: A list of AchievementWithProgress records.
         """
-        results = await self.session.exec(
-            select(UserAchievement).where(UserAchievement.user_id == user_id)
-        )
-        return results.all()
+        # Load all definitions
+        all_definitions = (
+            await self.session.exec(select(AchievementDefinition))
+        ).all()
+
+        # Load user's achievement progress
+        user_achievements = (
+            await self.session.exec(
+                select(UserAchievement).where(UserAchievement.user_id == user_id)
+            )
+        ).all()
+
+        # Map achievement_id -> UserAchievement for quick lookup
+        ua_map: dict[UUID, UserAchievement] = {
+            ua.achievement_id: ua for ua in user_achievements
+        }
+
+        entries: list[AchievementWithProgress] = []
+        for defn in all_definitions:
+            ua = ua_map.get(defn.id)  # type: ignore[arg-type]
+            entries.append(
+                AchievementWithProgress(
+                    code=defn.code,
+                    name=defn.name,
+                    description=defn.description,
+                    icon=defn.icon,
+                    category=defn.category.value,
+                    tier=defn.tier,
+                    threshold=defn.threshold,
+                    progress=ua.progress if ua else 0,
+                    unlocked=ua.unlocked_at is not None if ua else False,
+                )
+            )
+        return entries
 
     async def check_achievements(
         self, user_id: UUID, stats: UserStats

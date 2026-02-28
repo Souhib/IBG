@@ -20,7 +20,8 @@
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
-    "leaderboard": "Leaderboard"
+    "leaderboard": "Leaderboard",
+    "theme": "Theme"
   },
   "auth": {
     "login": "Login",
@@ -119,6 +120,7 @@
     "gameOver": "Game Over",
     "winner": "Winner",
     "playAgain": "Play Again",
+    "backToRoom": "Back to Room",
     "undercover": {
       "iUnderstand": "I Understand",
       "nextRound": "Next Round",
@@ -161,20 +163,42 @@
     "gamesWon": "Games Won",
     "winRate": "Win Rate",
     "currentStreak": "Current Streak",
-    "longestStreak": "Longest Streak"
+    "longestStreak": "Longest Streak",
+    "roomsCreated": "Rooms Created",
+    "recentGames": "Recent Games",
+    "noGames": "No games played yet",
+    "won": "Won",
+    "lost": "Lost"
   },
   "achievements": {
     "title": "Achievements",
     "unlocked": "Unlocked",
     "inProgress": "In Progress",
-    "locked": "Locked"
+    "locked": "Locked",
+    "progress": "{{current}} / {{target}}",
+    "noAchievements": "No achievements yet. Keep playing!"
   },
   "leaderboard": {
     "title": "Leaderboard",
     "rank": "Rank",
     "player": "Player",
     "wins": "Wins",
-    "games": "Games"
+    "games": "Games",
+    "noPlayers": "No players yet. Play a game to appear here!",
+    "winRate": "Win Rate",
+    "streak": "Streak"
+  },
+  "profile": {
+    "edit": "Edit Profile",
+    "editUsername": "Edit Username",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "saved": "Profile updated!",
+    "passwordChanged": "Password changed!",
+    "viewStats": "View your game statistics",
+    "viewAchievements": "View your earned badges",
+    "joinOrCreate": "Join or create a game room"
   },
   "errors": {
     "api": {

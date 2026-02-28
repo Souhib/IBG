@@ -20,7 +20,8 @@
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
     "logout": "تسجيل الخروج",
-    "leaderboard": "لوحة المتصدرين"
+    "leaderboard": "لوحة المتصدرين",
+    "theme": "المظهر"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -119,6 +120,7 @@
     "gameOver": "انتهت اللعبة",
     "winner": "الفائز",
     "playAgain": "العب مرة أخرى",
+    "backToRoom": "العودة للغرفة",
     "undercover": {
       "iUnderstand": "فهمت",
       "nextRound": "الجولة التالية",
@@ -161,19 +163,56 @@
     "gamesWon": "الألعاب المربوحة",
     "winRate": "نسبة الفوز",
     "currentStreak": "سلسلة الانتصارات الحالية",
-    "longestStreak": "أطول سلسلة انتصارات"
+    "longestStreak": "أطول سلسلة انتصارات",
+    "roomsCreated": "الغرف المُنشأة",
+    "recentGames": "الألعاب الأخيرة",
+    "noGames": "لم تلعب أي لعبة بعد",
+    "won": "فوز",
+    "lost": "خسارة"
   },
   "achievements": {
     "title": "الإنجازات",
     "unlocked": "مفتوح",
     "inProgress": "قيد التقدم",
-    "locked": "مقفل"
+    "locked": "مقفل",
+    "progress": "{{current}} / {{target}}",
+    "noAchievements": "لا إنجازات بعد. استمر باللعب!"
   },
   "leaderboard": {
     "title": "لوحة المتصدرين",
     "rank": "الترتيب",
     "player": "اللاعب",
     "wins": "الانتصارات",
-    "games": "الألعاب"
+    "games": "الألعاب",
+    "noPlayers": "لا يوجد لاعبون بعد. العب لعبة لتظهر هنا!",
+    "winRate": "نسبة الفوز",
+    "streak": "سلسلة الانتصارات"
+  },
+  "profile": {
+    "edit": "تعديل الملف الشخصي",
+    "editUsername": "تعديل اسم المستخدم",
+    "changePassword": "تغيير كلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "saved": "تم تحديث الملف الشخصي!",
+    "passwordChanged": "تم تغيير كلمة المرور!",
+    "viewStats": "عرض إحصائيات اللعب",
+    "viewAchievements": "عرض شاراتك المكتسبة",
+    "joinOrCreate": "انضم أو أنشئ غرفة لعب"
+  },
+  "errors": {
+    "api": {
+      "userNotFound": "المستخدم غير موجود.",
+      "userAlreadyExists": "يوجد حساب بهذا البريد الإلكتروني بالفعل.",
+      "invalidCredentials": "يرجى التحقق من بريدك الإلكتروني وكلمة المرور.",
+      "invalidToken": "رمز المصادقة غير صالح.",
+      "roomNotFound": "الغرفة غير موجودة.",
+      "roomAlreadyExists": "هذه الغرفة موجودة بالفعل.",
+      "userNotInRoom": "أنت لست في هذه الغرفة.",
+      "userAlreadyInRoom": "أنت بالفعل في غرفة.",
+      "wrongRoomPassword": "كلمة مرور الغرفة غير صحيحة.",
+      "gameNotFound": "اللعبة غير موجودة.",
+      "resourceNotFound": "المورد غير موجود."
+    }
   }
 }
