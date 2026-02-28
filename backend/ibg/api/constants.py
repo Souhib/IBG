@@ -52,7 +52,7 @@ EVENT_CODENAMES_TURN_ENDED = "codenames_turn_ended"
 EVENT_CODENAMES_GAME_OVER = "codenames_game_over"
 
 # Disconnect / reconnect constants
-DISCONNECT_GRACE_PERIOD_SECONDS = int(os.getenv("DISCONNECT_GRACE_PERIOD_SECONDS", "30"))
+DISCONNECT_GRACE_PERIOD_SECONDS = int(os.getenv("DISCONNECT_GRACE_PERIOD_SECONDS", "120"))
 
 # Disconnect / reconnect event names
 EVENT_PLAYER_DISCONNECTED = "player_disconnected"
@@ -61,3 +61,7 @@ EVENT_PLAYER_LEFT_PERMANENTLY = "player_left_permanently"
 EVENT_OWNER_CHANGED = "owner_changed"
 EVENT_GAME_CANCELLED = "game_cancelled"
 EVENT_UNDERCOVER_GAME_STATE = "undercover_game_state"
+EVENT_DESCRIPTION_SUBMITTED = "description_submitted"
+EVENT_DESCRIPTIONS_COMPLETE = "descriptions_complete"
+EVENT_YOUR_TURN_TO_DESCRIBE = "your_turn_to_describe"
+EVENT_TURN_STARTED = "turn_started"

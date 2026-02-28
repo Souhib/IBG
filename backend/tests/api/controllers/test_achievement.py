@@ -35,16 +35,19 @@ async def test_seed_achievements_idempotent(achievement_controller: AchievementC
 
 
 async def test_get_user_achievements_empty(achievement_controller: AchievementController, create_user):
-    """A new user with no unlocked achievements returns an empty list."""
+    """A new user with no unlocked achievements returns all definitions with no progress."""
 
     # Arrange
     user = await create_user(username="noachieve", email="noachieve@test.com")
+    await achievement_controller.seed_achievements()
 
     # Act
     achievements = await achievement_controller.get_user_achievements(user.id)
 
-    # Assert
-    assert len(achievements) == 0
+    # Assert — all definitions returned, none unlocked
+    assert len(achievements) == len(ACHIEVEMENT_DEFINITIONS)
+    assert all(not a.unlocked for a in achievements)
+    assert all(a.progress == 0 for a in achievements)
 
 
 async def test_unlock_achievement_creates_record(achievement_controller: AchievementController, create_user):
@@ -216,7 +219,7 @@ async def test_get_user_achievements_after_unlock(
     achievement_controller: AchievementController,
     create_user,
 ):
-    """After unlocking one achievement, get_user_achievements returns exactly one record with matching ids."""
+    """After unlocking one achievement, get_user_achievements returns all definitions with progress."""
 
     # Arrange
     user = await create_user(username="afterunlock", email="afterunlock@test.com")
@@ -228,8 +231,10 @@ async def test_get_user_achievements_after_unlock(
     # Act
     achievements = await achievement_controller.get_user_achievements(user.id)
 
-    # Assert
-    assert len(achievements) == 1
-    assert achievements[0].achievement_id == defn.id
-    assert achievements[0].user_id == user.id
-    assert achievements[0].unlocked_at is not None
+    # Assert — returns all definitions, with the unlocked one marked
+    assert len(achievements) == len(ACHIEVEMENT_DEFINITIONS)
+    unlocked = [a for a in achievements if a.unlocked]
+    assert len(unlocked) == 1
+    assert unlocked[0].code == defn.code
+    assert unlocked[0].name == defn.name
+    assert unlocked[0].progress == 1

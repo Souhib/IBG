@@ -15,11 +15,14 @@ from ibg.api.models.error import (
     CantVoteForYourselfError,
     RoomNotFoundError,
 )
+from ibg.api.models.undercover import UndercoverRole
 from ibg.socketio.controllers.undercover_game import (
     create_undercover_game,
+    generate_description_order,
     get_civilian_and_undercover_words,
     set_vote,
     start_new_turn,
+    submit_description,
 )
 from ibg.socketio.models.room import Room as RedisRoom
 from ibg.socketio.models.socket import StartGame, UndercoverGame, UndercoverTurn, VoteForAPerson
@@ -32,8 +35,8 @@ P2 = "22222222-2222-2222-2222-222222222222"
 P3 = "33333333-3333-3333-3333-333333333333"
 P4 = "44444444-4444-4444-4444-444444444444"
 
-ROOM_ID = "room-vote-1"
-GAME_ID = "game-vote-1"
+ROOM_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+GAME_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 
 
 # ========== set_vote ==========
@@ -51,7 +54,7 @@ async def test_set_vote_success(make_undercover_game, make_redis_room):
         game_id=GAME_ID,
         room_id=ROOM_ID,
         players=[p1, p2],
-        turns=[UndercoverTurn()],
+        turns=[UndercoverTurn(phase="voting")],
     )
 
     vote_data = VoteForAPerson(room_id=ROOM_ID, game_id=GAME_ID, user_id=P1, voted_user_id=P2)
@@ -81,7 +84,7 @@ async def test_set_vote_dead_voter(make_undercover_game, make_redis_room):
         game_id=GAME_ID,
         room_id=ROOM_ID,
         players=[p1, p2],
-        turns=[UndercoverTurn()],
+        turns=[UndercoverTurn(phase="voting")],
     )
 
     vote_data = VoteForAPerson(room_id=ROOM_ID, game_id=GAME_ID, user_id=P1, voted_user_id=P2)
@@ -103,7 +106,7 @@ async def test_set_vote_for_dead_player(make_undercover_game, make_redis_room):
         game_id=GAME_ID,
         room_id=ROOM_ID,
         players=[p1, p2],
-        turns=[UndercoverTurn()],
+        turns=[UndercoverTurn(phase="voting")],
     )
 
     vote_data = VoteForAPerson(room_id=ROOM_ID, game_id=GAME_ID, user_id=P1, voted_user_id=P2)
@@ -124,7 +127,7 @@ async def test_set_vote_for_yourself(make_undercover_game, make_redis_room):
         game_id=GAME_ID,
         room_id=ROOM_ID,
         players=[p1],
-        turns=[UndercoverTurn()],
+        turns=[UndercoverTurn(phase="voting")],
     )
 
     vote_data = VoteForAPerson(room_id=ROOM_ID, game_id=GAME_ID, user_id=P1, voted_user_id=P1)
@@ -170,7 +173,7 @@ async def test_get_civilian_and_undercover_words():
 
 
 async def test_start_new_turn(make_undercover_game, make_redis_room):
-    """Creates a DB turn, a turn event, and appends a Redis turn."""
+    """Creates a DB turn, a turn event, and appends a Redis turn with description order."""
 
     # Arrange
     mock_sio = MagicMock()
@@ -202,6 +205,9 @@ async def test_start_new_turn(make_undercover_game, make_redis_room):
     # Verify persisted in Redis
     refreshed = await UndercoverGame.get("game-turn-1")
     assert len(refreshed.turns) == 1
+    assert refreshed.turns[0].phase == "describing"
+    assert len(refreshed.turns[0].description_order) == 1
+    assert refreshed.turns[0].current_describer_index == 0
 
 
 # ========== create_undercover_game ==========
@@ -303,7 +309,7 @@ async def test_set_vote_overwrites_previous(make_undercover_game, make_redis_roo
         game_id=GAME_ID,
         room_id=ROOM_ID,
         players=[p1, p2, p3],
-        turns=[UndercoverTurn()],
+        turns=[UndercoverTurn(phase="voting")],
     )
 
     # Act — vote for P2, then change to P3
@@ -351,9 +357,7 @@ async def test_create_undercover_game_10_players(mock_get_words, mock_start_turn
     _, _, redis_game = await create_undercover_game(mock_sio, start_input)
 
     # Assert — 10 players: 2 mr_white, max(2, 10//4)=2 undercover, 6 civilian
-    from ibg.api.models.undercover import UndercoverRole
-
-    role_counts = {}
+    role_counts: dict[UndercoverRole, int] = {}
     for p in redis_game.players:
         role_counts[p.role] = role_counts.get(p.role, 0) + 1
 
@@ -403,9 +407,7 @@ async def test_create_undercover_game_3_players_minimum(mock_get_words, mock_sta
     _, _, redis_game = await create_undercover_game(mock_sio, start_input)
 
     # Assert — 3 players: no Mr. White, 1 undercover, 2 civilians
-    from ibg.api.models.undercover import UndercoverRole
-
-    role_counts = {}
+    role_counts: dict[UndercoverRole, int] = {}
     for p in redis_game.players:
         role_counts[p.role] = role_counts.get(p.role, 0) + 1
 
@@ -413,3 +415,159 @@ async def test_create_undercover_game_3_players_minimum(mock_get_words, mock_sta
     assert role_counts.get(UndercoverRole.MR_WHITE, 0) == 0
     assert role_counts.get(UndercoverRole.UNDERCOVER, 0) == 1
     assert role_counts.get(UndercoverRole.CIVILIAN, 0) == 2
+
+
+# ========== generate_description_order ==========
+
+
+def test_generate_description_order_mr_white_not_first():
+    """Mr. White should never be first in the description order."""
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.MR_WHITE),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN),
+        make_undercover_player(P3, role=UndercoverRole.CIVILIAN),
+        make_undercover_player(P4, role=UndercoverRole.UNDERCOVER),
+    ]
+
+    # Act / Assert — run many times to test randomization
+    for _ in range(100):
+        order = generate_description_order(players)
+        assert order[0] != UUID(P1), "Mr. White must never be first describer"
+        assert len(order) == 4
+
+
+def test_generate_description_order_skips_dead_players():
+    """Dead players should not appear in the description order."""
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN, alive=False),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER),
+    ]
+
+    # Act
+    order = generate_description_order(players)
+
+    # Assert
+    assert len(order) == 2
+    assert UUID(P2) not in order
+
+
+def test_generate_description_order_includes_all_alive():
+    """All alive players should appear in the description order."""
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER),
+    ]
+
+    # Act
+    order = generate_description_order(players)
+
+    # Assert
+    assert len(order) == 3
+    assert set(order) == {UUID(P1), UUID(P2), UUID(P3)}
+
+
+# ========== submit_description ==========
+
+
+async def test_submit_description_valid_word(make_undercover_game, make_redis_room):
+    """A valid description word is stored and the describer index advances."""
+
+    # Arrange
+    p1 = make_undercover_player(P1)
+    p2 = make_undercover_player(P2)
+
+    description_order = [UUID(P1), UUID(P2)]
+    turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id=GAME_ID,
+        room_id=ROOM_ID,
+        players=[p1, p2],
+        turns=[turn],
+    )
+
+    # Act
+    all_done = submit_description(game, UUID(P1), "prayer")
+
+    # Assert
+    assert not all_done
+    assert game.turns[-1].words[UUID(P1)] == "prayer"
+    assert game.turns[-1].current_describer_index == 1
+
+
+async def test_submit_description_all_done(make_undercover_game, make_redis_room):
+    """Returns True when all players have submitted descriptions."""
+
+    # Arrange
+    p1 = make_undercover_player(P1)
+    p2 = make_undercover_player(P2)
+
+    description_order = [UUID(P1), UUID(P2)]
+    turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id=GAME_ID,
+        room_id=ROOM_ID,
+        players=[p1, p2],
+        turns=[turn],
+    )
+
+    # Act — submit both descriptions
+    first_done = submit_description(game, UUID(P1), "prayer")
+    second_done = submit_description(game, UUID(P2), "fasting")
+
+    # Assert
+    assert not first_done
+    assert second_done
+    assert game.turns[-1].current_describer_index == 2
+    assert game.turns[-1].words[UUID(P1)] == "prayer"
+    assert game.turns[-1].words[UUID(P2)] == "fasting"
+
+
+async def test_submit_description_wrong_turn(make_undercover_game, make_redis_room):
+    """submit_description stores the word even when called out of order (validation is in the route)."""
+
+    # Arrange
+    p1 = make_undercover_player(P1)
+    p2 = make_undercover_player(P2)
+
+    description_order = [UUID(P1), UUID(P2)]
+    turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id=GAME_ID,
+        room_id=ROOM_ID,
+        players=[p1, p2],
+        turns=[turn],
+    )
+
+    # Act — P2 submits when it's P1's turn (route validates, controller just stores)
+    all_done = submit_description(game, UUID(P2), "mosque")
+
+    # Assert — controller stores without checking turn order
+    assert not all_done
+    assert game.turns[-1].words[UUID(P2)] == "mosque"
+    assert game.turns[-1].current_describer_index == 1

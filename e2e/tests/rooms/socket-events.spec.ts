@@ -166,8 +166,8 @@ test.describe("Rooms — Socket Events", () => {
     // Host (player 1) disconnects
     await player1.context().close();
 
-    // After grace period (3s in e2e), ownership should transfer via socket event
-    await player2.waitForTimeout(5_000);
+    // After grace period (5s in e2e), ownership should transfer via socket event
+    await player2.waitForTimeout(8_000);
 
     // Player 2 should now see the host controls (game type selector + start button)
     await expect(

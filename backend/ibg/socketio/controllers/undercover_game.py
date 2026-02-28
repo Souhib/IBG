@@ -35,6 +35,27 @@ async def get_civilian_and_undercover_words(sio: IBGSocket) -> tuple[Word, Word]
     return civilian_word, undercover_word
 
 
+def generate_description_order(players: list[UndercoverSocketPlayer]) -> list[UUID]:
+    """Generate a randomized description order for alive players.
+
+    Mr. White is never placed first. If Mr. White ends up at index 0,
+    swap with a random other player.
+    """
+    alive_ids = [p.user_id for p in players if p.is_alive]
+    random.shuffle(alive_ids)
+
+    if len(alive_ids) > 1:
+        mr_white_ids = {p.user_id for p in players if p.role == UndercoverRole.MR_WHITE and p.is_alive}
+        if alive_ids[0] in mr_white_ids:
+            # Swap with a random non-Mr-White player
+            swap_candidates = [i for i in range(1, len(alive_ids)) if alive_ids[i] not in mr_white_ids]
+            if swap_candidates:
+                swap_idx = random.choice(swap_candidates)
+                alive_ids[0], alive_ids[swap_idx] = alive_ids[swap_idx], alive_ids[0]
+
+    return alive_ids
+
+
 async def start_new_turn(sio: IBGSocket, db_room: Room, db_game: Game, redis_game: UndercoverGame) -> None:
     """Start a new turn in the game."""
     turn = await sio.game_controller.create_turn(game_id=db_game.id)
@@ -50,8 +71,25 @@ async def start_new_turn(sio: IBGSocket, db_room: Room, db_game: Game, redis_gam
             user_id=db_room.owner_id,
         ),
     )
-    redis_game.turns.append(UndercoverTurn())
+    description_order = generate_description_order(redis_game.players)
+    new_turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+    redis_game.turns.append(new_turn)
     await redis_game.save()
+
+
+def submit_description(game: UndercoverGame, user_id: UUID, word: str) -> bool:
+    """Store a player's description word and advance the describer index.
+
+    Returns True if all players have described (phase should transition to voting).
+    """
+    current_turn = game.turns[-1]
+    current_turn.words[user_id] = word
+    current_turn.current_describer_index += 1
+    return current_turn.current_describer_index >= len(current_turn.description_order)
 
 
 async def create_undercover_game(
@@ -175,12 +213,12 @@ async def set_vote(
         game = await UndercoverGame.get(data.game_id)
 
         player_to_vote: UndercoverSocketPlayer = next(
-            player for player in game.players if str(player.user_id) == data.user_id
+            player for player in game.players if player.user_id == data.user_id
         )
         if player_to_vote.is_alive is False:
             raise CantVoteBecauseYouDeadError(user_id=data.user_id)
         voted_player: UndercoverSocketPlayer = next(
-            player for player in game.players if str(player.user_id) == data.voted_user_id
+            player for player in game.players if player.user_id == data.voted_user_id
         )
         if voted_player.is_alive is False:
             raise CantVoteForDeadPersonError(
@@ -189,7 +227,7 @@ async def set_vote(
             )
         if player_to_vote.user_id == voted_player.user_id:
             raise CantVoteForYourselfError(user_id=data.user_id)
-        game.turns[-1].votes[UUID(data.user_id)] = voted_player.user_id
+        game.turns[-1].votes[data.user_id] = voted_player.user_id
         await game.save()
 
         # Check if all alive players have voted (inside lock for atomicity)

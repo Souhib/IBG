@@ -1,11 +1,11 @@
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import selectinload
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import desc, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.models.error import ErrorRoomIsNotActive, GameNotFoundError, NoTurnInsideGameError
 from ibg.api.models.event import EventCreate
@@ -13,6 +13,7 @@ from ibg.api.models.game import GameCreate, GameUpdate
 from ibg.api.models.relationship import GameTurnLink, RoomGameLink, TurnEventLink, UserGameLink
 from ibg.api.models.room import RoomType
 from ibg.api.models.table import Event, Game, Room, Turn
+from ibg.api.schemas.game import GameHistoryEntry
 
 
 class GameController:
@@ -102,6 +103,36 @@ class GameController:
         db_game = (await self.session.exec(select(Game).where(Game.id == game_id))).one()
         await self.session.delete(db_game)
         await self.session.commit()
+
+    async def get_games_by_user(
+        self, user_id: UUID, limit: int = 20
+    ) -> Sequence[GameHistoryEntry]:
+        """Get a user's game history, most recent first.
+
+        :param user_id: The id of the user.
+        :param limit: Maximum number of results to return.
+        :return: A list of GameHistoryEntry records.
+        """
+        results = await self.session.exec(
+            select(Game)
+            .join(UserGameLink, Game.id == UserGameLink.game_id)
+            .where(UserGameLink.user_id == user_id)
+            .order_by(desc(Game.start_time))
+            .limit(limit)
+        )
+        games = results.all()
+        entries: list[GameHistoryEntry] = []
+        for game in games:
+            entries.append(
+                GameHistoryEntry(
+                    id=game.id,  # type: ignore[arg-type]
+                    type=game.type,
+                    start_time=game.start_time,
+                    end_time=game.end_time,
+                    number_of_players=game.number_of_players,
+                )
+            )
+        return entries
 
     async def create_turn(self, game_id: UUID) -> Turn:
         """

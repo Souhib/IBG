@@ -32,6 +32,9 @@ class UndercoverTurn(BaseModel):
     words: dict[UUID, str] = {}
     users_that_voted: list[UUID] = []
     eliminated_player: UUID | None = None
+    description_order: list[UUID] = []
+    current_describer_index: int = 0
+    phase: str = "describing"
 
 
 class UndercoverGame(Game, index=True):
@@ -43,12 +46,19 @@ class UndercoverGame(Game, index=True):
 
 
 class StartNewTurn(BaseModel):
-    room_id: str
-    game_id: str
+    room_id: UUID
+    game_id: UUID
 
 
 class VoteForAPerson(BaseModel):
-    room_id: str
-    game_id: str
-    user_id: str
-    voted_user_id: str
+    room_id: UUID
+    game_id: UUID
+    user_id: UUID
+    voted_user_id: UUID
+
+
+class SubmitDescription(BaseModel):
+    room_id: UUID
+    game_id: UUID
+    user_id: UUID
+    word: str

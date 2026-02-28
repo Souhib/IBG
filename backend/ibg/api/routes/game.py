@@ -1,10 +1,12 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from ibg.api.controllers.game import GameController
 from ibg.api.models.game import GameCreate, GameUpdate
 from ibg.api.models.table import Game
+from ibg.api.schemas.game import GameHistoryEntry
 from ibg.dependencies import get_game_controller
 
 router = APIRouter(
@@ -29,6 +31,17 @@ async def get_all_undercover_games(
     game_controller: GameController = Depends(get_game_controller),
 ) -> list[Game]:
     return [Game.model_validate(game) for game in await game_controller.get_games()]
+
+
+@router.get("/user/{user_id}", response_model=list[GameHistoryEntry])
+async def get_games_by_user(
+    *,
+    user_id: UUID,
+    limit: int = Query(default=20, ge=1, le=100, description="Number of results"),
+    game_controller: Annotated[GameController, Depends(get_game_controller)],
+) -> list[GameHistoryEntry]:
+    """Get a user's game history, most recent first."""
+    return list(await game_controller.get_games_by_user(user_id, limit=limit))
 
 
 @router.get("/{game_id}", response_model=Game)

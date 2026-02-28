@@ -64,7 +64,7 @@ function RootLayout() {
                 </ErrorBoundary>
               </main>
               <Footer />
-              <Toaster position="bottom-right" richColors closeButton />
+              <Toaster position="bottom-right" richColors closeButton expand visibleToasts={3} />
             </div>
             <Suspense>
               <TanStackRouterDevtools position="bottom-right" />

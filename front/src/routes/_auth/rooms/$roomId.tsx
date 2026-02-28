@@ -91,7 +91,6 @@ function RoomLobbyPage() {
     const offStatus = on("room_status", (data: unknown) => {
       const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
       if (payload.data?.users) {
-        toast.success(t("toast.roomJoined"))
         setPlayers(
           payload.data.users.map((u) => ({
             id: u.id,
@@ -110,7 +109,7 @@ function RoomLobbyPage() {
           const prevIds = new Set(prev.map((p) => p.id))
           const newUser = payload.data.users.find((u) => !prevIds.has(u.id))
           if (newUser) {
-            toast.info(t("toast.playerJoined", { username: newUser.username }))
+            toast.info(t("toast.playerJoined", { username: newUser.username }), { id: `join-${newUser.id}` })
           }
           return payload.data.users.map((u) => ({
             id: u.id,
@@ -208,7 +207,7 @@ function RoomLobbyPage() {
       setPlayers((prev) => {
         const player = prev.find((p) => p.id === payload.user_id)
         if (player) {
-          toast.warning(t("toast.playerDisconnected", { username: player.username }))
+          toast.warning(t("toast.playerDisconnected", { username: player.username }), { id: `disconnect-${payload.user_id}` })
         }
         return prev.map((p) => (p.id === payload.user_id ? { ...p, is_disconnected: true } : p))
       })
@@ -220,7 +219,7 @@ function RoomLobbyPage() {
       if (payload.data?.users) {
         const reconnectedUser = payload.data.users.find((u) => u.id === payload.user_id)
         if (reconnectedUser) {
-          toast.success(t("toast.playerReconnected", { username: reconnectedUser.username }))
+          toast.success(t("toast.playerReconnected", { username: reconnectedUser.username }), { id: `reconnect-${payload.user_id}` })
         }
         setPlayers(
           payload.data.users.map((u) => ({
@@ -234,7 +233,7 @@ function RoomLobbyPage() {
         setPlayers((prev) => {
           const player = prev.find((p) => p.id === payload.user_id)
           if (player) {
-            toast.success(t("toast.playerReconnected", { username: player.username }))
+            toast.success(t("toast.playerReconnected", { username: player.username }), { id: `reconnect-${payload.user_id}` })
           }
           return prev.map((p) => (p.id === payload.user_id ? { ...p, is_disconnected: false } : p))
         })

@@ -31,8 +31,8 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
       await setup.players[1].page.context().close();
       await setup.players[2].page.context().close();
 
-      // Wait for disconnect grace period (15s in e2e) + cancellation processing
-      await setup.players[0].page.waitForTimeout(6_000);
+      // Wait for disconnect grace period (5s in e2e) + cancellation processing
+      await setup.players[0].page.waitForTimeout(8_000);
 
       // Player 1 should see one of:
       // 1. Game cancelled error (bg-destructive/10 div)
@@ -65,8 +65,8 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
       await setup.players[1].page.context().close();
       await setup.players[2].page.context().close();
 
-      // Wait for grace period (15s in e2e) + cancellation
-      await setup.players[0].page.waitForTimeout(6_000);
+      // Wait for grace period (5s in e2e) + cancellation
+      await setup.players[0].page.waitForTimeout(8_000);
 
       // Player 1 should see the game cancelled state:
       // Either a destructive error div or redirect to home
@@ -129,8 +129,8 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
       // Disconnect player 3
       await setup.players[2].page.context().close();
 
-      // Wait for disconnect grace period (15s in e2e) + processing
-      await setup.players[0].page.waitForTimeout(6_000);
+      // Wait for disconnect grace period (5s in e2e) + processing
+      await setup.players[0].page.waitForTimeout(8_000);
 
       // With 3 players, disconnecting 1 drops below minimum (< 3 alive)
       // so the game is cancelled rather than continuing

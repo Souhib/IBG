@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router"
-import { BookOpen, LogOut, Menu, Moon, Sun, Trophy, User, X } from "lucide-react"
+import { BookOpen, Globe, LogOut, Menu, Moon, Sun, Trophy, User, X } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/providers/AuthProvider"
@@ -33,6 +33,31 @@ function ThemeToggle() {
       aria-label={`Switch to ${effectiveTheme === "light" ? "dark" : "light"} mode`}
     >
       <Icon className="h-4 w-4" />
+    </button>
+  )
+}
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation()
+  const currentLang = i18n.language?.startsWith("ar") ? "ar" : "en"
+
+  const toggle = () => {
+    const newLang = currentLang === "en" ? "ar" : "en"
+    i18n.changeLanguage(newLang)
+    localStorage.setItem("ibg-language", newLang)
+    document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr"
+    document.documentElement.lang = newLang
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="flex items-center gap-1 rounded-md p-2 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+      aria-label={`Switch to ${currentLang === "en" ? "Arabic" : "English"}`}
+    >
+      <Globe className="h-4 w-4" />
+      <span className="text-xs font-medium">{currentLang === "en" ? "ع" : "EN"}</span>
     </button>
   )
 }
@@ -82,6 +107,7 @@ export function MainNav() {
         {/* Prayer times + Theme toggle + Auth buttons */}
         <div className="hidden md:flex items-center gap-3">
           <PrayerTimesNav />
+          <LanguageSwitcher />
           <ThemeToggle />
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
@@ -140,8 +166,9 @@ export function MainNav() {
             <PrayerTimesNav />
           </div>
           <div className="flex items-center gap-2 py-1">
+            <LanguageSwitcher />
             <ThemeToggle />
-            <span className="text-xs text-muted-foreground">Theme</span>
+            <span className="text-xs text-muted-foreground">{t("nav.theme")}</span>
           </div>
           {isAuthenticated ? (
             <button
