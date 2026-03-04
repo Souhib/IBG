@@ -35,16 +35,20 @@ class IBGSocket(socketio.AsyncServer):
         cors_origins: list[str] | None = None,
         ping_interval: int = 25,
         ping_timeout: int = 60,
+        client_manager: socketio.AsyncManager | None = None,
     ):
         from ibg.socketio.controllers.room import SocketRoomController
 
         allowed_origins = cors_origins or ["*"]
-        super().__init__(
-            async_mode="asgi",
-            cors_allowed_origins=allowed_origins,
-            ping_interval=ping_interval,
-            ping_timeout=ping_timeout,
-        )
+        kwargs = {
+            "async_mode": "asgi",
+            "cors_allowed_origins": allowed_origins,
+            "ping_interval": ping_interval,
+            "ping_timeout": ping_timeout,
+        }
+        if client_manager is not None:
+            kwargs["client_manager"] = client_manager
+        super().__init__(**kwargs)
         self._socket_room_controller_cls = SocketRoomController
         logger.info(f"[SIO] IBGSocket initialized with CORS origins: {allowed_origins}")
 

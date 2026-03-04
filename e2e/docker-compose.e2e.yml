@@ -62,8 +62,8 @@ services:
       DISCONNECT_GRACE_PERIOD_SECONDS: "30"
       GAME_FINISHED_TTL: "5"
       RATE_LIMIT_ENABLED: "false"
-      SIO_PING_INTERVAL: "10"
-      SIO_PING_TIMEOUT: "5"
+      SIO_PING_INTERVAL: "25"
+      SIO_PING_TIMEOUT: "20"
     depends_on:
       db:
         condition: service_healthy

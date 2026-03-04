@@ -1,22 +1,96 @@
-from typing import Sequence
+from collections.abc import Sequence
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from starlette.status import HTTP_201_CREATED
 
 from ibg.api.controllers.codenames import CodenamesController
+from ibg.api.controllers.codenames_game import CodenamesGameController
 from ibg.api.models.codenames import (
     CodenamesWord,
     CodenamesWordCreate,
     CodenamesWordPack,
     CodenamesWordPackCreate,
 )
-from ibg.dependencies import get_codenames_controller
+from ibg.api.models.table import User
+from ibg.api.schemas.shared import BaseModel
+from ibg.dependencies import get_codenames_controller, get_codenames_game_controller, get_current_user
 
 router = APIRouter(
     prefix="/codenames",
     tags=["Codenames"],
     responses={404: {"description": "Not found"}},
 )
+
+
+# --- Request Schemas ---
+
+
+class StartCodenamesRequest(BaseModel):
+    word_pack_ids: list[UUID] | None = None
+
+
+class GiveClueRequest(BaseModel):
+    clue_word: str
+    clue_number: int
+
+
+class GuessCardRequest(BaseModel):
+    card_index: int
+
+
+# --- Game Action Endpoints ---
+
+
+@router.post("/games/{room_id}/start", status_code=HTTP_201_CREATED)
+async def start_codenames_game(
+    room_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+    body: StartCodenamesRequest | None = None,
+) -> dict:
+    word_pack_ids = body.word_pack_ids if body else None
+    return await controller.create_and_start(room_id, current_user.id, word_pack_ids=word_pack_ids)
+
+
+@router.get("/games/{game_id}/board")
+async def get_codenames_board(
+    game_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+    sid: str | None = None,
+) -> dict:
+    return await controller.get_board(game_id, current_user.id, sid=sid)
+
+
+@router.post("/games/{game_id}/clue")
+async def give_clue(
+    game_id: UUID,
+    body: GiveClueRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+) -> dict:
+    return await controller.give_clue(game_id, current_user.id, body.clue_word, body.clue_number)
+
+
+@router.post("/games/{game_id}/guess")
+async def guess_card(
+    game_id: UUID,
+    body: GuessCardRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+) -> dict:
+    return await controller.guess_card(game_id, current_user.id, body.card_index)
+
+
+@router.post("/games/{game_id}/end-turn")
+async def end_turn(
+    game_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+) -> dict:
+    return await controller.end_turn(game_id, current_user.id)
 
 
 # --- Word Packs ---

@@ -3,6 +3,7 @@ import { LogOut, Users } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
+import apiClient, { getApiErrorMessage } from "@/api/client"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
@@ -50,10 +51,8 @@ function CodenamesGamePage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { emit, on, isConnected } = useSocket()
-  const roomIdRef = useRef<string | null>(
-    sessionStorage.getItem(`ibg-game-room-${gameId}`) || null,
-  )
+  const { socket, emit, on, isConnected } = useSocket()
+  const roomIdRef = useRef<string | null>(null)
   const [gameState, setGameState] = useState<CodenamesGameState | null>(null)
   const [clueWord, setClueWord] = useState("")
   const [clueNumber, setClueNumber] = useState(1)
@@ -62,57 +61,19 @@ function CodenamesGamePage() {
   const [isSubmittingClue, setIsSubmittingClue] = useState(false)
   const [loadingTimedOut, setLoadingTimedOut] = useState(false)
 
-  // Request board state on mount (handles navigation from lobby where initial event is missed)
+  // Fetch board state from server via REST on mount and reconnect
   useEffect(() => {
     if (!isConnected || !user) return
-    emit("get_board", { game_id: gameId, user_id: user.id })
-
-    // Retry if no state received within 2s (socket may have missed the initial emit)
-    const retryTimer = setTimeout(() => {
-      if (!gameState && isConnected) {
-        emit("get_board", { game_id: gameId, user_id: user.id })
-      }
-    }, 2000)
-    return () => clearTimeout(retryTimer)
-  }, [isConnected, user, emit, gameId])
-
-  useEffect(() => {
-    if (!isConnected) return
-
-    const offGameStarted = on("codenames_game_started", (data: unknown) => {
+    const fetchBoard = async () => {
       try {
-        const d = data as {
-          game_id: string
-          team: "red" | "blue"
-          role: "spymaster" | "operative"
-          current_team: "red" | "blue"
-          red_remaining: number
-          blue_remaining: number
-          board: CodenamesCard[]
-          players: CodenamesPlayer[]
-        }
-        setGameState({
-          board: d.board,
-          current_team: d.current_team,
-          current_turn: null,
-          my_team: d.team,
-          my_role: d.role,
-          red_remaining: d.red_remaining,
-          blue_remaining: d.blue_remaining,
-          status: "in_progress",
-          winner: null,
-          players: d.players || [],
+        const res = await apiClient({
+          method: "GET",
+          url: `/api/v1/codenames/games/${gameId}/board`,
+          params: socket?.id ? { sid: socket.id } : undefined,
         })
-      } catch {
-        toast.error(t("common.error"))
-      }
-    })
-
-    // codenames_board: response from get_board request (used on mount to fetch initial state)
-    const offBoard = on("codenames_board", (data: unknown) => {
-      try {
-        const d = data as {
+        const d = res.data as {
           game_id: string
+          room_id?: string
           team: "red" | "blue"
           role: "spymaster" | "operative"
           board: CodenamesCard[]
@@ -124,6 +85,7 @@ function CodenamesGamePage() {
           winner: "red" | "blue" | null
           players?: CodenamesPlayer[]
         }
+        if (d.room_id) roomIdRef.current = d.room_id
         setGameState((prev) => ({
           board: d.board,
           current_team: d.current_team,
@@ -136,10 +98,15 @@ function CodenamesGamePage() {
           winner: d.winner,
           players: d.players || prev?.players || [],
         }))
-      } catch {
-        toast.error(t("common.error"))
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Failed to load game state"))
       }
-    })
+    }
+    fetchBoard()
+  }, [isConnected, user, gameId])
+
+  useEffect(() => {
+    if (!isConnected) return
 
     const offClueGiven = on("codenames_clue_given", (data: unknown) => {
       try {
@@ -251,8 +218,6 @@ function CodenamesGamePage() {
     })
 
     return () => {
-      offGameStarted()
-      offBoard()
       offClueGiven()
       offCardRevealed()
       offTurnEnded()
@@ -271,30 +236,48 @@ function CodenamesGamePage() {
     return () => clearTimeout(timer)
   }, [gameState])
 
-  const handleGiveClue = useCallback(() => {
+  const handleGiveClue = useCallback(async () => {
     if (!clueWord.trim() || isSubmittingClue) return
     setIsSubmittingClue(true)
-    emit("give_clue", {
-      room_id: roomIdRef.current,
-      game_id: gameId,
-      user_id: user?.id,
-      clue_word: clueWord.trim(),
-      clue_number: clueNumber,
-    })
-    setClueWord("")
-    setClueNumber(1)
-  }, [emit, gameId, user?.id, clueWord, clueNumber, isSubmittingClue])
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/codenames/games/${gameId}/clue`,
+        data: { clue_word: clueWord.trim(), clue_number: clueNumber },
+      })
+      setClueWord("")
+      setClueNumber(1)
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to give clue"))
+      setIsSubmittingClue(false)
+    }
+  }, [gameId, clueWord, clueNumber, isSubmittingClue])
 
   const handleGuessCard = useCallback(
-    (index: number) => {
-      emit("guess_card", { room_id: roomIdRef.current, game_id: gameId, user_id: user?.id, card_index: index })
+    async (index: number) => {
+      try {
+        await apiClient({
+          method: "POST",
+          url: `/api/v1/codenames/games/${gameId}/guess`,
+          data: { card_index: index },
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Failed to guess card"))
+      }
     },
-    [emit, gameId, user?.id],
+    [gameId],
   )
 
-  const handleEndTurn = useCallback(() => {
-    emit("end_turn", { room_id: roomIdRef.current, game_id: gameId, user_id: user?.id })
-  }, [emit, gameId, user?.id])
+  const handleEndTurn = useCallback(async () => {
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/codenames/games/${gameId}/end-turn`,
+      })
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to end turn"))
+    }
+  }, [gameId])
 
   const handleLeaveRoom = useCallback(() => {
     if (!user || !roomIdRef.current) {

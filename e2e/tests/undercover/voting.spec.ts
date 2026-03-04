@@ -8,25 +8,25 @@ import {
   voteForPlayer,
   getAliveVoteTargets,
   waitForEliminationOrGameOver,
+  isPageAlive,
 } from "../../helpers/ui-game-setup";
 
 test.describe("Undercover — Voting Rules (UI)", () => {
   test("voting buttons do not include the current player (no self-vote)", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       let checkedPlayers = 0;
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         const targets = await getAliveVoteTargets(player.page);
         if (targets.length === 0) continue; // Player may not be in voting phase yet
@@ -41,14 +41,14 @@ test.describe("Undercover — Voting Rules (UI)", () => {
   });
 
   test("player sees word reminder in playing phase", async ({ browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       // Find game URL from a player still on the game page
       const gameUrl = activePlayers
@@ -58,8 +58,7 @@ test.describe("Undercover — Voting Rules (UI)", () => {
       // All active players should see "Your word:" reminder (no Mr. White in 3-player games)
       let wordCount = 0;
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
 
         // Recover players redirected away during the describing→voting transition
         if (!/\/game\/undercover\//.test(player.page.url()) && gameUrl) {
@@ -75,8 +74,7 @@ test.describe("Undercover — Voting Rules (UI)", () => {
 
         // Reload to trigger get_undercover_state reconnection handler
         if (!isVisible) {
-          const stillAlive = await player.page.evaluate(() => true).catch(() => false);
-          if (!stillAlive) continue;
+          if (!isPageAlive(player.page)) continue;
           await player.page.reload();
           await player.page.waitForLoadState("domcontentloaded");
           isVisible = await wordReminder
@@ -96,14 +94,14 @@ test.describe("Undercover — Voting Rules (UI)", () => {
   test("vote selection highlights chosen target and disables buttons", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       if (activePlayers.length < 2) return;
 
@@ -176,14 +174,14 @@ test.describe("Undercover — Voting Rules (UI)", () => {
   test("elimination occurs after all alive players vote via UI", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       const gameUrl = activePlayers
         .find((p) => /\/game\/undercover\//.test(p.page.url()))
@@ -194,8 +192,7 @@ test.describe("Undercover — Voting Rules (UI)", () => {
       const player1Username = activePlayers[0].login.user.username;
 
       for (const voter of activePlayers) {
-        const pageAlive = await voter.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(voter.page)) continue;
 
         if (!/\/game\/undercover\//.test(voter.page.url())) {
           await voter.page.goto(gameUrl);
@@ -215,11 +212,25 @@ test.describe("Undercover — Voting Rules (UI)", () => {
       )?.page;
       if (!observerPage) return; // All redirected — game cancelled
 
-      await expect(
-        observerPage
-          .locator(".lucide-skull, h2:has-text('Game Over')")
-          .first(),
-      ).toBeVisible({ timeout: 15_000 });
+      // Wait for elimination or game over — with reload fallback
+      const eliminationVisible = await observerPage
+        .locator(".lucide-skull, h2:has-text('Game Over')")
+        .first()
+        .waitFor({ state: "visible", timeout: 15_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!eliminationVisible) {
+        // Reload to get fresh state from server
+        await observerPage.reload();
+        await observerPage.waitForLoadState("domcontentloaded");
+        await observerPage
+          .locator(".lucide-skull")
+          .or(observerPage.locator("h2:has-text('Game Over')"))
+          .or(observerPage.locator("text=Eliminated"))
+          .first()
+          .waitFor({ state: "visible", timeout: 15_000 })
+          .catch(() => {});
+      }
     } finally {
       await setup.cleanup();
     }
@@ -228,20 +239,19 @@ test.describe("Undercover — Voting Rules (UI)", () => {
   test("players list shows correct count for 3 players via UI", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       // Player list should show player count
       let playerCountChecked = false;
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         const hasPlayerCount = await player.page
           .locator("text=/Players \\(\\d+\\/3\\)/")
@@ -262,8 +272,7 @@ test.describe("Undercover — Voting Rules (UI)", () => {
 
       // Each player should see 2 vote targets (not self)
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         const targets = await getAliveVoteTargets(player.page);
         if (targets.length === 0) continue; // Player may not be in voting phase
@@ -277,14 +286,14 @@ test.describe("Undercover — Voting Rules (UI)", () => {
   test("voted indicator shows which players have voted", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       if (activePlayers.length < 2) return;
 

@@ -25,20 +25,36 @@ from ibg.api.routes.user import router as user_router
 from ibg.api.schemas.error import BaseError
 from ibg.settings import Settings
 from ibg.socketio.models.shared import IBGSocket
-from ibg.socketio.routes import codenames, room, undercover
+from ibg.socketio.routes import room
 from ibg.socketio.routes.room import router as socket_router
+
+# Module-level sio instance for DI access
+_sio: IBGSocket | None = None
+
+
+def get_sio() -> IBGSocket:
+    """Get the global Socket.IO server instance for use in DI."""
+    if _sio is None:
+        raise RuntimeError("Socket.IO server not initialized yet")
+    return _sio
 
 
 def _create_sio(settings: Settings) -> IBGSocket:
-    """Create and configure the Socket.IO server with all event handlers."""
+    """Create and configure the Socket.IO server with event handlers.
+
+    Game event handlers have been migrated to REST controllers.
+    Only room lifecycle events (connect, disconnect, join, leave) remain on Socket.IO.
+    """
+    global _sio
+    mgr = socketio.AsyncRedisManager(settings.redis_om_url)
     sio = IBGSocket(
         cors_origins=settings.cors_origins,
         ping_interval=settings.sio_ping_interval,
         ping_timeout=settings.sio_ping_timeout,
+        client_manager=mgr,
     )
     room.room_events(sio)
-    undercover.undercover_events(sio)
-    codenames.codenames_events(sio)
+    _sio = sio
     return sio
 
 

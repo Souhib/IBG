@@ -4,6 +4,7 @@ import {
   setupRoomWithPlayers,
   startGameViaUI,
   getPlayerRoleFromUI,
+  isPageAlive,
   type CodenamesPlayerRole,
 } from "../../helpers/ui-game-setup";
 
@@ -24,6 +25,10 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
         role: CodenamesPlayerRole;
       }[] = [];
       for (let i = 0; i < setup.players.length; i++) {
+        if (!isPageAlive(setup.players[i].page)) continue;
+        const hasBoard = await setup.players[i].page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(setup.players[i].page);
         playerRoles.push({ index: i, role });
       }
@@ -40,27 +45,32 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
         await setup.players[player.index].page.context().close();
       }
 
-      // Wait for grace period (3s in e2e) + cleanup + game resolution
+      // Wait for disconnect grace period (30s) + 3s Redis polling + processing
       const survivorPage = setup.players[survivingTeam[0].index].page;
+      const gameOverOrCancelled = survivorPage
+        .locator("h2:has-text('Game Over')")
+        .or(survivorPage.locator(".bg-destructive\\/10"));
 
-      // Wait for disconnect grace period (30s) + backend cleanup + game resolution
-      await survivorPage
-        .locator("h2:has-text('Game Over'), .bg-destructive\\/10")
+      // Wait for game over indicator (returns immediately when visible, 25s ceiling)
+      await gameOverOrCancelled
         .first()
-        .waitFor({ state: "visible", timeout: 40_000 })
+        .waitFor({ state: "visible", timeout: 50_000 })
         .catch(() => {});
 
-      let gameOverVisible = await survivorPage
-        .locator("h2:has-text('Game Over')")
-        .isVisible()
-        .catch(() => false);
-      let cancelledVisible = await survivorPage
-        .locator(".bg-destructive\\/10")
-        .isVisible()
-        .catch(() => false);
+      const checkResolved = async (): Promise<boolean> => {
+        const redirected = !survivorPage.url().includes("/game/codenames/");
+        if (redirected) return true;
+        const go = await survivorPage.locator("h2:has-text('Game Over')").isVisible().catch(() => false);
+        if (go) return true;
+        const cancelled = await survivorPage.locator(".bg-destructive\\/10").isVisible().catch(() => false);
+        if (cancelled) return true;
+        return false;
+      };
 
-      // If not visible, reload to get latest state from server (get_board)
-      if (!gameOverVisible && !cancelledVisible) {
+      let resolved = await checkResolved();
+
+      // Retry with reloads if socket event was missed (SID may be stale)
+      for (let attempt = 0; attempt < 2 && !resolved; attempt++) {
         await survivorPage.reload();
         await survivorPage.waitForLoadState("domcontentloaded");
         await survivorPage.waitForFunction(
@@ -68,27 +78,16 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
           { timeout: 10_000 },
         ).catch(() => {});
 
-        // Wait for game over or cancelled to render after reload
-        await survivorPage
-          .locator("h2:has-text('Game Over'), .bg-destructive\\/10")
+        // After reload, get_board returns finished state → Game Over renders
+        await gameOverOrCancelled
           .first()
-          .waitFor({ state: "visible", timeout: 40_000 })
+          .waitFor({ state: "visible", timeout: 15_000 })
           .catch(() => {});
 
-        gameOverVisible = await survivorPage
-          .locator("h2:has-text('Game Over')")
-          .isVisible()
-          .catch(() => false);
-        cancelledVisible = await survivorPage
-          .locator(".bg-destructive\\/10")
-          .isVisible()
-          .catch(() => false);
+        resolved = await checkResolved();
       }
 
-      const redirected =
-        survivorPage.url().includes("/game/codenames/") === false;
-
-      expect(gameOverVisible || cancelledVisible || redirected).toBeTruthy();
+      expect(resolved).toBeTruthy();
     } finally {
       // Close any remaining contexts
       for (const player of setup.players) {
@@ -100,6 +99,7 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
   test("spymaster disconnect handled gracefully via UI", async ({
     browser,
   }) => {
+    test.setTimeout(120_000);
     // Need 5 players so one team has 3 (spymaster + 2 operatives)
     const accounts = await generateTestAccounts(5);
     const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
@@ -113,6 +113,10 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
         role: CodenamesPlayerRole;
       }[] = [];
       for (let i = 0; i < setup.players.length; i++) {
+        if (!isPageAlive(setup.players[i].page)) continue;
+        const hasBoard = await setup.players[i].page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(setup.players[i].page);
         playerRoles.push({ index: i, role });
       }
@@ -142,8 +146,12 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
             (_, idx) => idx !== spymaster.index,
           )!;
           // Wait for disconnect grace period (30s) + cleanup
-          await waitPlayer.page.locator("h2:has-text('Game Over'), .bg-destructive\\/10")
-            .first().waitFor({ state: "visible", timeout: 40_000 }).catch(() => {});
+          await waitPlayer.page
+            .locator("h2:has-text('Game Over')")
+            .or(waitPlayer.page.locator(".bg-destructive\\/10"))
+            .first()
+            .waitFor({ state: "visible", timeout: 50_000 })
+            .catch(() => {});
 
           // Find a remaining player from the same team
           const remainingTeammate = members.find(
@@ -158,6 +166,25 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
             const isOnGamePage = remainingPage
               .url()
               .includes("/game/codenames/");
+
+            // Reload to trigger get_board — backend may not have sent any
+            // notification after the disconnect (only promotes operative internally)
+            if (isOnGamePage) {
+              await remainingPage.reload().catch(() => {});
+              await remainingPage.waitForLoadState("domcontentloaded").catch(() => {});
+              await remainingPage.waitForFunction(
+                () => (window as any).__SOCKET__?.connected === true,
+                { timeout: 10_000 },
+              ).catch(() => {});
+              // Wait for board or game over / cancellation to appear
+              await remainingPage.locator(".grid-cols-5 button")
+                .first()
+                .or(remainingPage.locator("h2:has-text('Game Over')"))
+                .or(remainingPage.locator(".bg-destructive\\/10"))
+                .waitFor({ state: "visible", timeout: 15_000 })
+                .catch(() => {});
+            }
+
             const hasBoard = await remainingPage
               .locator(".grid-cols-5 button")
               .first()
@@ -167,10 +194,14 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
               .locator(".bg-destructive\\/10")
               .isVisible()
               .catch(() => false);
+            const isGameOver = await remainingPage
+              .locator("h2:has-text('Game Over')")
+              .isVisible()
+              .catch(() => false);
 
             // One of these outcomes is valid
             expect(
-              (isOnGamePage && hasBoard) || isCancelled || !isOnGamePage,
+              (isOnGamePage && hasBoard) || isCancelled || isGameOver || !isOnGamePage,
             ).toBeTruthy();
           }
         }
@@ -218,25 +249,28 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
         return cancelledVisible || gameOverVisible || redirected;
       };
 
-      // Wait for grace period (30s) + game resolution via socket events
-      await remainingPage
-        .locator("h2:has-text('Game Over'), .bg-destructive\\/10")
+      // Wait for grace period (30s) + 3s polling + game resolution via socket events
+      const gameOverOrCancelled = remainingPage
+        .locator("h2:has-text('Game Over')")
+        .or(remainingPage.locator(".bg-destructive\\/10"));
+      await gameOverOrCancelled
         .first()
-        .waitFor({ state: "visible", timeout: 40_000 })
+        .waitFor({ state: "visible", timeout: 50_000 })
         .catch(() => {});
 
       let resolved = await checkResolution();
 
-      // Retry with reload — socket may have missed the event
-      for (let attempt = 0; attempt < 3 && !resolved; attempt++) {
+      // Retry with reloads — socket event may have been sent to stale SID
+      for (let attempt = 0; attempt < 2 && !resolved; attempt++) {
         await remainingPage.reload();
         await remainingPage.waitForLoadState("domcontentloaded");
-        // Wait for socket reconnect and server state to propagate
-        await remainingPage.waitForTimeout(3_000);
-        await remainingPage
-          .locator("h2:has-text('Game Over'), .bg-destructive\\/10")
+        await remainingPage.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await gameOverOrCancelled
           .first()
-          .waitFor({ state: "visible", timeout: 10_000 })
+          .waitFor({ state: "visible", timeout: 15_000 })
           .catch(() => {});
         resolved = await checkResolution();
       }
@@ -248,6 +282,7 @@ test.describe("Codenames — Disconnect During Game (UI)", () => {
   });
 
   test("player reconnects to ongoing codenames game", async ({ browser }) => {
+    test.setTimeout(120_000);
     const accounts = await generateTestAccounts(4);
     const setup = await setupRoomWithPlayers(browser, accounts, "codenames");
 

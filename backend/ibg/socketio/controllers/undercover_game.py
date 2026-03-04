@@ -98,68 +98,79 @@ async def create_undercover_game(
 ) -> tuple[Room, Game, UndercoverGame]:
     """Create an undercover game, assign roles to players, and save the game to Redis."""
     db_room = await sio.room_controller.get_room_by_id(start_game_input.room_id)
-    async with redis_connection.lock(f"room:{db_room.id}:join", timeout=5):
-        try:
-            room = await RedisRoom.get(str(db_room.id))
-        except NotFoundError:
-            raise RoomNotFoundError(room_id=start_game_input.room_id) from None
-        players = room.users
-    num_players = len(players)
-    if num_players == 3:
-        # 3-player games: no Mr. White (too few players for that role)
-        num_mr_white = 0
-        num_undercover = 1
-        num_civilians = 2
-    else:
-        num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
-        num_undercover = max(2, num_players // 4)
-        num_civilians = num_players - num_mr_white - num_undercover
-        # Ensure at least 1 civilian — reduce undercover count if needed
-        while num_civilians < 1 and num_undercover > 1:
-            num_undercover -= 1
-            num_civilians += 1
-        while num_civilians < 1 and num_mr_white > 0:
-            num_mr_white -= 1
-            num_civilians += 1
-    roles = (
-        [UndercoverRole.UNDERCOVER] * num_undercover
-        + [UndercoverRole.CIVILIAN] * num_civilians
-        + [UndercoverRole.MR_WHITE] * num_mr_white
-    )
-    random.shuffle(roles)
-    undercover_players = [
-        UndercoverSocketPlayer(user_id=player.id, username=player.username, role=role, sid=player.sid)
-        for player, role in zip(players, roles)
-    ]
-    undercover_players[random.randint(0, len(undercover_players) - 1)].is_mayor = True
-    civilian_word, undercover_word = await get_civilian_and_undercover_words(sio)
-    db_game = await sio.game_controller.create_game(
-        GameCreate(
-            room_id=db_room.id,
-            number_of_players=len(players),
-            type=GameType.UNDERCOVER,
-            game_configurations={
-                "civilian_word": civilian_word.word,
-                "undercover_word": undercover_word.word,
-                "civilian_word_id": str(civilian_word.id),
-                "undercover_word_id": str(undercover_word.id),
-            },
-        )
-    )
-    redis_game = UndercoverGame(
-        pk=str(db_game.id),
-        civilian_word=civilian_word.word,
-        undercover_word=undercover_word.word,
-        room_id=str(db_room.id),
-        id=str(db_game.id),
-        players=undercover_players,
-    )
-    await redis_game.save()
+    async with redis_connection.lock(f"room:{db_room.id}:start", timeout=10):
+        async with redis_connection.lock(f"room:{db_room.id}:join", timeout=5):
+            try:
+                room = await RedisRoom.get(str(db_room.id))
+            except NotFoundError:
+                raise RoomNotFoundError(room_id=start_game_input.room_id) from None
 
-    # Track active game on the room
-    room.active_game_id = str(db_game.id)
-    room.active_game_type = "undercover"
-    await room.save()
+            # Prevent double-start
+            if room.active_game_id:
+                from ibg.api.schemas.error import BaseError
+                raise BaseError(
+                    message=f"Room {start_game_input.room_id} already has an active game",
+                    frontend_message="A game is already in progress.",
+                    status_code=400,
+                )
+
+            players = room.users
+        num_players = len(players)
+        if num_players == 3:
+            # 3-player games: no Mr. White (too few players for that role)
+            num_mr_white = 0
+            num_undercover = 1
+            num_civilians = 2
+        else:
+            num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
+            num_undercover = max(2, num_players // 4)
+            num_civilians = num_players - num_mr_white - num_undercover
+            # Ensure at least 1 civilian — reduce undercover count if needed
+            while num_civilians < 1 and num_undercover > 1:
+                num_undercover -= 1
+                num_civilians += 1
+            while num_civilians < 1 and num_mr_white > 0:
+                num_mr_white -= 1
+                num_civilians += 1
+        roles = (
+            [UndercoverRole.UNDERCOVER] * num_undercover
+            + [UndercoverRole.CIVILIAN] * num_civilians
+            + [UndercoverRole.MR_WHITE] * num_mr_white
+        )
+        random.shuffle(roles)
+        undercover_players = [
+            UndercoverSocketPlayer(user_id=player.id, username=player.username, role=role, sid=player.sid)
+            for player, role in zip(players, roles)
+        ]
+        undercover_players[random.randint(0, len(undercover_players) - 1)].is_mayor = True
+        civilian_word, undercover_word = await get_civilian_and_undercover_words(sio)
+        db_game = await sio.game_controller.create_game(
+            GameCreate(
+                room_id=db_room.id,
+                number_of_players=len(players),
+                type=GameType.UNDERCOVER,
+                game_configurations={
+                    "civilian_word": civilian_word.word,
+                    "undercover_word": undercover_word.word,
+                    "civilian_word_id": str(civilian_word.id),
+                    "undercover_word_id": str(undercover_word.id),
+                },
+            )
+        )
+        redis_game = UndercoverGame(
+            pk=str(db_game.id),
+            civilian_word=civilian_word.word,
+            undercover_word=undercover_word.word,
+            room_id=str(db_room.id),
+            id=str(db_game.id),
+            players=undercover_players,
+        )
+        await redis_game.save()
+
+        # Track active game on the room
+        room.active_game_id = str(db_game.id)
+        room.active_game_type = "undercover"
+        await room.save()
 
     await start_new_turn(sio, db_room, db_game, redis_game)
     return db_room, db_game, redis_game
@@ -199,42 +210,52 @@ async def eliminate_player_based_on_votes(
     return eliminated_player, vote_counts[player_with_most_vote]
 
 
+async def set_vote_unlocked(
+    game: UndercoverGame, data: VoteForAPerson
+) -> tuple[UndercoverSocketPlayer, UndercoverSocketPlayer, UndercoverGame, bool]:
+    """Validate and record a vote. Must be called inside a Redis lock.
+
+    Returns (voter, voted_for, game, all_voted) where all_voted is True only
+    when this vote was the last one needed.
+    """
+    # Re-fetch game to get latest state
+    game = await UndercoverGame.get(data.game_id)
+
+    player_to_vote: UndercoverSocketPlayer = next(
+        player for player in game.players if player.user_id == data.user_id
+    )
+    if player_to_vote.is_alive is False:
+        raise CantVoteBecauseYouDeadError(user_id=data.user_id)
+    voted_player: UndercoverSocketPlayer = next(
+        player for player in game.players if player.user_id == data.voted_user_id
+    )
+    if voted_player.is_alive is False:
+        raise CantVoteForDeadPersonError(
+            user_id=data.user_id,
+            dead_user_id=data.voted_user_id,
+        )
+    if player_to_vote.user_id == voted_player.user_id:
+        raise CantVoteForYourselfError(user_id=data.user_id)
+    game.turns[-1].votes[data.user_id] = voted_player.user_id
+    await game.save()
+
+    # Check if all alive players have voted
+    alive_count = sum(1 for p in game.players if p.is_alive)
+    all_voted = len(game.turns[-1].votes) == alive_count
+
+    return player_to_vote, voted_player, game, all_voted
+
+
 async def set_vote(
     game: UndercoverGame, data: VoteForAPerson
 ) -> tuple[UndercoverSocketPlayer, UndercoverSocketPlayer, UndercoverGame, bool]:
     """Validate and record a vote. Uses a Redis lock for atomicity.
 
-    Returns (voter, voted_for, game, all_voted) where all_voted is True only
-    when this vote was the last one needed. Computed inside the lock to prevent
-    double-elimination race conditions.
+    Locked wrapper around set_vote_unlocked for callers that don't hold
+    the game state lock (e.g. disconnect handler).
     """
-    async with redis_connection.lock(f"game:{data.game_id}:vote", timeout=5):
-        # Re-fetch game inside lock to get latest state
-        game = await UndercoverGame.get(data.game_id)
-
-        player_to_vote: UndercoverSocketPlayer = next(
-            player for player in game.players if player.user_id == data.user_id
-        )
-        if player_to_vote.is_alive is False:
-            raise CantVoteBecauseYouDeadError(user_id=data.user_id)
-        voted_player: UndercoverSocketPlayer = next(
-            player for player in game.players if player.user_id == data.voted_user_id
-        )
-        if voted_player.is_alive is False:
-            raise CantVoteForDeadPersonError(
-                user_id=data.user_id,
-                dead_user_id=data.voted_user_id,
-            )
-        if player_to_vote.user_id == voted_player.user_id:
-            raise CantVoteForYourselfError(user_id=data.user_id)
-        game.turns[-1].votes[data.user_id] = voted_player.user_id
-        await game.save()
-
-        # Check if all alive players have voted (inside lock for atomicity)
-        alive_count = sum(1 for p in game.players if p.is_alive)
-        all_voted = len(game.turns[-1].votes) == alive_count
-
-    return player_to_vote, voted_player, game, all_voted
+    async with redis_connection.lock(f"game:{data.game_id}:state", timeout=5):
+        return await set_vote_unlocked(game, data)
 
 
 def get_winning_team(game: UndercoverGame) -> UndercoverRole | None:

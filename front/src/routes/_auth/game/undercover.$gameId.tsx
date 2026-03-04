@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Crown, Loader2, LogOut, MessageCircle, Shield, Skull, ThumbsUp, User } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
+import apiClient, { getApiErrorMessage } from "@/api/client"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
@@ -46,93 +47,114 @@ function UndercoverGamePage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { emit, on, isConnected } = useSocket()
+  const { socket, emit, on, isConnected } = useSocket()
   const [cancelMessage, setCancelMessage] = useState<string | null>(null)
 
   const roomIdRef = useRef<string | null>(null)
 
-  const [gameState, setGameState] = useState<GameState>(() => {
-    const initial: GameState = {
-      players: [],
-      phase: "role_reveal",
-      round: 1,
-      votedPlayers: [],
-      isHost: false,
-      descriptionOrder: [],
-      currentDescriberIndex: 0,
-      descriptions: {},
-    }
-    try {
-      const stored = sessionStorage.getItem(`ibg-game-init-${gameId}`)
-      if (stored) {
-        sessionStorage.removeItem(`ibg-game-init-${gameId}`)
-        const { roleData, players: playerNames, roomId, ownerId } = JSON.parse(stored) as {
-          roleData?: { role: string; word: string | null }
-          players?: string[]
-          mayor?: string
-          roomId?: string
-          ownerId?: string
-        }
-        if (roomId) roomIdRef.current = roomId
-        if (ownerId && user) {
-          initial.isHost = ownerId === user.id
-        }
-        if (roleData) {
-          initial.my_role = roleData.role
-          initial.my_word = roleData.word || undefined
-        }
-        if (playerNames) {
-          initial.players = playerNames.map((username) => ({
-            id: username,
-            username,
-            is_alive: true,
-          }))
-        }
-      }
-    } catch {}
-    return initial
+  const [gameState, setGameState] = useState<GameState>({
+    players: [],
+    phase: "role_reveal",
+    round: 1,
+    votedPlayers: [],
+    isHost: false,
+    descriptionOrder: [],
+    currentDescriberIndex: 0,
+    descriptions: {},
   })
   const [selectedVote, setSelectedVote] = useState<string | null>(null)
-  const [hasVoted, setHasVoted] = useState(false)
-  const [isLoadingState, setIsLoadingState] = useState(!gameState.my_role)
+  const [isLoadingState, setIsLoadingState] = useState(true)
   const [loadingTimedOut, setLoadingTimedOut] = useState(false)
-  const lastServerRoundRef = useRef(0)
   const [descriptionInput, setDescriptionInput] = useState("")
   const [descriptionError, setDescriptionError] = useState("")
   const [isSubmittingDescription, setIsSubmittingDescription] = useState(false)
   const [showVotingTransition, setShowVotingTransition] = useState(false)
+  const votingTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Always request authoritative state from server on mount
+  // Derive hasVoted from server-authoritative votedPlayers list
+  const hasVoted = useMemo(() => {
+    if (!user) return false
+    return gameState.votedPlayers.includes(user.id)
+  }, [gameState.votedPlayers, user])
+
+  // Fetch authoritative state from server via REST on mount and reconnect
   useEffect(() => {
     if (!isConnected || !user) return
-    emit("get_undercover_state", { game_id: gameId, user_id: user.id })
+    const fetchState = async () => {
+      try {
+        const res = await apiClient({
+          method: "GET",
+          url: `/api/v1/undercover/games/${gameId}/state`,
+          params: socket?.id ? { sid: socket.id } : undefined,
+        })
+        const d = res.data as {
+          my_role: string
+          my_word: string
+          is_alive: boolean
+          players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
+          eliminated_players: { user_id: string; username: string; role: string }[]
+          turn_number: number
+          has_voted: boolean
+          room_id?: string
+          is_host?: boolean
+          votes?: Record<string, string>
+          winner?: string | null
+          turn_phase?: string
+          description_order?: DescriptionOrderEntry[]
+          current_describer_index?: number
+          descriptions?: Record<string, string>
+        }
+        if (d.room_id) roomIdRef.current = d.room_id
+        if (votingTransitionTimerRef.current) {
+          clearTimeout(votingTransitionTimerRef.current)
+          votingTransitionTimerRef.current = null
+          setShowVotingTransition(false)
+        }
+        const isHost = d.is_host ?? false
+        const votedPlayerIds = d.votes ? Object.keys(d.votes) : []
 
-    // Retry if no state received within 2s (socket may have missed the initial emit)
-    const retryTimer = setTimeout(() => {
-      if (gameState.players.length === 0 && isConnected) {
-        emit("get_undercover_state", { game_id: gameId, user_id: user.id })
+        let phase: GameState["phase"]
+        if (d.winner) {
+          phase = "game_over"
+        } else if (d.turn_phase === "describing") {
+          phase = "describing"
+        } else if (d.turn_number > 0) {
+          phase = "playing"
+        } else {
+          phase = "role_reveal"
+        }
+
+        setGameState((prev) => ({
+          ...prev,
+          my_role: d.my_role,
+          my_word: d.my_word,
+          round: d.turn_number,
+          phase,
+          isHost,
+          winner: d.winner || prev.winner,
+          votedPlayers: votedPlayerIds,
+          players: d.players.map((p) => ({
+            id: p.user_id,
+            username: p.username,
+            is_alive: p.is_alive,
+            is_mayor: p.is_mayor,
+          })),
+          descriptionOrder: d.description_order || [],
+          currentDescriberIndex: d.current_describer_index ?? 0,
+          descriptions: d.descriptions || {},
+        }))
+        setIsLoadingState(false)
+        setSelectedVote(null)
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Failed to load game state"))
+        setIsLoadingState(false)
       }
-    }, 2000)
-    return () => clearTimeout(retryTimer)
-  }, [isConnected, user, emit, gameId])
+    }
+    fetchState()
+  }, [isConnected, user, gameId])
 
   useEffect(() => {
     if (!isConnected) return
-
-    const offRoleAssigned = on("role_assigned", (data: unknown) => {
-      try {
-        const roleData = data as { role: string; word: string | null }
-        setGameState((prev) => ({
-          ...prev,
-          my_role: roleData.role,
-          my_word: roleData.word || undefined,
-          phase: "role_reveal",
-        }))
-        setIsLoadingState(false)
-      } catch {
-        toast.error(t("common.error"))
-      }
-    })
 
     // vote_casted: your vote was recorded
     const offVoteCasted = on("vote_casted", () => {
@@ -171,6 +193,12 @@ function UndercoverGamePage() {
     // turn_started: new turn with description order
     const offTurnStarted = on("turn_started", (data: unknown) => {
       try {
+        // Cancel stale voting transition timer from previous round
+        if (votingTransitionTimerRef.current) {
+          clearTimeout(votingTransitionTimerRef.current)
+          votingTransitionTimerRef.current = null
+          setShowVotingTransition(false)
+        }
         const d = data as {
           message: string
           description_order: DescriptionOrderEntry[]
@@ -188,7 +216,6 @@ function UndercoverGamePage() {
           currentDescriberIndex: d.current_describer_index,
           descriptions: {},
         }))
-        setHasVoted(false)
         setSelectedVote(null)
         setDescriptionInput("")
         setDescriptionError("")
@@ -229,13 +256,14 @@ function UndercoverGamePage() {
       try {
         const d = data as { descriptions: Record<string, string> }
         setShowVotingTransition(true)
-        setTimeout(() => {
-          setGameState((prev) => ({
-            ...prev,
-            phase: "playing",
-            descriptions: d.descriptions,
-          }))
+        if (votingTransitionTimerRef.current) clearTimeout(votingTransitionTimerRef.current)
+        votingTransitionTimerRef.current = setTimeout(() => {
+          setGameState((prev) => {
+            if (prev.phase !== "describing") return prev
+            return { ...prev, phase: "playing", descriptions: d.descriptions }
+          })
           setShowVotingTransition(false)
+          votingTransitionTimerRef.current = null
         }, 2500)
       } catch {
         toast.error(t("common.error"))
@@ -245,26 +273,6 @@ function UndercoverGamePage() {
     // your_turn_to_describe: it's my turn
     const offYourTurn = on("your_turn_to_describe", () => {
       toast.info(t("game.undercover.yourTurn"))
-    })
-
-    // notification: legacy turn updates from backend (backward compat)
-    const offNotification = on("notification", (data: unknown) => {
-      try {
-        const d = data as { message: string }
-        toast.info(d.message)
-        setGameState((prev) => ({
-          ...prev,
-          phase: "describing",
-          round: prev.round + 1,
-          votedPlayers: [],
-          eliminated_player_username: undefined,
-          eliminated_player_role: undefined,
-        }))
-        setHasVoted(false)
-        setSelectedVote(null)
-      } catch {
-        toast.error(t("common.error"))
-      }
     })
 
     const offPlayerEliminated = on("player_eliminated", (data: unknown) => {
@@ -304,76 +312,6 @@ function UndercoverGamePage() {
       }
     })
 
-    // undercover_game_state: full state recovery for reconnecting players
-    const offUndercoverState = on("undercover_game_state", (data: unknown) => {
-      try {
-        const d = data as {
-          my_role: string
-          my_word: string
-          is_alive: boolean
-          players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
-          eliminated_players: { user_id: string; username: string; role: string }[]
-          turn_number: number
-          has_voted: boolean
-          room_id?: string
-          votes?: Record<string, string>
-          winner?: string | null
-          turn_phase?: string
-          description_order?: DescriptionOrderEntry[]
-          current_describer_index?: number
-          descriptions?: Record<string, string>
-        }
-        if (d.room_id) roomIdRef.current = d.room_id
-        const votedPlayerIds = d.votes ? Object.keys(d.votes) : []
-
-        // Determine phase based on server state
-        let phase: GameState["phase"]
-        if (d.winner) {
-          phase = "game_over"
-        } else if (d.turn_phase === "describing") {
-          phase = "describing"
-        } else if (d.turn_number > 0) {
-          phase = "playing"
-        } else {
-          phase = "role_reveal"
-        }
-
-        // Only reset vote state when the round actually changes
-        const roundChanged = d.turn_number !== lastServerRoundRef.current
-        lastServerRoundRef.current = d.turn_number
-
-        setGameState((prev) => ({
-          ...prev,
-          my_role: d.my_role,
-          my_word: d.my_word,
-          round: d.turn_number,
-          phase,
-          winner: d.winner || prev.winner,
-          votedPlayers: votedPlayerIds,
-          players: d.players.map((p) => ({
-            id: p.user_id,
-            username: p.username,
-            is_alive: p.is_alive,
-            is_mayor: p.is_mayor,
-          })),
-          descriptionOrder: d.description_order || [],
-          currentDescriberIndex: d.current_describer_index ?? 0,
-          descriptions: d.descriptions || {},
-        }))
-        setIsLoadingState(false)
-
-        if (roundChanged || d.winner) {
-          setHasVoted(d.has_voted)
-          setSelectedVote(null)
-        } else if (d.has_voted) {
-          setHasVoted(true)
-        }
-      } catch {
-        toast.error(t("common.error"))
-        setIsLoadingState(false)
-      }
-    })
-
     // game_cancelled: not enough players, navigate back
     const offGameCancelled = on("game_cancelled", (data: unknown) => {
       toast.error(t("toast.gameCancelled"))
@@ -398,7 +336,6 @@ function UndercoverGamePage() {
     })
 
     return () => {
-      offRoleAssigned()
       offVoteCasted()
       offWaitingVotes()
       offYouDied()
@@ -406,10 +343,8 @@ function UndercoverGamePage() {
       offDescriptionSubmitted()
       offDescriptionsComplete()
       offYourTurn()
-      offNotification()
       offPlayerEliminated()
       offGameOver()
-      offUndercoverState()
       offGameCancelled()
       offError()
     }
@@ -432,22 +367,34 @@ function UndercoverGamePage() {
     [hasVoted],
   )
 
-  const handleConfirmVote = useCallback(() => {
+  const handleConfirmVote = useCallback(async () => {
     if (!selectedVote || hasVoted || !user) return
     const votedPlayer = gameState.players.find((p) => p.id === selectedVote)
-    setHasVoted(true)
+    // Optimistically add to votedPlayers (drives derived hasVoted)
+    setGameState((prev) => ({
+      ...prev,
+      votedPlayers: [...prev.votedPlayers, user.id],
+    }))
     if (votedPlayer) {
       toast.info(t("game.undercover.votedFor", { username: votedPlayer.username }))
     }
-    emit("vote_for_a_player", {
-      room_id: roomIdRef.current,
-      game_id: gameId,
-      user_id: user.id,
-      voted_user_id: selectedVote,
-    })
-  }, [selectedVote, hasVoted, emit, gameId, user, gameState.players, t])
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/undercover/games/${gameId}/vote`,
+        data: { voted_for: selectedVote },
+      })
+    } catch (err) {
+      // Revert optimistic update on error
+      setGameState((prev) => ({
+        ...prev,
+        votedPlayers: prev.votedPlayers.filter((id) => id !== user.id),
+      }))
+      toast.error(getApiErrorMessage(err, "Failed to submit vote"))
+    }
+  }, [selectedVote, hasVoted, gameId, user, gameState.players, t])
 
-  const handleSubmitDescription = useCallback(() => {
+  const handleSubmitDescription = useCallback(async () => {
     if (!user || isSubmittingDescription) return
     const word = descriptionInput.trim()
     if (!word) {
@@ -464,20 +411,30 @@ function UndercoverGamePage() {
     }
     setDescriptionError("")
     setIsSubmittingDescription(true)
-    emit("submit_description_event", {
-      room_id: roomIdRef.current,
-      game_id: gameId,
-      user_id: user.id,
-      word,
-    })
-  }, [descriptionInput, user, emit, gameId, isSubmittingDescription, t])
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/undercover/games/${gameId}/describe`,
+        data: { word },
+      })
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to submit description"))
+      setIsSubmittingDescription(false)
+    }
+  }, [descriptionInput, user, gameId, isSubmittingDescription, t])
 
-  const handleNextRound = useCallback(() => {
-    emit("start_new_turn_event", {
-      room_id: roomIdRef.current,
-      game_id: gameId,
-    })
-  }, [emit, gameId])
+  const handleNextRound = useCallback(async () => {
+    if (!roomIdRef.current) return
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/undercover/games/${gameId}/next-round`,
+        data: { room_id: roomIdRef.current },
+      })
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to start next round"))
+    }
+  }, [gameId])
 
   const handleDismissRole = useCallback(() => {
     setGameState((prev) => ({ ...prev, phase: "describing" }))

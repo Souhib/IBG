@@ -8,6 +8,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
   test("player disconnect shows reconnecting status, reconnect clears it", async ({
     browser,
   }) => {
+    test.setTimeout(90_000);
     const accounts = await generateTestAccounts(2);
     // Setup room with 2 players
     const p1Login = await apiLogin(accounts[0].email, accounts[0].password);
@@ -21,9 +22,12 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     );
     await player1.goto(ROUTES.room(room.id));
     await player1.waitForLoadState("domcontentloaded");
-    await player1.waitForTimeout(2000);
+    await player1.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 15_000 },
+    );
 
-    // Player 2 joins
+    // Player 2 joins via API then navigates to room
     const p2Context = await browser.newContext();
     const player2 = await p2Context.newPage();
 
@@ -66,7 +70,23 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     }
     await player2.locator('button[type="submit"]').click();
     await expect(player2).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-    await player2.waitForTimeout(2000);
+    await player2.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 15_000 },
+    );
+
+    // Wait for player 1 to see player 2 in the room before disconnecting
+    await expect(async () => {
+      const names = await player1.locator(".text-sm.font-medium").allTextContents();
+      const count = names.filter((t) => t.trim().length > 0).length;
+      expect(count).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 15_000 });
+
+    // Verify player 1's socket is still connected before testing disconnect behavior
+    await player1.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 10_000 },
+    );
 
     // Simulate player 2 disconnect by closing the socket
     await player2.evaluate(() => {
@@ -76,7 +96,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     // Player 1 should see "Reconnecting..." status for player 2
     await expect(
       player1.locator('text=Reconnecting...'),
-    ).toBeVisible({ timeout: 10_000 });
+    ).toBeVisible({ timeout: 20_000 });
 
     // Reconnect player 2
     await player2.evaluate(() => {
@@ -93,7 +113,7 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
   });
 
   test("player removed after grace period expires", async ({ browser }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
     const accounts = await generateTestAccounts(2);
     // Setup room with 2 players
     const p1Login = await apiLogin(accounts[0].email, accounts[0].password);
@@ -107,7 +127,10 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     );
     await player1.goto(ROUTES.room(room.id));
     await player1.waitForLoadState("domcontentloaded");
-    await player1.waitForTimeout(2000);
+    await player1.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 15_000 },
+    );
 
     // Player 2 joins
     const player2 = await createPlayerPage(
@@ -126,11 +149,21 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     }
     await player2.locator('button[type="submit"]').click();
     await expect(player2).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-    await player2.waitForTimeout(2000);
+    await player2.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 15_000 },
+    );
 
-    // Count players before disconnect
+    // Wait for player 1 to see both players in the room
+    const playerCardSelector = ".bg-muted\\/50 .text-sm.font-medium, [class*='bg-muted'] .text-sm.font-medium";
+    await expect(async () => {
+      const names = await player1.locator(playerCardSelector).allTextContents();
+      const count = names.filter((t) => t.trim().length > 0).length;
+      expect(count).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 10_000 });
+
     const playersBeforeTexts = await player1
-      .locator(".text-sm.font-medium")
+      .locator(playerCardSelector)
       .allTextContents();
     const playerCountBefore = playersBeforeTexts.filter(
       (t) => t.trim().length > 0,
@@ -139,19 +172,12 @@ test.describe("Rooms — Disconnect / Reconnect", () => {
     // Player 2 permanently disconnects (close the context entirely)
     await player2.context().close();
 
-    // Wait for the grace period to expire (30 seconds in E2E + buffer)
-    await player1.waitForTimeout(35_000);
-
-    // Player 1 should see the permanently left toast
-    // and the player count should decrease
-    const playersAfterTexts = await player1
-      .locator(".bg-muted\\/50 .text-sm.font-medium, [class*='bg-muted'] .text-sm.font-medium")
-      .allTextContents();
-    const playerCountAfter = playersAfterTexts.filter(
-      (t) => t.trim().length > 0,
-    ).length;
-
-    expect(playerCountAfter).toBeLessThan(playerCountBefore);
+    // Player count should decrease after grace period (30s) + cleanup
+    await expect(async () => {
+      const names = await player1.locator(playerCardSelector).allTextContents();
+      const count = names.filter((t) => t.trim().length > 0).length;
+      expect(count).toBeLessThan(playerCountBefore);
+    }).toPass({ timeout: 55_000 });
 
     await player1.context().close();
   });

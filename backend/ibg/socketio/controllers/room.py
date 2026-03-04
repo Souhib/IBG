@@ -51,7 +51,7 @@ class SocketRoomController:
         db_user = await self._user_controller.get_user_by_id(join_room_user.user_id)
 
         # Check if this is a reconnect (cancel pending disconnect cleanup)
-        is_reconnect = cancel_disconnect_cleanup(str(db_user.id))
+        is_reconnect = await cancel_disconnect_cleanup(str(db_user.id))
         if is_reconnect:
             logger.info(f"[Room] Reconnect detected for user_id={db_user.id}")
 

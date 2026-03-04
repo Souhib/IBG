@@ -574,3 +574,86 @@ async def test_undercover_disconnect_partial_votes_no_elimination(make_undercove
     assert p1.is_alive is False
     # Only the disconnect player is eliminated, not vote-based elimination
     assert len(refreshed.eliminated_players) == 1
+
+
+# ========== Disconnect during describing phase ==========
+
+
+async def test_undercover_disconnect_during_describing_phase(make_undercover_game, make_redis_room):
+    """Player disconnects during describing phase. No votes exist. Player marked dead, game continues."""
+
+    # Arrange — 4 players, describing phase with empty votes, U1 disconnects
+    turn = UndercoverTurn(
+        phase="describing",
+        description_order=[UUID(U1), UUID(U2), UUID(U3), UUID(U4)],
+        current_describer_index=0,
+    )
+
+    room = await make_redis_room(ROOM_ID, active_game_id=GAME_ID)
+    await make_undercover_game(
+        game_id=GAME_ID, room_id=ROOM_ID,
+        players=[
+            make_undercover_player(U1, role=UndercoverRole.CIVILIAN),
+            make_undercover_player(U2, role=UndercoverRole.CIVILIAN),
+            make_undercover_player(U3, role=UndercoverRole.UNDERCOVER),
+            make_undercover_player(U4, role=UndercoverRole.MR_WHITE),
+        ],
+        turns=[turn],
+    )
+    sio = AsyncMock()
+
+    # Act — U1 disconnects during describing phase
+    await handle_undercover_disconnect(sio, U1, room)
+
+    # Assert — U1 dead, in eliminated_players, game NOT cancelled (3 alive >= minimum)
+    refreshed = await UndercoverGame.get(GAME_ID)
+    p1 = next(p for p in refreshed.players if str(p.user_id) == U1)
+    assert p1.is_alive is False
+    assert any(str(ep.user_id) == U1 for ep in refreshed.eliminated_players)
+
+    # Game continues — room still has active game
+    refreshed_room = await RedisRoom.get(ROOM_ID)
+    assert refreshed_room.active_game_id == GAME_ID
+
+    # 3 players alive
+    alive_count = sum(1 for p in refreshed.players if p.is_alive)
+    assert alive_count == 3
+
+
+@patch("ibg.socketio.controllers.disconnect.send_event_to_client", new_callable=AsyncMock)
+async def test_undercover_disconnect_last_undercover_civilians_win(mock_send, make_undercover_game, make_redis_room):
+    """Last undercover disconnects during describing phase — civilians win immediately."""
+
+    # Arrange — 4 players (3 civilian, 1 undercover), describing phase
+    turn = UndercoverTurn(
+        phase="describing",
+        description_order=[UUID(U1), UUID(U2), UUID(U3), UUID(U4)],
+        current_describer_index=1,
+        words={UUID(U1): "prayer"},
+    )
+
+    room = await make_redis_room(ROOM_ID, active_game_id=GAME_ID)
+    await make_undercover_game(
+        game_id=GAME_ID, room_id=ROOM_ID,
+        players=[
+            make_undercover_player(U1, role=UndercoverRole.CIVILIAN),
+            make_undercover_player(U2, role=UndercoverRole.CIVILIAN),
+            make_undercover_player(U3, role=UndercoverRole.CIVILIAN),
+            make_undercover_player(U4, role=UndercoverRole.UNDERCOVER),
+        ],
+        turns=[turn],
+    )
+    sio = AsyncMock()
+
+    # Act — the last undercover (U4) disconnects
+    await handle_undercover_disconnect(sio, U4, room)
+
+    # Assert — civilians win immediately via check_if_a_team_has_win
+    assert mock_send.await_count == 4
+    game_over_calls = [c for c in mock_send.call_args_list if c.args[1] == "game_over"]
+    assert len(game_over_calls) > 0
+    assert "civilians have won" in game_over_calls[0].args[2]["data"]
+
+    # Verify room cleaned up
+    refreshed_room = await RedisRoom.get(ROOM_ID)
+    assert refreshed_room.active_game_id is None

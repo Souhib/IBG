@@ -389,3 +389,137 @@ async def test_check_win_only_undercover_alive(make_undercover_game, make_redis_
     # Assert — both conditions met: no civilians AND no mr_whites
     # The civilian == 0 condition triggers first → undercover wins
     assert winner == UndercoverRole.UNDERCOVER
+
+
+# ========== Additional edge cases ==========
+
+
+async def test_eliminate_four_way_tie(make_undercover_game, make_redis_room):
+    """Four-way tie — mayor voted for non-tied player, first tied player is eliminated."""
+
+    # Arrange — 9 players, 4 candidates each with 2 votes, mayor voted for P9
+    P6 = "66666666-6666-6666-6666-666666666666"  # noqa: N806
+    P7 = "77777777-7777-7777-7777-777777777777"  # noqa: N806
+    P8 = "88888888-8888-8888-8888-888888888888"  # noqa: N806
+    P9 = "99999999-9999-9999-9999-999999999999"  # noqa: N806
+
+    p1 = make_undercover_player(P1, is_mayor=True)
+    p2 = make_undercover_player(P2)
+    p3 = make_undercover_player(P3)
+    p4 = make_undercover_player(P4)
+    p5 = make_undercover_player(P5)
+    p6 = make_undercover_player(P6)
+    p7 = make_undercover_player(P7)
+    p8 = make_undercover_player(P8)
+    p9 = make_undercover_player(P9)
+
+    # P3:2 (P2,P6), P4:2 (P3,P7), P5:2 (P4,P8), P6:2 (P5,P9), P9:1 (P1)
+    votes = {
+        UUID(P1): P9,  # Mayor votes for P9 (not in tie)
+        UUID(P2): P3,
+        UUID(P3): P4,
+        UUID(P4): P5,
+        UUID(P5): P6,
+        UUID(P6): P3,
+        UUID(P7): P4,
+        UUID(P8): P5,
+        UUID(P9): P6,
+    }
+    turn = UndercoverTurn(votes=votes)
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-elim-4way",
+        room_id=ROOM_ID,
+        players=[p1, p2, p3, p4, p5, p6, p7, p8, p9],
+        turns=[turn],
+    )
+
+    # Act
+    eliminated, vote_count = await eliminate_player_based_on_votes(game)
+
+    # Assert — 4-way tie (P3, P4, P5, P6), mayor voted for P9 (not in tie)
+    # First tied player should be eliminated
+    assert vote_count == 2
+    assert str(eliminated.user_id) in (P3, P4, P5, P6)
+    assert len(game.eliminated_players) == 1
+
+
+async def test_winning_team_undercover_outnumber_civilians(make_undercover_game, make_redis_room):
+    """Undercovers outnumber civilians but Mr. White is dead — undercovers win via mr_white condition."""
+
+    # Arrange — 2 undercover alive, 1 civilian alive, 1 mr_white dead
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN, alive=True),
+        make_undercover_player(P2, role=UndercoverRole.UNDERCOVER, alive=True),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER, alive=True),
+        make_undercover_player(P4, role=UndercoverRole.MR_WHITE, alive=False),
+    ]
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-win-uc-outnumber",
+        room_id=ROOM_ID,
+        players=players,
+    )
+
+    # Act
+    winner = await check_if_a_team_has_win(game)
+
+    # Assert — total_mr_white > 0 and num_alive_mr_white == 0 → undercovers win
+    assert winner == UndercoverRole.UNDERCOVER
+
+
+async def test_winning_team_only_mr_white_alive(make_undercover_game, make_redis_room):
+    """All civilians and undercovers dead, only Mr. White alive — undercovers win.
+
+    Mr. White is on the undercover team. num_alive_civilian == 0 triggers the
+    undercover win condition, even though undercover-role players are also dead.
+    """
+
+    # Arrange
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN, alive=False),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN, alive=False),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER, alive=False),
+        make_undercover_player(P4, role=UndercoverRole.MR_WHITE, alive=True),
+    ]
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-win-mw-only",
+        room_id=ROOM_ID,
+        players=players,
+    )
+
+    # Act
+    winner = await check_if_a_team_has_win(game)
+
+    # Assert — num_alive_civilian == 0 → undercovers win
+    assert winner == UndercoverRole.UNDERCOVER
+
+
+async def test_winning_team_mixed_alive_no_winner(make_undercover_game, make_redis_room):
+    """All three roles have alive players (with some dead) — no winner yet."""
+
+    # Arrange — 6 players, 1 of each role alive + 1 of each role dead
+    players = [
+        make_undercover_player(P1, role=UndercoverRole.CIVILIAN, alive=True),
+        make_undercover_player(P2, role=UndercoverRole.CIVILIAN, alive=False),
+        make_undercover_player(P3, role=UndercoverRole.UNDERCOVER, alive=True),
+        make_undercover_player(P4, role=UndercoverRole.UNDERCOVER, alive=False),
+        make_undercover_player(P5, role=UndercoverRole.MR_WHITE, alive=True),
+    ]
+    P6 = "66666666-6666-6666-6666-666666666666"  # noqa: N806
+    players.append(make_undercover_player(P6, role=UndercoverRole.MR_WHITE, alive=False))
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id="game-win-mixed",
+        room_id=ROOM_ID,
+        players=players,
+    )
+
+    # Act
+    winner = await check_if_a_team_has_win(game)
+
+    # Assert — all three conditions return None
+    assert winner is None

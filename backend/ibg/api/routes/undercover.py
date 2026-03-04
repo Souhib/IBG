@@ -1,17 +1,89 @@
-from typing import Sequence
+from collections.abc import Sequence
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from starlette.status import HTTP_201_CREATED
 
 from ibg.api.controllers.undercover import UndercoverController
+from ibg.api.controllers.undercover_game import UndercoverGameController
+from ibg.api.models.table import User
 from ibg.api.models.undercover import TermPair, TermPairCreate, Word, WordCreate
-from ibg.dependencies import get_undercover_controller
+from ibg.api.schemas.shared import BaseModel
+from ibg.dependencies import get_current_user, get_undercover_controller, get_undercover_game_controller
 
 router = APIRouter(
     prefix="/undercover",
     tags=["undercover"],
     responses={404: {"description": "Not found"}},
 )
+
+
+# --- Request Schemas ---
+
+
+class DescriptionRequest(BaseModel):
+    word: str
+
+
+class VoteRequest(BaseModel):
+    voted_for: UUID
+
+
+class NextRoundRequest(BaseModel):
+    room_id: UUID
+
+
+# --- Game Action Endpoints ---
+
+
+@router.post("/games/{room_id}/start", status_code=HTTP_201_CREATED)
+async def start_undercover_game(
+    room_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+) -> dict:
+    return await controller.create_and_start(room_id, current_user.id)
+
+
+@router.get("/games/{game_id}/state")
+async def get_undercover_state(
+    game_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+    sid: str | None = None,
+) -> dict:
+    return await controller.get_state(game_id, current_user.id, sid=sid)
+
+
+@router.post("/games/{game_id}/describe")
+async def submit_description(
+    game_id: UUID,
+    body: DescriptionRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+) -> dict:
+    return await controller.submit_description(game_id, current_user.id, body.word)
+
+
+@router.post("/games/{game_id}/vote")
+async def submit_vote(
+    game_id: UUID,
+    body: VoteRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+) -> dict:
+    return await controller.submit_vote(game_id, current_user.id, body.voted_for)
+
+
+@router.post("/games/{game_id}/next-round")
+async def start_next_round(
+    game_id: UUID,
+    body: NextRoundRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+) -> dict:
+    return await controller.start_next_round(game_id, body.room_id, current_user.id)
 
 
 @router.post("/words", response_model=Word, status_code=201)

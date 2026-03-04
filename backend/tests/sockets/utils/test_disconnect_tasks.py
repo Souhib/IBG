@@ -1,172 +1,195 @@
-"""Tests for the disconnect task scheduler (pure async, no Redis dependency)."""
+"""Tests for the Redis-based disconnect task scheduler.
+
+Uses real Redis via the `redis_container` fixture from conftest.
+"""
 
 import asyncio
+import json
 
 import pytest
 
 from ibg.socketio.utils.disconnect_tasks import (
-    _pending_tasks,
+    _MARKER_PREFIX,
+    _QUEUE_KEY,
     cancel_disconnect_cleanup,
     has_pending_disconnect,
     schedule_disconnect_cleanup,
+    start_polling,
+    stop_polling,
 )
 
 
 @pytest.fixture(autouse=True)
-def clear_pending_tasks():
-    """Clear the global pending tasks dict before and after each test."""
-    _pending_tasks.clear()
+async def cleanup_disconnect_state(redis_container):  # noqa: ARG001
+    """Clean up disconnect queue and polling state before/after each test."""
+    from ibg.socketio.dependencies import get_redis_connection_singleton
+
+    stop_polling()
+    conn = get_redis_connection_singleton()
+    # Clean up any existing disconnect keys
+    await conn.delete(_QUEUE_KEY)
+    keys = []
+    async for key in conn.scan_iter(f"{_MARKER_PREFIX}*"):
+        keys.append(key)
+    if keys:
+        await conn.delete(*keys)
     yield
-    # Cancel any leftover tasks to avoid warnings
-    for task in _pending_tasks.values():
-        if not task.done():
-            task.cancel()
-    _pending_tasks.clear()
+    stop_polling()
+    await conn.delete(_QUEUE_KEY)
+    keys = []
+    async for key in conn.scan_iter(f"{_MARKER_PREFIX}*"):
+        keys.append(key)
+    if keys:
+        await conn.delete(*keys)
 
 
-async def test_schedule_disconnect_cleanup_adds_task():
-    """Scheduling cleanup adds a pending task for the user."""
+async def test_schedule_creates_entry():
+    """Scheduling cleanup creates a sorted set entry and marker key."""
 
     # Arrange
-    user_id = "user-1"
+    from ibg.socketio.dependencies import get_redis_connection_singleton
 
-    async def noop():
-        pass
+    conn = get_redis_connection_singleton()
 
     # Act
-    schedule_disconnect_cleanup(user_id, delay=10, coro=noop())
+    await schedule_disconnect_cleanup("user-1", delay=60, room_id="room-1")
 
     # Assert
-    assert has_pending_disconnect(user_id) is True
+    marker = await conn.get(f"{_MARKER_PREFIX}user-1")
+    assert marker is not None
+    data = json.loads(marker)
+    assert data["user_id"] == "user-1"
+    assert data["room_id"] == "room-1"
+
+    score = await conn.zscore(_QUEUE_KEY, marker)
+    assert score is not None
 
 
-async def test_cancel_disconnect_cleanup_returns_true():
-    """Cancelling an existing pending task returns True."""
+async def test_cancel_returns_true_when_pending():
+    """Cancelling an existing pending entry returns True and cleans up."""
 
     # Arrange
-    user_id = "user-2"
+    from ibg.socketio.dependencies import get_redis_connection_singleton
 
-    async def noop():
-        await asyncio.sleep(100)
-
-    schedule_disconnect_cleanup(user_id, delay=100, coro=noop())
+    conn = get_redis_connection_singleton()
+    await schedule_disconnect_cleanup("user-2", delay=60, room_id="room-2")
 
     # Act
-    result = cancel_disconnect_cleanup(user_id)
+    result = await cancel_disconnect_cleanup("user-2")
 
     # Assert
     assert result is True
-    assert has_pending_disconnect(user_id) is False
+    assert await conn.exists(f"{_MARKER_PREFIX}user-2") == 0
+    assert await conn.zscore(_QUEUE_KEY, json.dumps({"user_id": "user-2", "room_id": "room-2"})) is None
 
 
-async def test_cancel_disconnect_cleanup_no_task_returns_false():
-    """Cancelling when no task exists returns False."""
-
-    # Arrange
-    user_id = "nonexistent"
+async def test_cancel_returns_false_when_no_entry():
+    """Cancelling when no entry exists returns False."""
 
     # Act
-    result = cancel_disconnect_cleanup(user_id)
+    result = await cancel_disconnect_cleanup("nonexistent")
 
     # Assert
     assert result is False
 
 
-async def test_has_pending_disconnect_false_for_unknown_user():
-    """Checking pending disconnect for an unknown user returns False."""
-
-    # Arrange / Act / Assert
-    assert has_pending_disconnect("nobody") is False
-
-
-async def test_schedule_replaces_existing_task():
-    """Scheduling a second cleanup for the same user cancels the first."""
+async def test_has_pending_disconnect_true():
+    """has_pending_disconnect returns True when entry exists."""
 
     # Arrange
-    user_id = "user-3"
-    first_ran = False
+    await schedule_disconnect_cleanup("user-3", delay=60, room_id="room-3")
 
-    async def first_coro():
-        nonlocal first_ran
-        first_ran = True
+    # Act / Assert
+    assert await has_pending_disconnect("user-3") is True
 
-    async def second_coro():
-        pass
 
-    schedule_disconnect_cleanup(user_id, delay=100, coro=first_coro())
+async def test_has_pending_disconnect_false():
+    """has_pending_disconnect returns False for unknown user."""
+
+    # Act / Assert
+    assert await has_pending_disconnect("nobody") is False
+
+
+async def test_schedule_replaces_existing():
+    """Scheduling a second cleanup for the same user replaces the first."""
+
+    # Arrange
+    from ibg.socketio.dependencies import get_redis_connection_singleton
+
+    conn = get_redis_connection_singleton()
+    await schedule_disconnect_cleanup("user-4", delay=60, room_id="room-a")
 
     # Act
-    schedule_disconnect_cleanup(user_id, delay=100, coro=second_coro())
-    await asyncio.sleep(0.05)  # Let cancellation propagate
+    await schedule_disconnect_cleanup("user-4", delay=120, room_id="room-b")
 
     # Assert
-    assert first_ran is False
-    assert has_pending_disconnect(user_id) is True
+    marker = await conn.get(f"{_MARKER_PREFIX}user-4")
+    data = json.loads(marker)
+    assert data["room_id"] == "room-b"
+    # Only one entry in sorted set
+    count = await conn.zcard(_QUEUE_KEY)
+    assert count == 1
 
 
-async def test_task_runs_after_delay():
-    """The cleanup coroutine actually runs after the specified delay."""
+async def test_polling_claims_expired_entries():
+    """Polling loop picks up and runs cleanup for expired entries."""
 
     # Arrange
-    ran = False
+    cleanup_calls = []
 
-    async def my_coro():
-        nonlocal ran
-        ran = True
+    async def fake_cleanup(user_id, room_id):
+        cleanup_calls.append((user_id, room_id))
+
+    # Schedule with delay=0 so it's immediately expired
+    await schedule_disconnect_cleanup("user-5", delay=0, room_id="room-5")
 
     # Act
-    schedule_disconnect_cleanup("user-4", delay=0.05, coro=my_coro())
-    await asyncio.sleep(0.15)
+    start_polling(fake_cleanup)
+    # Wait for at least one poll cycle (3s) + buffer
+    await asyncio.sleep(5)
 
     # Assert
-    assert ran is True
-    assert has_pending_disconnect("user-4") is False
+    assert ("user-5", "room-5") in cleanup_calls
 
 
-async def test_task_removed_from_pending_after_completion():
-    """After the task completes, the user is removed from _pending_tasks."""
-
-    # Arrange
-    async def quick():
-        pass
-
-    schedule_disconnect_cleanup("user-5", delay=0.01, coro=quick())
-
-    # Act
-    await asyncio.sleep(0.1)
-
-    # Assert
-    assert "user-5" not in _pending_tasks
-
-
-async def test_task_handles_coroutine_exception():
-    """If the cleanup coroutine raises, the task is still removed from pending."""
+async def test_polling_does_not_claim_future_entries():
+    """Polling loop does NOT claim entries scheduled far in the future."""
 
     # Arrange
-    async def failing():
-        raise RuntimeError("boom")
+    cleanup_calls = []
+
+    async def fake_cleanup(user_id, room_id):
+        cleanup_calls.append((user_id, room_id))
+
+    # Schedule with delay=300 (5 minutes from now)
+    await schedule_disconnect_cleanup("user-6", delay=300, room_id="room-6")
 
     # Act
-    schedule_disconnect_cleanup("user-6", delay=0.01, coro=failing())
-    await asyncio.sleep(0.1)
+    start_polling(fake_cleanup)
+    await asyncio.sleep(5)
 
-    # Assert
-    assert has_pending_disconnect("user-6") is False
-    assert "user-6" not in _pending_tasks
+    # Assert — should NOT have been claimed
+    assert ("user-6", "room-6") not in cleanup_calls
+    # Entry should still be pending
+    assert await has_pending_disconnect("user-6") is True
 
 
-async def test_cancel_after_completion_returns_false():
-    """Cancelling after the task has already completed returns False."""
+async def test_cancel_after_polling_claimed():
+    """Cancelling after polling has already claimed returns False."""
 
     # Arrange
-    async def quick():
-        pass
+    cleanup_calls = []
 
-    schedule_disconnect_cleanup("user-7", delay=0.01, coro=quick())
-    await asyncio.sleep(0.1)
+    async def fake_cleanup(user_id, room_id):
+        cleanup_calls.append((user_id, room_id))
 
-    # Act
-    result = cancel_disconnect_cleanup("user-7")
+    await schedule_disconnect_cleanup("user-7", delay=0, room_id="room-7")
+
+    start_polling(fake_cleanup)
+    await asyncio.sleep(5)
+
+    # Act — entry already claimed by polling
+    result = await cancel_disconnect_cleanup("user-7")
 
     # Assert
     assert result is False
