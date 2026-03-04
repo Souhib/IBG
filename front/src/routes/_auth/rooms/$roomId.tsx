@@ -3,7 +3,7 @@ import { Check, Copy, Crown, KeyRound, LogOut, Users } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
-import apiClient from "@/api/client"
+import apiClient, { getApiErrorMessage } from "@/api/client"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
@@ -41,11 +41,13 @@ function RoomLobbyPage() {
   const [error, setError] = useState("")
   const [copied, setCopied] = useState("")
   const [gameType, setGameType] = useState<GameType>("undercover")
+  const [isStartingGame, setIsStartingGame] = useState(false)
   const joinedRef = useRef(false)
   const navigatingToGameRef = useRef(false)
-  const roleDataRef = useRef<{ role: string; word: string | null } | null>(null)
 
   const isHost = roomData?.owner_id === user?.id
+  const roomDataRef = useRef(roomData)
+  useEffect(() => { roomDataRef.current = roomData }, [roomData])
 
   // Fetch room details via REST
   useEffect(() => {
@@ -83,9 +85,9 @@ function RoomLobbyPage() {
     }
   }, [isConnected, roomData, user, emit])
 
-  // Listen for socket events (separate effect to avoid re-subscribing on roomData change)
+  // Listen for socket events (roomData removed from deps to prevent listener teardown race)
   useEffect(() => {
-    if (!isConnected || !roomData) return
+    if (!isConnected) return
 
     // room_status: sent to the joining user with full room data
     const offStatus = on("room_status", (data: unknown) => {
@@ -139,49 +141,17 @@ function RoomLobbyPage() {
       }
     })
 
-    // role_assigned: capture undercover role data before game_started navigates away
-    const offRoleAssigned = on("role_assigned", (data: unknown) => {
-      roleDataRef.current = data as { role: string; word: string | null }
-    })
-
-    // game_started: undercover game started, navigate to game page with role data
+    // game_started: undercover game started, navigate to game page (for non-host players)
     const offGameStarted = on("game_started", (data: unknown) => {
       if (navigatingToGameRef.current) return
       toast.success(t("toast.gameStarting"))
       navigatingToGameRef.current = true
-      const { game_id, game_type, players: playerNames, mayor } = data as {
+      const { game_id, game_type } = data as {
         game_id: string; game_type: string; players: string[]; mayor: string
       }
       if (game_type === "undercover") {
-        const doNavigate = () => {
-          // Always store game_started data; include role data if available
-          sessionStorage.setItem(
-            `ibg-game-init-${game_id}`,
-            JSON.stringify({ roleData: roleDataRef.current, players: playerNames, mayor, roomId: roomData?.id, ownerId: roomData?.owner_id }),
-          )
-          navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
-        }
-
-        try {
-          if (roleDataRef.current) {
-            doNavigate()
-          } else {
-            // role_assigned may not have been processed yet — wait with exponential backoff
-            let attempts = 0
-            const maxAttempts = 4
-            const checkRole = () => {
-              if (roleDataRef.current || attempts >= maxAttempts) {
-                doNavigate()
-              } else {
-                attempts++
-                setTimeout(checkRole, 50 * Math.pow(2, attempts))
-              }
-            }
-            setTimeout(checkRole, 50)
-          }
-        } catch {
-          navigatingToGameRef.current = false
-        }
+        // Navigate immediately — game page fetches state from server via get_undercover_state
+        navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
       } else {
         navigatingToGameRef.current = false
       }
@@ -194,7 +164,6 @@ function RoomLobbyPage() {
       navigatingToGameRef.current = true
       try {
         const { game_id } = data as { game_id: string }
-        sessionStorage.setItem(`ibg-game-room-${game_id}`, roomData?.id || "")
         navigate({ to: "/game/codenames/$gameId", params: { gameId: game_id } })
       } catch {
         navigatingToGameRef.current = false
@@ -283,7 +252,6 @@ function RoomLobbyPage() {
       offStatus()
       offNewUser()
       offUserLeft()
-      offRoleAssigned()
       offGameStarted()
       offCodenamesStarted()
       offPlayerDisconnected()
@@ -293,13 +261,29 @@ function RoomLobbyPage() {
       offUserDisconnected()
       offError()
     }
-  }, [isConnected, roomData, on, navigate])
+  }, [isConnected, on, navigate, t])
 
-  const handleStartGame = () => {
-    if (gameType === "codenames") {
-      emit("start_codenames_game", { room_id: roomId, user_id: user?.id, word_pack_ids: null })
-    } else {
-      emit("start_undercover_game", { room_id: roomId, user_id: user?.id })
+  const handleStartGame = async () => {
+    if (!roomData || isStartingGame) return
+    setIsStartingGame(true)
+    try {
+      const url =
+        gameType === "codenames"
+          ? `/api/v1/codenames/games/${roomData.id}/start`
+          : `/api/v1/undercover/games/${roomData.id}/start`
+      const res = await apiClient({ method: "POST", url })
+      const data = res.data as { game_id: string; room_id: string }
+      navigatingToGameRef.current = true
+      toast.success(t("toast.gameStarting"))
+      if (gameType === "undercover") {
+        navigate({ to: "/game/undercover/$gameId", params: { gameId: data.game_id } })
+      } else {
+        navigate({ to: "/game/codenames/$gameId", params: { gameId: data.game_id } })
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to start game"))
+    } finally {
+      setIsStartingGame(false)
     }
   }
 
@@ -495,10 +479,10 @@ function RoomLobbyPage() {
           <button
             type="button"
             onClick={handleStartGame}
-            disabled={players.length < minPlayers}
+            disabled={players.length < minPlayers || isStartingGame}
             className="w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
-            {t("room.startGame")}
+            {isStartingGame ? t("common.loading") : t("room.startGame")}
           </button>
         </div>
       )}

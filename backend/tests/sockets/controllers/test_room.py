@@ -205,10 +205,7 @@ async def test_join_room_reconnection(make_redis_room, make_redis_user):
     )
 
     # Schedule a fake disconnect cleanup so cancel returns True
-    async def dummy_cleanup():
-        pass
-
-    schedule_disconnect_cleanup(user_id_str, 60, dummy_cleanup())
+    await schedule_disconnect_cleanup(user_id_str, 60, room_id=str(db_room.id))
 
     room_ctrl = MagicMock()
     room_ctrl.get_active_room_by_public_id = AsyncMock(return_value=db_room)
@@ -607,10 +604,7 @@ async def test_join_room_reconnect_updates_game_sid(make_redis_room, make_redis_
     )
 
     # Schedule a fake disconnect cleanup so cancel returns True
-    async def dummy():
-        pass
-
-    schedule_disconnect_cleanup(user_id_str, 60, dummy())
+    await schedule_disconnect_cleanup(user_id_str, 60, room_id=str(db_room.id))
 
     room_ctrl = MagicMock()
     room_ctrl.get_active_room_by_public_id = AsyncMock(return_value=db_room)

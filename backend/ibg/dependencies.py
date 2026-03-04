@@ -10,10 +10,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ibg.api.controllers.achievement import AchievementController
 from ibg.api.controllers.auth import AuthController
 from ibg.api.controllers.codenames import CodenamesController
+from ibg.api.controllers.codenames_game import CodenamesGameController
 from ibg.api.controllers.game import GameController
+from ibg.api.controllers.notification import NotificationService
 from ibg.api.controllers.room import RoomController
 from ibg.api.controllers.stats import StatsController
 from ibg.api.controllers.undercover import UndercoverController
+from ibg.api.controllers.undercover_game import UndercoverGameController
 from ibg.api.controllers.user import UserController
 from ibg.api.models.table import User
 from ibg.api.schemas.error import InvalidTokenError, UserNotFoundError
@@ -132,3 +135,25 @@ async def get_current_active_user(
     :return: The active user.
     """
     return current_user
+
+
+def get_notification_service() -> NotificationService:
+    """Get NotificationService with the global sio instance."""
+    from ibg.app import get_sio
+    return NotificationService(get_sio())
+
+
+async def get_undercover_game_controller(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    notifier: Annotated[NotificationService, Depends(get_notification_service)],
+) -> UndercoverGameController:
+    """Get UndercoverGameController with injected session and notifier."""
+    return UndercoverGameController(session, notifier)
+
+
+async def get_codenames_game_controller(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    notifier: Annotated[NotificationService, Depends(get_notification_service)],
+) -> CodenamesGameController:
+    """Get CodenamesGameController with injected session and notifier."""
+    return CodenamesGameController(session, notifier)

@@ -33,7 +33,7 @@ from ibg.socketio.routes.shared import (
     serialize_model,
     socketio_exception_handler,
 )
-from ibg.socketio.utils.disconnect_tasks import schedule_disconnect_cleanup
+from ibg.socketio.utils.disconnect_tasks import schedule_disconnect_cleanup, start_polling
 from ibg.socketio.utils.redis_ttl import set_game_finished_ttl
 
 router = APIRouter(
@@ -199,6 +199,7 @@ def room_events(sio: IBGSocket) -> None:
     @sio.event
     async def connect(sid, environ, auth):
         """Authenticate Socket.IO connections via JWT in handshake auth."""
+        start_polling(lambda uid, rid: _permanent_disconnect_cleanup(sio, uid, rid))
         if not auth or "token" not in auth:
             logger.warning(f"[SIO] Connection rejected: no token (sid={sid})")
             return False
@@ -226,6 +227,7 @@ def room_events(sio: IBGSocket) -> None:
         user_id = session.get("user_id") if session else None
         if not user_id:
             logger.info(f"[SIO] Disconnected unknown user: sid={sid}")
+            cleanup_sid_counter(sid)
             return
 
         logger.info(f"[SIO] Disconnected: sid={sid}, user_id={user_id}")
@@ -263,7 +265,7 @@ def room_events(sio: IBGSocket) -> None:
             await redis_room.save()
 
         # Leave the Socket.IO room (transport is gone)
-        await sio.leave_room(sid, redis_room.id)
+        await sio.leave_room(sid, str(redis_room.public_id))
 
         # Notify remaining room members of temporary disconnect
         in_game = redis_room.active_game_id is not None
@@ -281,10 +283,10 @@ def room_events(sio: IBGSocket) -> None:
         )
 
         # Schedule permanent cleanup after grace period
-        schedule_disconnect_cleanup(
+        await schedule_disconnect_cleanup(
             user_id,
             DISCONNECT_GRACE_PERIOD_SECONDS,
-            _permanent_disconnect_cleanup(sio, user_id, room_id),
+            room_id,
         )
 
     async def _permanent_disconnect_cleanup(sio: IBGSocket, user_id: str, room_id: str) -> None:
@@ -323,10 +325,25 @@ def room_events(sio: IBGSocket) -> None:
 
             # Handle game-specific disconnect if there's an active game
             if redis_room.active_game_id:
-                if redis_room.active_game_type == "undercover":
-                    await handle_undercover_disconnect(sio, user_id, redis_room)
-                elif redis_room.active_game_type == "codenames":
-                    await handle_codenames_disconnect(sio, user_id, redis_room)
+                # Verify the game still exists (TTL may have expired)
+                game_exists = True
+                try:
+                    if redis_room.active_game_type == "undercover":
+                        await UndercoverGame.get(redis_room.active_game_id)
+                    elif redis_room.active_game_type == "codenames":
+                        await CodenamesGame.get(redis_room.active_game_id)
+                except NotFoundError:
+                    # Game TTL expired — clean up stale reference
+                    game_exists = False
+                    redis_room.active_game_id = None
+                    redis_room.active_game_type = None
+                    await redis_room.save()
+
+                if game_exists:
+                    if redis_room.active_game_type == "undercover":
+                        await handle_undercover_disconnect(sio, user_id, redis_room)
+                    elif redis_room.active_game_type == "codenames":
+                        await handle_codenames_disconnect(sio, user_id, redis_room)
 
             # Remove user from Redis room
             redis_room.users = [u for u in redis_room.users if u.id != user_id]

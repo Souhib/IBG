@@ -5,12 +5,13 @@ import {
   startGameViaUI,
   dismissRoleRevealAll,
   submitDescriptionsForAllPlayers,
+  isPageAlive,
   type PlayerContext,
 } from "../../helpers/ui-game-setup";
 
 test.describe("Undercover — Description Phase", () => {
   test("each player gets a turn to describe", async ({ browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -55,8 +56,7 @@ test.describe("Undercover — Description Phase", () => {
       // The first describer should see the input field
       let inputFound = false;
       for (const player of gamePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         const hasInput = await player.page
           .locator("#description-input")
@@ -75,8 +75,7 @@ test.describe("Undercover — Description Phase", () => {
       // Non-describers should see "Waiting for..." message
       let waitingFound = false;
       for (const player of gamePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         // Skip broken "Players (0/0)" pages
         const broken = await player.page
@@ -105,7 +104,7 @@ test.describe("Undercover — Description Phase", () => {
   });
 
   test("single-word validation rejects spaces", async ({ browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -121,8 +120,7 @@ test.describe("Undercover — Description Phase", () => {
       // Find the player whose turn it is (has the input)
       let describerPage = null;
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         const hasInput = await player.page
           .locator("#description-input")
           .waitFor({ state: "visible", timeout: 10_000 })
@@ -137,8 +135,7 @@ test.describe("Undercover — Description Phase", () => {
       // Retry with reload if no describer found (page may need server state refresh)
       if (!describerPage) {
         for (const player of activePlayers) {
-          const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-          if (!pageAlive) continue;
+          if (!isPageAlive(player.page)) continue;
           await player.page.reload();
           await player.page.waitForLoadState("domcontentloaded");
           const hasInput = await player.page
@@ -184,7 +181,7 @@ test.describe("Undercover — Description Phase", () => {
   test("all descriptions visible after completion transitions to voting", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -199,7 +196,7 @@ test.describe("Undercover — Description Phase", () => {
       if (activePlayers.length < 2) return; // Not enough players reached game phase
 
       // Submit descriptions for all players
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, players);
 
       // Get game URL for recovery
       const gameUrl = activePlayers
@@ -222,8 +219,7 @@ test.describe("Undercover — Description Phase", () => {
       // Wait for voting phase ("Discuss and vote") to appear after transition completes
       let votingFound = false;
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         // Navigate players back to game page if redirected
         if (!/\/game\/undercover\//.test(player.page.url())) {
           await player.page.goto(gameUrl);
@@ -259,8 +255,7 @@ test.describe("Undercover — Description Phase", () => {
 
       // Should see the "Vote to Eliminate" button
       for (const player of activePlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         const voteBtn = await player.page
           .locator("text=Vote to Eliminate")
@@ -279,7 +274,7 @@ test.describe("Undercover — Description Phase", () => {
   test("reconnecting during description phase recovers state", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,

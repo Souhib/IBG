@@ -6,12 +6,14 @@ import { useAuth } from "@/providers/AuthProvider"
 /**
  * Hook to manage Socket.IO connection with authentication.
  * Automatically connects when authenticated and disconnects on logout.
+ * Queues emit calls when disconnected and flushes on reconnect.
  */
 export function useSocket() {
   const { isAuthenticated, token } = useAuth()
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const socketRef = useRef<Socket | null>(null)
+  const pendingEmits = useRef<Array<{ event: string; data: unknown }>>([])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -19,6 +21,7 @@ export function useSocket() {
       setIsConnected(false)
       setConnectionError(null)
       socketRef.current = null
+      pendingEmits.current = []
       return
     }
 
@@ -61,10 +64,23 @@ export function useSocket() {
     }
   }, [token])
 
+  // Flush queued emits on reconnect
+  useEffect(() => {
+    if (!isConnected || pendingEmits.current.length === 0) return
+    const queue = [...pendingEmits.current]
+    pendingEmits.current = []
+    for (const item of queue) {
+      socketRef.current?.emit(item.event, item.data)
+    }
+  }, [isConnected])
+
   const emit = useCallback(
     (event: string, data?: unknown) => {
-      if (socketRef.current?.connected) {
-        socketRef.current.emit(event, data)
+      const socket = socketRef.current
+      if (socket?.connected) {
+        socket.emit(event, data)
+      } else {
+        pendingEmits.current.push({ event, data: data ?? null })
       }
     },
     [],

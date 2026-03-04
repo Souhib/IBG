@@ -39,6 +39,9 @@ api/
 │   ├── game.py        # Game lifecycle
 │   ├── undercover.py  # Undercover word/term pairs
 │   ├── codenames.py   # Codenames words/packs
+│   ├── undercover_game.py # Undercover game logic (REST-first)
+│   ├── codenames_game.py  # Codenames game logic (REST-first)
+│   ├── notification.py    # Socket.IO push notification wrapper
 │   ├── stats.py       # User statistics
 │   └── achievement.py # Achievement tracking + seeding
 ├── models/            # SQLModel DB tables ONLY

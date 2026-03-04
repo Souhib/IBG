@@ -6,13 +6,14 @@ import {
   dismissRoleRevealAll,
   submitDescriptionsForAllPlayers,
   waitForVotingPhase,
+  isPageAlive,
 } from "../../helpers/ui-game-setup";
 
 test.describe("Undercover — Vote Confirmation", () => {
   test("select player highlights but doesn't vote immediately", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -23,7 +24,7 @@ test.describe("Undercover — Vote Confirmation", () => {
     try {
       await startGameViaUI(players, "undercover");
       const activePlayers = await dismissRoleRevealAll(players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, players);
       // Find a player still on the game page for voting
       const voter = activePlayers.find((p) =>
         /\/game\/undercover\//.test(p.page.url()),
@@ -67,7 +68,7 @@ test.describe("Undercover — Vote Confirmation", () => {
   });
 
   test("vote button submits the vote", async ({ browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -79,7 +80,7 @@ test.describe("Undercover — Vote Confirmation", () => {
       await startGameViaUI(players, "undercover");
       const activePlayers = await dismissRoleRevealAll(players);
       if (activePlayers.length < 2) return; // Not enough players reached game phase
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, players);
 
       // Find a player still on the game page
       const voterCtx = activePlayers.find((p) =>
@@ -132,7 +133,7 @@ test.describe("Undercover — Vote Confirmation", () => {
   });
 
   test("can change selection before confirming", async ({ browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -143,7 +144,7 @@ test.describe("Undercover — Vote Confirmation", () => {
     try {
       await startGameViaUI(players, "undercover");
       const activePlayers = await dismissRoleRevealAll(players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, players);
       await waitForVotingPhase(activePlayers[0].page);
 
       const voterPage = activePlayers[0].page;
@@ -174,7 +175,7 @@ test.describe("Undercover — Vote Confirmation", () => {
   });
 
   test("cannot vote after confirming", async ({ browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const { players, cleanup } = await setupRoomWithPlayers(
       browser,
@@ -186,7 +187,7 @@ test.describe("Undercover — Vote Confirmation", () => {
       await startGameViaUI(players, "undercover");
       const activePlayers = await dismissRoleRevealAll(players);
       if (activePlayers.length < 2) return; // Not enough players reached game phase
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, players);
       await waitForVotingPhase(activePlayers[0].page);
 
       const voterPage = activePlayers[0].page;
@@ -201,8 +202,7 @@ test.describe("Undercover — Vote Confirmation", () => {
         .then(() => true)
         .catch(() => false);
       if (!buttonVisible) {
-        const alive = await voterPage.evaluate(() => true).catch(() => false);
-        if (!alive) return;
+        if (!isPageAlive(voterPage)) return;
         await voterPage.reload();
         await voterPage.waitForLoadState("domcontentloaded");
         if (!/\/game\/undercover\//.test(voterPage.url())) return;

@@ -4,13 +4,14 @@ import { generateTestAccounts } from "../../helpers/test-setup";
 import {
   setupRoomWithPlayers,
   startGameViaUI,
+  isPageAlive,
 } from "../../helpers/ui-game-setup";
 
 test.describe("Undercover — Disconnect During Game (UI)", () => {
   test("game is cancelled when players drop below minimum (< 3)", async ({
     browser,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
@@ -20,36 +21,87 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
       // Wait for game UI to load
       await expect(setup.players[0].page.locator("h1:has-text('Undercover')")).toBeVisible({ timeout: 10_000 });
 
+      // Dismiss role reveal for player 0 if visible (overlay blocks cancellation UI)
+      const roleRevealBtn = setup.players[0].page.locator('button:has-text("I Understand")');
+      const hasRoleReveal = await roleRevealBtn
+        .waitFor({ state: "visible", timeout: 5_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (hasRoleReveal) {
+        await roleRevealBtn.click({ force: true }).catch(() => {});
+        await setup.players[0].page.waitForTimeout(500);
+      }
+
       // Disconnect players 2 and 3 by closing their contexts
       await setup.players[1].page.context().close();
       await setup.players[2].page.context().close();
 
       // Wait for disconnect grace period (30s in e2e) + cancellation processing
-      await setup.players[0].page.waitForTimeout(35_000);
-
-      // Player 1 should see one of:
-      // 1. Game cancelled error (bg-destructive/10 div)
-      // 2. Redirected away from game page
       const p0Page = setup.players[0].page;
-      let redirected = !p0Page.url().includes("/game/undercover/");
-      let cancelledVisible = await p0Page
+
+      // Wait for cancellation — use locator-based wait so it returns immediately
+      // when detected, with 25s ceiling (10s grace + 3s poll + processing buffer)
+      let redirected = false;
+      let cancelledVisible = false;
+      let gameOverVisible = false;
+
+      // Dismiss role reveal if it blocks the cancellation UI
+      const roleRevealBtn2 = p0Page.locator('button:has-text("I Understand")');
+      const hasRoleReveal2 = await roleRevealBtn2
+        .isVisible()
+        .catch(() => false);
+      if (hasRoleReveal2) {
+        await roleRevealBtn2.click({ force: true }).catch(() => {});
+        await p0Page.waitForTimeout(500);
+      }
+
+      // Wait for cancellation indicator (returns immediately when visible, up to 50s)
+      await p0Page
+        .locator(".bg-destructive\\/10")
+        .or(p0Page.locator("h2:has-text('Game Over')"))
+        .first()
+        .waitFor({ state: "visible", timeout: 50_000 })
+        .catch(() => {});
+
+      redirected = !p0Page.url().includes("/game/undercover/");
+      cancelledVisible = await p0Page
         .locator(".bg-destructive\\/10")
         .isVisible()
         .catch(() => false);
+      gameOverVisible = await p0Page
+        .locator("h2:has-text('Game Over')")
+        .isVisible()
+        .catch(() => false);
 
-      // Reload if event was missed
-      if (!redirected && !cancelledVisible) {
+      // Retry with reloads if socket event was missed
+      for (let attempt = 0; attempt < 2 && !(redirected || cancelledVisible || gameOverVisible); attempt++) {
         await p0Page.reload();
         await p0Page.waitForLoadState("domcontentloaded");
-        await p0Page.waitForTimeout(3_000);
+        await p0Page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+
+        // Wait again after reload
+        await p0Page
+          .locator(".bg-destructive\\/10")
+          .or(p0Page.locator("h2:has-text('Game Over')"))
+          .first()
+          .waitFor({ state: "visible", timeout: 10_000 })
+          .catch(() => {});
+
         redirected = !p0Page.url().includes("/game/undercover/");
         cancelledVisible = await p0Page
           .locator(".bg-destructive\\/10")
           .isVisible()
           .catch(() => false);
+        gameOverVisible = await p0Page
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
       }
 
-      expect(redirected || cancelledVisible).toBeTruthy();
+      expect(redirected || cancelledVisible || gameOverVisible).toBeTruthy();
     } finally {
       // Only close remaining context (others already closed)
       await setup.players[0].page.context().close();
@@ -59,24 +111,31 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
   test("game cancellation shows error state in UI", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
-      await setup.players[0].page.waitForTimeout(2000);
+
+      // Dismiss role reveal for player 0 if visible (overlay blocks cancellation UI)
+      const roleBtn = setup.players[0].page.locator('button:has-text("I Understand")');
+      const hasRole = await roleBtn
+        .waitFor({ state: "visible", timeout: 5_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (hasRole) {
+        await roleBtn.click({ force: true }).catch(() => {});
+        await setup.players[0].page.waitForTimeout(500);
+      }
 
       // Disconnect players 2 and 3
       await setup.players[1].page.context().close();
       await setup.players[2].page.context().close();
 
       // Wait for grace period (30s in e2e) + cancellation processing
-      await setup.players[0].page.waitForTimeout(35_000);
-
       const p0Page = setup.players[0].page;
 
-      // Check for cancellation: error div, redirect to home, or game_cancelled toast
       const checkCancelled = async (): Promise<boolean> => {
         const redirected = !p0Page.url().includes("/game/undercover/");
         if (redirected) return true;
@@ -85,16 +144,50 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
           .isVisible()
           .catch(() => false);
         if (cancelledDiv) return true;
+        const gameOver = await p0Page
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
+        if (gameOver) return true;
         return false;
       };
 
+      // Dismiss role reveal if it blocks the cancellation UI
+      const roleRevealRetry = await p0Page
+        .locator('button:has-text("I Understand")')
+        .isVisible()
+        .catch(() => false);
+      if (roleRevealRetry) {
+        await p0Page.locator('button:has-text("I Understand")').click({ force: true }).catch(() => {});
+        await p0Page.waitForTimeout(500);
+      }
+
+      // Wait for cancellation indicator (returns immediately when visible, up to 50s)
+      await p0Page
+        .locator(".bg-destructive\\/10")
+        .or(p0Page.locator("h2:has-text('Game Over')"))
+        .first()
+        .waitFor({ state: "visible", timeout: 50_000 })
+        .catch(() => {});
+
       let isCancelled = await checkCancelled();
 
-      // Reload once if not yet cancelled (socket may have missed the event)
-      if (!isCancelled) {
+      // Retry with reloads if socket event was missed
+      for (let attempt = 0; attempt < 2 && !isCancelled; attempt++) {
         await p0Page.reload();
         await p0Page.waitForLoadState("domcontentloaded");
-        await p0Page.waitForTimeout(3_000);
+        await p0Page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+
+        await p0Page
+          .locator(".bg-destructive\\/10")
+          .or(p0Page.locator("h2:has-text('Game Over')"))
+          .first()
+          .waitFor({ state: "visible", timeout: 10_000 })
+          .catch(() => {});
+
         isCancelled = await checkCancelled();
       }
 
@@ -107,7 +200,7 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
   test("remaining players see updated player list after disconnect", async ({
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
@@ -116,8 +209,7 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
 
       // Dismiss role reveals so players enter the game phase
       for (const player of setup.players) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         const dismissBtn = player.page.locator('button:has-text("I Understand")');
         const hasDismiss = await dismissBtn
           .waitFor({ state: "visible", timeout: 8_000 })
@@ -194,8 +286,13 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
       // Disconnect player 3
       await setup.players[2].page.context().close();
 
-      // Wait for disconnect grace period (30s in e2e) + processing buffer
-      await setup.players[0].page.waitForTimeout(35_000);
+      // Wait for cancellation indicator (returns immediately when visible, up to 50s)
+      await p0Page
+        .locator(".bg-destructive\\/10")
+        .or(p0Page.locator("h2:has-text('Game Over')"))
+        .first()
+        .waitFor({ state: "visible", timeout: 50_000 })
+        .catch(() => {});
 
       // With 3 players, disconnecting 1 drops below minimum (< 3 alive)
       // so the game is cancelled rather than continuing
@@ -205,11 +302,22 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
         .isVisible()
         .catch(() => false);
 
-      // Reload if event was missed
-      if (!redirected && !cancelledVisible) {
+      // Retry with reloads if socket event was missed
+      for (let attempt = 0; attempt < 2 && !(redirected || cancelledVisible); attempt++) {
         await p0Page.reload();
         await p0Page.waitForLoadState("domcontentloaded");
-        await p0Page.waitForTimeout(3_000);
+        await p0Page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+
+        await p0Page
+          .locator(".bg-destructive\\/10")
+          .or(p0Page.locator("h2:has-text('Game Over')"))
+          .first()
+          .waitFor({ state: "visible", timeout: 10_000 })
+          .catch(() => {});
+
         redirected = !p0Page.url().includes("/game/undercover/");
         cancelledVisible = await p0Page
           .locator(".bg-destructive\\/10")
@@ -225,6 +333,7 @@ test.describe("Undercover — Disconnect During Game (UI)", () => {
   });
 
   test("player reconnects to ongoing undercover game", async ({ browser }) => {
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 

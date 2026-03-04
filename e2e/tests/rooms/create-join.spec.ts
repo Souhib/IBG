@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { createPlayerPage } from "../../fixtures/auth.fixture";
 import { ROUTES } from "../../helpers/constants";
 import { generateTestAccounts } from "../../helpers/test-setup";
-import { apiLogin, apiJoinRoom } from "../../helpers/api-client";
+import { apiLogin, apiJoinRoom, apiCreateRoom, apiGetRoom } from "../../helpers/api-client";
 
 test.describe("Rooms — Create & Join", () => {
   test("player 1 creates a room and sees lobby", async ({ browser }) => {
@@ -17,10 +17,38 @@ test.describe("Rooms — Create & Join", () => {
     await page.goto(ROUTES.createRoom);
     await page.waitForLoadState("domcontentloaded");
 
+    // Wait for socket connection (ensures backend is responsive)
+    await page.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 10_000 },
+    ).catch(() => {});
+
     // Select Undercover and create room
     await page.locator('button[type="submit"]').click();
 
-    // Should redirect to room lobby
+    // Should redirect to room lobby (retry if "Failed to fetch")
+    const created = await page
+      .waitForURL(/\/rooms\//, { timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!created) {
+      // Backend may be briefly unresponsive — retry with increasing waits
+      for (let retry = 0; retry < 2; retry++) {
+        await page.waitForTimeout(3000 + retry * 3000);
+        await page.reload();
+        await page.waitForLoadState("domcontentloaded");
+        await page.waitForFunction(
+          () => (window as any).__SOCKET__?.connected === true,
+          { timeout: 10_000 },
+        ).catch(() => {});
+        await page.locator('button[type="submit"]').click();
+        const ok = await page
+          .waitForURL(/\/rooms\//, { timeout: 15_000 })
+          .then(() => true)
+          .catch(() => false);
+        if (ok) break;
+      }
+    }
     await expect(page).toHaveURL(/\/rooms\//, { timeout: 15_000 });
 
     // Room code and password should be visible
@@ -33,34 +61,26 @@ test.describe("Rooms — Create & Join", () => {
   test("player 2 joins room with correct code and password", async ({
     browser,
   }) => {
+    test.setTimeout(120_000);
     const accounts = await generateTestAccounts(2);
-    // Player 1 creates a room
+
+    // Create room via API (reliable, not subject to "Failed to fetch" under load)
+    const p1Login = await apiLogin(accounts[0].email, accounts[0].password);
+    const p2Login = await apiLogin(accounts[1].email, accounts[1].password);
+    const room = await apiCreateRoom(p1Login.access_token, "undercover");
+    const roomDetails = await apiGetRoom(room.id, p1Login.access_token);
+
+    const roomCode = roomDetails.public_id;
+    const passwordText = roomDetails.password;
+
+    // Player 1 opens the room lobby
     const player1 = await createPlayerPage(
       browser,
       accounts[0].email,
       accounts[0].password,
     );
-
-    await player1.goto(ROUTES.createRoom);
+    await player1.goto(ROUTES.room(room.id));
     await player1.waitForLoadState("domcontentloaded");
-    await player1.locator('button[type="submit"]').click();
-    await expect(player1).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-
-    // Wait for room data to load
-    await player1.waitForLoadState("domcontentloaded");
-
-    // Extract room code and password from the lobby page
-    const roomCodeButton = player1.locator(
-      'button:has(.tracking-widest):not(:has(.lucide-key-round))',
-    );
-    await expect(roomCodeButton).toBeVisible({ timeout: 5_000 });
-    const roomCode = (await roomCodeButton.innerText()).replace(/\s/g, "").slice(0, 5);
-
-    const passwordButton = player1.locator(
-      'button:has(.lucide-key-round)',
-    );
-    await expect(passwordButton).toBeVisible();
-    const passwordText = (await passwordButton.innerText()).replace(/\D/g, "");
 
     expect(roomCode).toHaveLength(5);
     expect(passwordText).toHaveLength(4);
@@ -104,61 +124,58 @@ test.describe("Rooms — Create & Join", () => {
 
     // If join didn't redirect, retry (socket may not have been fully ready)
     const joined = await player2
-      .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 8_000 })
+      .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 10_000 })
       .then(() => true)
       .catch(() => false);
     if (!joined) {
-      // Re-check socket + listeners and retry
+      // Re-check socket + listeners and retry click
       await player2.waitForFunction(
-        () => {
-          const s = (window as any).__SOCKET__;
-          if (!s?.connected) return false;
-          return typeof s.hasListeners === "function"
-            ? s.hasListeners("room_status")
-            : true;
-        },
+        () => (window as any).__SOCKET__?.connected === true,
         { timeout: 5_000 },
-      );
-      await player2.waitForTimeout(500);
+      ).catch(() => {});
       await joinBtn.click();
 
-      // Second retry with page reload
       const joined2 = await player2
-        .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 8_000 })
+        .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 10_000 })
         .then(() => true)
         .catch(() => false);
       if (!joined2) {
-        // Socket join failed — use REST API to join the room as fallback
-        const roomUrlMatch = player1.url().match(/\/rooms\/([a-f0-9-]+)/);
-        if (roomUrlMatch) {
-          const p2Login = await apiLogin(accounts[1].email, accounts[1].password);
-          await apiJoinRoom(roomUrlMatch[1], p2Login.user.id, passwordText, p2Login.access_token)
-            .catch(() => {}); // Ignore if already joined
-          await player2.goto(`${ROUTES.rooms}/${roomUrlMatch[1]}`);
-          await player2.waitForLoadState("domcontentloaded");
-        }
+        // Socket join failed — force-join via REST API + navigate directly
+        await apiJoinRoom(room.id, p2Login.user.id, passwordText, p2Login.access_token)
+          .catch(() => {}); // Ignore if already joined
+        await player2.goto(ROUTES.room(room.id));
+        await player2.waitForLoadState("domcontentloaded");
       }
     }
 
-    // Player 2 should be redirected to the room lobby
-    await expect(player2).toHaveURL(/\/rooms\/[a-f0-9-]+/, { timeout: 15_000 });
+    // Verify membership via API — force-join if needed (like setupRoomWithPlayers)
+    const roomCheck = await apiGetRoom(room.id, p1Login.access_token);
+    const joinedUserIds = new Set(roomCheck.users.map((u: { id: string }) => u.id));
+    if (!joinedUserIds.has(p2Login.user.id)) {
+      await apiJoinRoom(room.id, p2Login.user.id, passwordText, p2Login.access_token)
+        .catch(() => {});
+      // Navigate player2 to the room after API join
+      await player2.goto(ROUTES.room(room.id));
+      await player2.waitForLoadState("domcontentloaded");
+    }
+
+    // Player 2 should be on the room lobby
+    await expect(player2).toHaveURL(/\/rooms\/[a-f0-9-]+/, { timeout: 10_000 });
 
     // Both players should see each other in the lobby
-    await player2.waitForLoadState("domcontentloaded");
-    await player2.waitForTimeout(3000);
-    let playerNames = await player1
-      .locator(".bg-muted\\/50 .text-sm.font-medium")
-      .allTextContents();
-    // If host only sees 1 player, reload to get fresh data
-    if (playerNames.length < 2) {
-      await player1.reload();
-      await player1.waitForLoadState("domcontentloaded");
-      await player1.waitForTimeout(3000);
-      playerNames = await player1
-        .locator(".bg-muted\\/50 .text-sm.font-medium")
-        .allTextContents();
-    }
-    expect(playerNames.length).toBeGreaterThanOrEqual(2);
+    await player2.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 10_000 },
+    ).catch(() => {});
+
+    const playerCardSelector = ".bg-muted\\/50 .text-sm.font-medium, [class*='bg-muted'] .text-sm.font-medium";
+
+    // Both players should see each other in the player list
+    await expect(async () => {
+      const names = await player2.locator(playerCardSelector).allTextContents();
+      const count = names.filter((t) => t.trim().length > 0).length;
+      expect(count).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 15_000 });
 
     await player1.context().close();
     await player2.context().close();
@@ -166,25 +183,20 @@ test.describe("Rooms — Create & Join", () => {
 
   test("wrong password shows error toast", async ({ browser }) => {
     const accounts = await generateTestAccounts(2);
-    // Player 1 creates a room
+
+    // Create room via API (reliable under load)
+    const p1Login = await apiLogin(accounts[0].email, accounts[0].password);
+    const room = await apiCreateRoom(p1Login.access_token, "undercover");
+    const roomDetails = await apiGetRoom(room.id, p1Login.access_token);
+    const roomCode = roomDetails.public_id;
+
     const player1 = await createPlayerPage(
       browser,
       accounts[0].email,
       accounts[0].password,
     );
-
-    await player1.goto(ROUTES.createRoom);
+    await player1.goto(ROUTES.room(room.id));
     await player1.waitForLoadState("domcontentloaded");
-    await player1.locator('button[type="submit"]').click();
-    await expect(player1).toHaveURL(/\/rooms\//, { timeout: 15_000 });
-    await player1.waitForLoadState("domcontentloaded");
-
-    // Extract room code
-    const roomCodeButton = player1.locator(
-      'button:has(.tracking-widest):not(:has(.lucide-key-round))',
-    );
-    await expect(roomCodeButton).toBeVisible({ timeout: 5_000 });
-    const roomCode = (await roomCodeButton.innerText()).replace(/\s/g, "").slice(0, 5);
 
     // Player 2 tries to join with wrong password
     const player2 = await createPlayerPage(
@@ -195,6 +207,12 @@ test.describe("Rooms — Create & Join", () => {
 
     await player2.goto(ROUTES.rooms);
     await player2.waitForLoadState("domcontentloaded");
+
+    // Wait for socket connection before interacting with the form
+    await player2.waitForFunction(
+      () => (window as any).__SOCKET__?.connected === true,
+      { timeout: 10_000 },
+    ).catch(() => {});
 
     await player2.locator('input[id="room-code"]').fill(roomCode);
 
@@ -210,7 +228,7 @@ test.describe("Rooms — Create & Join", () => {
     // Should show error toast
     await expect(
       player2.locator('[data-sonner-toast][data-type="error"]'),
-    ).toBeVisible({ timeout: 10_000 });
+    ).toBeVisible({ timeout: 15_000 });
 
     // Should still be on the rooms page
     await expect(player2).toHaveURL(/\/rooms$/);

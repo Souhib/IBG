@@ -6,21 +6,24 @@ import {
   dismissRoleRevealAll,
   submitDescriptionsForAllPlayers,
   voteForPlayer,
+  verifyAllPlayersVoted,
   waitForEliminationOrGameOver,
   clickNextRound,
+  isPageAlive,
 } from "../../helpers/ui-game-setup";
 
 test.describe("Undercover — Full Game Flow (UI)", () => {
   test("3-player game: start → playing phase → vote → elimination/game over", async ({
     browser,
   }) => {
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       // ─── Verify Playing Phase ───────────────────────────
       // Get game URL from any player still on the game page
@@ -33,10 +36,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
 
       // Ensure active players are on the game page and in voting phase
       for (const player of activePlayers) {
-        const pageAlive = await player.page
-          .evaluate(() => true)
-          .catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
 
         // Reconnect player if redirected to home
         if (!/\/game\/undercover\//.test(player.page.url())) {
@@ -73,8 +73,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
       const player1Username = activePlayers[0].login.user.username;
 
       for (const voter of activePlayers) {
-        const pageAlive = await voter.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(voter.page)) continue;
         if (!/\/game\/undercover\//.test(voter.page.url())) continue;
         // Skip broken "Players (0/0)" pages
         const brokenVoter = await voter.page
@@ -88,6 +87,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
             : targetUsername;
         await voteForPlayer(voter.page, voteTarget);
       }
+      await verifyAllPlayersVoted(activePlayers, targetUsername, player1Username);
 
       // ─── Wait for Elimination or Game Over ──────────────
       // Find a player still on the game page to check result
@@ -104,15 +104,26 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
           observerPage.locator("h2:has-text('Game Over')"),
         ).toBeVisible();
       } else {
-        // Verify elimination screen shows target's name
-        await expect(
-          observerPage.locator(`text=${targetUsername}`).first(),
-        ).toBeVisible();
+        // Elimination may transition to Game Over before we check (race condition)
+        const alsoGameOver = await observerPage
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
+        if (alsoGameOver) {
+          await expect(
+            observerPage.locator("h2:has-text('Game Over')"),
+          ).toBeVisible();
+        } else {
+          // Verify elimination screen shows target's name
+          await expect(
+            observerPage.locator(`text=${targetUsername}`).first(),
+          ).toBeVisible();
 
-        // "Next Round" button should be visible
-        await expect(
-          observerPage.locator("button:has-text('Next Round')"),
-        ).toBeVisible();
+          // "Next Round" button should be visible
+          await expect(
+            observerPage.locator("button:has-text('Next Round')"),
+          ).toBeVisible();
+        }
       }
     } finally {
       await setup.cleanup();
@@ -122,6 +133,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
   test("players see their word after game starts", async ({
     browser,
   }) => {
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
@@ -133,8 +145,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
       let wordCount = 0;
       let aliveCount = 0;
       for (const player of activeWordPlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         // Skip players redirected to HOME
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         aliveCount++;
@@ -151,8 +162,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
 
       // Players list should show player count
       for (const player of activeWordPlayers) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         await expect(
           player.page.locator("text=/Players \\(\\d+\\/3\\)/"),
         ).toBeVisible({ timeout: 5_000 });
@@ -165,13 +175,14 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
   test("3-player game plays to game over through multiple rounds if needed", async ({
     browser,
   }) => {
+    test.setTimeout(180_000);
     const accounts = await generateTestAccounts(3);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
     try {
       await startGameViaUI(setup.players, "undercover");
       const activePlayers3 = await dismissRoleRevealAll(setup.players);
-      await submitDescriptionsForAllPlayers(activePlayers3);
+      await submitDescriptionsForAllPlayers(activePlayers3, setup.players);
 
       let gameEnded = false;
       const eliminated = new Set<string>();
@@ -215,16 +226,36 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
           .isVisible()
           .catch(() => false);
         if (brokenPage) break;
-        const hasButtons = await voteObserver.page
+        let hasButtons = await voteObserver.page
           .locator(".grid.gap-3 button").first()
           .waitFor({ state: "visible", timeout: 15_000 })
           .then(() => true)
           .catch(() => false);
+        if (!hasButtons) {
+          // Voting transition overlay may be stuck — reload to get fresh state
+          await voteObserver.page.reload().catch(() => {});
+          await voteObserver.page.waitForLoadState("domcontentloaded").catch(() => {});
+          await voteObserver.page.waitForFunction(
+            () => (window as any).__SOCKET__?.connected === true,
+            { timeout: 10_000 },
+          ).catch(() => {});
+          hasButtons = await voteObserver.page
+            .locator(".grid.gap-3 button").first()
+            .waitFor({ state: "visible", timeout: 10_000 })
+            .then(() => true)
+            .catch(() => false);
+        }
         if (!hasButtons) break;
 
         for (const voter of alivePlayers) {
-          const pageAlive = await voter.page.evaluate(() => true).catch(() => false);
-          if (!pageAlive) continue;
+          if (!isPageAlive(voter.page)) continue;
+
+          // Check for game over before each vote attempt
+          const overBeforeVote = await voter.page
+            .locator("h2:has-text('Game Over')")
+            .isVisible()
+            .catch(() => false);
+          if (overBeforeVote) { gameEnded = true; break; }
 
           // Reconnect voter if not on game page
           if (!/\/game\/undercover\//.test(voter.page.url()) && gameUrl3) {
@@ -248,6 +279,8 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
             await voteForPlayer(voter.page, voteTarget);
           }
         }
+        if (gameEnded) break;
+        await verifyAllPlayersVoted(alivePlayers, targetUsername, alivePlayers[0].login.user.username);
 
         // Find an alive player still on the game page for observation
         const observerPage3 = alivePlayers.find(
@@ -260,7 +293,17 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
           gameEnded = true;
         } else {
           eliminated.add(targetUsername);
-          await clickNextRound(observerPage3);
+
+          // clickNextRound can throw if elimination screen vanishes (socket reconnection)
+          await clickNextRound(observerPage3).catch(async () => {
+            // Fallback: reload to get fresh state
+            await observerPage3.reload();
+            await observerPage3.waitForLoadState("domcontentloaded");
+            await observerPage3.waitForFunction(
+              () => (window as any).__SOCKET__?.connected === true,
+              { timeout: 10_000 },
+            ).catch(() => {});
+          });
 
           gameEnded = await observerPage3
             .locator("h2:has-text('Game Over')")
@@ -272,7 +315,7 @@ test.describe("Undercover — Full Game Flow (UI)", () => {
             const nextRoundPlayers = activePlayers3.filter(
               (p) => !eliminated.has(p.login.user.username),
             );
-            await submitDescriptionsForAllPlayers(nextRoundPlayers);
+            await submitDescriptionsForAllPlayers(nextRoundPlayers, setup.players);
           }
         }
       }

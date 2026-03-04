@@ -156,19 +156,16 @@ test.describe("Rooms — Socket Events", () => {
     // Also ensure player2's socket is connected
     await player2.waitForFunction(
       () => (window as any).__SOCKET__?.connected === true,
-      { timeout: 10_000 },
-    ).catch(() => {});
+      { timeout: 15_000 },
+    );
 
     // Host (player 1) disconnects
     await player1.context().close();
 
-    // After grace period (30s in e2e), ownership should transfer via socket event
-    await player2.waitForTimeout(35_000);
-
-    // Player 2 should now see the host controls (game type selector + start button)
+    // Player 2 should see host controls after grace period (30s) + cleanup
     await expect(
       player2.locator('text=Game Type'),
-    ).toBeVisible({ timeout: 10_000 });
+    ).toBeVisible({ timeout: 55_000 });
 
     await player2.context().close();
   });

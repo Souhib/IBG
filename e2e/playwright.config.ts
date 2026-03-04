@@ -11,21 +11,21 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: 4,
+  workers: 2,
   globalTimeout: 3_600_000, // 60 minutes for full suite
   reporter: process.env.CI
     ? [["html", { open: "never" }], ["github"]]
     : [["html", { open: "on-failure" }]],
   timeout: 60_000,
   expect: {
-    timeout: 10_000,
+    timeout: 15_000,
   },
   use: {
     baseURL: FRONTEND_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    actionTimeout: 15_000,
+    actionTimeout: 20_000,
     navigationTimeout: 30_000,
     ...devices["Desktop Chrome"],
   },

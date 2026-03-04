@@ -134,13 +134,40 @@ docker compose -f docker-compose.dokploy.yml up -d
 
 ## Coding Standards
 
-### Zero Tolerance for Test Failures
+### ⛔ MANDATORY — Zero Tolerance for Test Failures ⛔
 
-**ABSOLUTE RULE: A task is NEVER complete if there is even a single failing or flaky test.** This is non-negotiable — no feature, bugfix, refactor, or any modification of any kind can be considered done until the ENTIRE test suite passes with:
+**THIS RULE CANNOT BE BYPASSED, FORGOTTEN, OR IGNORED UNDER ANY CIRCUMSTANCES.**
+
+**ABSOLUTE RULE: If ANY test is failing, flaky, or has ANYTHING wrong — YOU MUST FIX IT. Period.**
+
+This is the single most important rule in this entire project. It overrides everything else. No exceptions, no excuses, no "it's pre-existing", no "it's not related to my changes". If you see a broken or flaky test, **YOU FIX IT RIGHT NOW** before doing anything else.
+
+A task is NEVER complete until the ENTIRE test suite passes with:
 - **0 failed tests**
 - **0 flaky tests**
+- **0 tests with any issue whatsoever**
 
-A flaky test IS a failing test. "It passes on retry" is NOT acceptable. If a flaky test exists — whether caused by your changes or pre-existing — you MUST fix it before the task is complete. Do not move on, do not report the task as done, do not ask the user if it's acceptable. Fix it.
+**The E2E suite must pass 5 consecutive runs with 0 failures and 0 flaky.** Three runs is not enough — intermittent issues only surface under repeated execution. All 5 runs must be completely clean before a feature is considered done.
+
+**What counts as broken:**
+- A test that fails on any run
+- A test that passes on retry (flaky) — "it passes on retry" is NOT acceptable
+- A test that produces warnings about instability
+- A test that only passes sometimes across multiple runs
+
+**What you MUST do:**
+1. Run the full test suite
+2. If ANY test fails or is flaky → **STOP everything and fix it**
+3. Re-run the full test suite **5 consecutive times** to confirm 0 failures and 0 flaky
+4. Only then is the task complete
+
+**What you MUST NOT do:**
+- Do NOT report a task as done if any test is broken
+- Do NOT say "this is a pre-existing flaky test" as an excuse to skip it
+- Do NOT ask the user if it's acceptable — it's NOT
+- Do NOT move on to other work while tests are broken
+- Do NOT dismiss flaky tests as "timing issues" without fixing them
+- Do NOT blame parallel execution, load, or infrastructure — make the tests resilient
 
 ### CLAUDE.md Self-Maintenance
 
@@ -251,12 +278,12 @@ class MyController:
 - **BaseModel/BaseTable**: All models inherit from `ibg.api.schemas.shared.BaseModel/BaseTable`
 - **Enhanced Errors**: Auto i18n keys, auto-logging, `frontend_message` for UI
 - **Multi-env Settings**: `IBG_ENV` selector (.env -> .env.{env})
-- **Socket.IO + REST**: REST for CRUD, Socket.IO for real-time game events
+- **REST-First + Socket.IO Notifications**: REST for all game state reads and mutations, Socket.IO for real-time push notifications that update client state
 - **Kubb Codegen**: Auto-generated React Query hooks from FastAPI's OpenAPI spec
 
 ## Lessons Learned (E2E, Backend, Frontend, Infrastructure)
 
-These are hard-won lessons from debugging the full E2E suite (125 tests), backend performance, and real-time Socket.IO game flows. Every item below caused real failures — keep them in mind when touching these areas.
+These are hard-won lessons from debugging the full E2E suite (140 tests, 4 workers), backend performance, and real-time Socket.IO game flows. Every item below caused real failures — keep them in mind when touching these areas.
 
 ### Backend — Socket.IO
 
@@ -280,7 +307,9 @@ votes[player.user_id]
 votes.get(player.user_id)
 ```
 
-**Put the "all voted" check inside the Redis lock.** In `set_vote`, two concurrent vote handlers can both see a complete vote set and both trigger elimination. The all-voted check and elimination must happen atomically inside the lock to prevent double-elimination corrupting `eliminated_players`.
+**All game state mutations use a single unified Redis lock: `game:{id}:state`.** Vote submission, description submission, disconnect handling, and state retrieval ALL use the same lock key. Previously, different operations used different locks (`game:{id}:vote`, `game:{id}:disconnect`) which allowed concurrent mutations to corrupt state. If you add a new game event handler that modifies game state, wrap it in `redis_connection.lock(f"game:{game_id}:state")`.
+
+**Put the "all voted" check AND elimination inside the Redis lock.** In `set_vote`, two concurrent vote handlers can both see a complete vote set and both trigger elimination. The all-voted check and elimination must happen atomically inside the lock to prevent double-elimination corrupting `eliminated_players`. The elimination logic runs INSIDE `set_vote`, not after it returns.
 
 **`get_undercover_state` is the reconnection handler — it must be complete.** This handler is called on every page load/reload. It must:
 - Cancel any pending disconnect cleanup (`cancel_disconnect_cleanup`)
@@ -340,6 +369,8 @@ if total_mr_white > 0 and num_alive_mr_white == 0: return UNDERCOVER
 
 **Track round changes to avoid resetting vote state.** Without `lastServerRoundRef`, the initial `undercover_game_state` response on mount resets `hasVoted` and `selectedVote`, clearing a vote the user just cast. Only reset vote state when the server round number actually changes.
 
+**Guard delayed phase transitions with phase checks.** The `descriptions_complete` handler uses a 2.5s `setTimeout` to transition to voting phase. If `turn_started` (new round) arrives during that window, the delayed callback overwrites the new phase. Fix: store timeout IDs in refs, clear them on conflicting events, and guard the callback with `if (prev.phase !== "describing") return prev`. Apply this pattern to ANY delayed state transition.
+
 ### E2E — Playwright Selectors
 
 **Never mix `text=` engine with CSS in comma-separated selectors.** Playwright's `text=` engine consumes the ENTIRE remaining string as the text to match, including commas. This is a silent failure — the selector matches nothing but doesn't error:
@@ -363,6 +394,22 @@ This also applies to `"text=Voted, text=Waiting for other players"` — it does 
 **`waitForEliminationOrGameOver` must check multiple indicators.** The skull icon (`.lucide-skull`) only appears on the elimination screen. If the screen is replaced, check the player list for "Eliminated" text as a fallback. The function now detects elimination via three signals: skull icon, Game Over heading, or "Eliminated" in the player list.
 
 **Reloading a page during a game triggers `get_undercover_state`.** The frontend's `useEffect` on `isConnected` fires `get_undercover_state` on every reconnection. After reload, the page gets the server's current state, which may show a DIFFERENT phase than what was on screen before. This is by design for reconnection recovery, but it means tests can't rely on page state surviving a reload.
+
+### E2E — Adding New Game Features / Tests
+
+**When adding a new game phase or action that requires ALL players to complete (like voting or describing), follow this checklist:**
+1. **Backend**: Wrap the handler in `redis_connection.lock(f"game:{game_id}:state")` — never create a new lock key
+2. **Backend**: Ensure the "all completed" check and the state transition happen INSIDE the lock, not after it returns
+3. **Frontend**: If there's a transition animation (like `descriptions_complete` → 2.5s delay → phase change), store the timeout in a ref and clear it when new events arrive. Guard the delayed callback with a phase check (`if (prev.phase !== "expected") return prev`)
+4. **E2E tests**: After any loop where all players perform an action, add a verification retry that scans for players who failed silently. Use the `verifyAllPlayersVoted()` pattern: check each player's UI state, skip those already done, retry for stragglers
+5. **E2E tests**: Set timeouts to at least 180s for any test involving game setup + gameplay under 4-worker load. Tests that run in ~30s solo can take 120s+ under parallel load
+6. **E2E tests**: Always use `isPageAlive(page)` before interacting with a player page — browser contexts can close under memory pressure
+
+**When adding a new Socket.IO event:**
+- Backend: Send to individual SIDs (`send_event_to_client`), never room broadcasts
+- Frontend: Handle the event arriving out-of-order (e.g., `turn_started` before `descriptions_complete` finishes its animation)
+- Frontend: Handle page reload recovery in `get_undercover_state` / `get_board` — the reconnection handler must reconstruct the correct UI state for the new feature
+- E2E: If the event triggers a UI transition, tests must handle both "event arrived" and "event missed, need reload" paths
 
 ### E2E — Test Infrastructure
 
@@ -410,6 +457,26 @@ if (earlyOver) return;
 ```
 
 **Never reload player pages during the describing phase.** Reloading causes `get_undercover_state` to fire, which may return broken state ("Players (0/0)") if the socket hasn't fully reconnected. Use `waitFor({ state: "attached" })` with longer timeouts instead of reload fallbacks.
+
+**ALWAYS call `verifyAllPlayersVoted()` after every voting loop.** `voteForPlayer()` can silently fail under load — the click registers in Playwright but doesn't reach the backend. The function has an internal retry (tries twice), but callers MUST still call `verifyAllPlayersVoted(players, targetUsername, fallbackUsername)` after the voting loop. This helper scans all players for remaining vote buttons, skips already-voted players (who show "Waiting for other players"), and retries only for unvoted players. Without this, the game hangs waiting for a vote that never arrives, causing a test timeout. This pattern is mandatory for ANY test that votes:
+```typescript
+for (const voter of activePlayers) {
+  // ... vote logic ...
+  await voteForPlayer(voter.page, voteTarget);
+}
+await verifyAllPlayersVoted(activePlayers, targetUsername, player1Username);
+```
+
+**"Waiting for other players" means ONE player voted, not ALL.** Never use `text=Waiting for other players` as a signal that all votes are in. It appears on each individual player's screen after THEY vote, regardless of whether others have voted. Using it as an early-exit condition in retry loops will cause the loop to skip unvoted players. Only use game-ending signals (`.lucide-skull`, `h2:has-text('Game Over')`) to detect that all votes completed.
+
+**`.grid.gap-3 button` matches BOTH voted and unvoted players.** After voting, player cards remain as `button` elements in the grid — they just show "Voted" labels and are greyed out. To identify truly unvoted players, check for the ABSENCE of "Waiting for other players" text:
+```typescript
+const alreadyVoted = await voter.page
+  .locator("text=Waiting for other players")
+  .isVisible()
+  .catch(() => false);
+if (alreadyVoted) continue; // Skip — this player already voted
+```
 
 **Disconnect grace period is 5s in E2E.** The `DISCONNECT_GRACE_PERIOD_SECONDS` env var in `docker-compose.e2e.yml` is set to 5. Tests that wait for disconnect effects (player removal, game cancellation) must wait at least 8s (5s grace + 3s processing buffer).
 

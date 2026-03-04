@@ -571,3 +571,101 @@ async def test_submit_description_wrong_turn(make_undercover_game, make_redis_ro
     assert not all_done
     assert game.turns[-1].words[UUID(P2)] == "mosque"
     assert game.turns[-1].current_describer_index == 1
+
+
+# ========== submit_description edge cases ==========
+
+
+async def test_submit_description_empty_word(make_undercover_game, make_redis_room):
+    """Submit empty string. Controller stores it and advances index (no crash)."""
+
+    # Arrange
+    p1 = make_undercover_player(P1)
+    p2 = make_undercover_player(P2)
+
+    description_order = [UUID(P1), UUID(P2)]
+    turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id=GAME_ID,
+        room_id=ROOM_ID,
+        players=[p1, p2],
+        turns=[turn],
+    )
+
+    # Act — submit empty string
+    all_done = submit_description(game, UUID(P1), "")
+
+    # Assert — stored and index advanced
+    assert not all_done
+    assert game.turns[-1].words[UUID(P1)] == ""
+    assert game.turns[-1].current_describer_index == 1
+
+
+async def test_submit_description_duplicate_submission(make_undercover_game, make_redis_room):
+    """Same player submits twice. Second overwrites first word, index advances twice."""
+
+    # Arrange
+    p1 = make_undercover_player(P1)
+    p2 = make_undercover_player(P2)
+
+    description_order = [UUID(P1), UUID(P2)]
+    turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id=GAME_ID,
+        room_id=ROOM_ID,
+        players=[p1, p2],
+        turns=[turn],
+    )
+
+    # Act — P1 submits twice
+    first_done = submit_description(game, UUID(P1), "prayer")
+    second_done = submit_description(game, UUID(P1), "mosque")
+
+    # Assert — second overwrites first, index advanced twice
+    assert not first_done
+    assert second_done  # index=2 >= len(order)=2
+    assert game.turns[-1].words[UUID(P1)] == "mosque"
+    assert game.turns[-1].current_describer_index == 2
+
+
+async def test_submit_description_single_player(make_undercover_game, make_redis_room):
+    """Solo alive player submits. Returns True (all_done) immediately."""
+
+    # Arrange — 2 players but P2 is dead, only P1 alive
+    p1 = make_undercover_player(P1)
+    p2 = make_undercover_player(P2, alive=False)
+
+    description_order = [UUID(P1)]  # Only alive player
+    turn = UndercoverTurn(
+        description_order=description_order,
+        current_describer_index=0,
+        phase="describing",
+    )
+
+    await make_redis_room(ROOM_ID)
+    game = await make_undercover_game(
+        game_id=GAME_ID,
+        room_id=ROOM_ID,
+        players=[p1, p2],
+        turns=[turn],
+    )
+
+    # Act
+    all_done = submit_description(game, UUID(P1), "prayer")
+
+    # Assert — single player means all done immediately
+    assert all_done
+    assert game.turns[-1].words[UUID(P1)] == "prayer"
+    assert game.turns[-1].current_describer_index == 1

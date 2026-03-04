@@ -1,6 +1,5 @@
 from urllib.parse import urlparse
 
-from aredis_om import get_redis_connection
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import AsyncAdaptedQueuePool
@@ -62,11 +61,13 @@ async def create_db_and_tables(engine: AsyncEngine, drop_all: bool = False) -> N
 
 
 def get_redis_om_connection():
-    """Get Redis OM connection using pydantic Settings.
+    """Get Redis OM connection with connection pooling.
 
     Returns:
-        Redis connection configured for Redis OM.
+        Redis connection configured for Redis OM with a connection pool.
     """
+    import redis.asyncio as aioredis
+
     from ibg.settings import Settings
 
     settings = Settings()  # type: ignore
@@ -74,4 +75,11 @@ def get_redis_om_connection():
     host = parsed.hostname or "localhost"
     port = parsed.port or 6379
     password = parsed.password or None
-    return get_redis_connection(host=host, port=port, password=password, decode_responses=True, encoding="utf-8")
+    return aioredis.Redis(
+        host=host,
+        port=port,
+        password=password,
+        decode_responses=True,
+        encoding="utf-8",
+        max_connections=50,
+    )

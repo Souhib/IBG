@@ -63,16 +63,35 @@ def redis_container():
     conn = get_redis_connection_singleton()
 
     # Patch every module-level reference to `redis_connection`
+    import ibg.api.controllers.codenames_game as api_codenames_game_mod
+    import ibg.api.controllers.undercover_game as api_uc_game_mod
+    import ibg.socketio.controllers.codenames as codenames_ctrl_mod
+    import ibg.socketio.controllers.disconnect as disconnect_ctrl_mod
     import ibg.socketio.controllers.room as room_ctrl_mod
     import ibg.socketio.controllers.undercover_game as uc_mod
     import ibg.socketio.models.shared as shared_mod
     import ibg.socketio.utils.redis_ttl as ttl_mod
 
     shared_mod.redis_connection = conn
-    shared_mod.RedisJsonModel.Meta.database = conn
     uc_mod.redis_connection = conn
     ttl_mod.redis_connection = conn
     room_ctrl_mod.redis_connection = conn
+    codenames_ctrl_mod.redis_connection = conn
+    disconnect_ctrl_mod.redis_connection = conn
+    api_uc_game_mod.redis_connection = conn
+    api_codenames_game_mod.redis_connection = conn
+
+    # aredis_om's metaclass creates a separate Meta per model class,
+    # so we must patch Meta.database on EVERY model, not just the base.
+    shared_mod.RedisJsonModel.Meta.database = conn
+    RedisRoom.Meta.database = conn
+    UndercoverGame.Meta.database = conn
+    from ibg.socketio.models.codenames import CodenamesGame
+    from ibg.socketio.models.socket import Game as RedisGame
+    from ibg.socketio.models.user import User as RedisUserModel
+    RedisGame.Meta.database = conn
+    CodenamesGame.Meta.database = conn
+    RedisUserModel.Meta.database = conn
 
     yield container
     container.stop()

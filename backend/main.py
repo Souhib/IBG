@@ -22,6 +22,9 @@ async def lifespan(app: FastAPI):
     engine = await create_app_engine(settings)
     await create_db_and_tables(engine)
     yield
+    from ibg.socketio.utils.disconnect_tasks import stop_polling
+
+    stop_polling()
     await engine.dispose()
 
 

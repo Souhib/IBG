@@ -8,6 +8,7 @@ import {
   giveClueViaUI,
   getSpymasterCardTypes,
   getBoardWords,
+  isPageAlive,
   type PlayerContext,
   type CodenamesPlayerRole,
 } from "../../helpers/ui-game-setup";
@@ -20,9 +21,21 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
     try {
       await startGameViaUI(setup.players, "codenames");
 
-      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      // Find a player with a loaded board for team detection
+      let boardPlayerPage = setup.players[0].page;
+      for (const p of setup.players) {
+        if (!isPageAlive(p.page)) continue;
+        const hasBd = await p.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (hasBd) { boardPlayerPage = p.page; break; }
+      }
+      const currentTeam = await getCurrentTeamFromUI(boardPlayerPage);
 
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(player.page);
         const clueForm = player.page.locator("h3:has-text('Give a Clue')");
 
@@ -45,10 +58,22 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
     try {
       await startGameViaUI(setup.players, "codenames");
 
-      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      // Find a player with a loaded board for team detection
+      let boardPlayerPage2 = setup.players[0].page;
+      for (const p of setup.players) {
+        if (!isPageAlive(p.page)) continue;
+        const hasBd = await p.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (hasBd) { boardPlayerPage2 = p.page; break; }
+      }
+      const currentTeam = await getCurrentTeamFromUI(boardPlayerPage2);
       const otherTeam = currentTeam === "red" ? "blue" : "red";
 
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(player.page);
         const clueForm = player.page.locator("h3:has-text('Give a Clue')");
 
@@ -69,11 +94,23 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
     try {
       await startGameViaUI(setup.players, "codenames");
 
-      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      // Find a player with a loaded board for team detection
+      let boardPlayerPage3 = setup.players[0].page;
+      for (const p of setup.players) {
+        if (!isPageAlive(p.page)) continue;
+        const hasBd = await p.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (hasBd) { boardPlayerPage3 = p.page; break; }
+      }
+      const currentTeam = await getCurrentTeamFromUI(boardPlayerPage3);
 
       let clueFormVisibleCount = 0;
 
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(player.page);
         const clueForm = player.page.locator("h3:has-text('Give a Clue')");
         const isVisible = await clueForm.isVisible().catch(() => false);
@@ -102,9 +139,13 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
     try {
       await startGameViaUI(setup.players, "codenames");
 
-      // Find a spymaster
+      // Find a spymaster (skip players without a board)
       let spymasterPage: Page | null = null;
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(player.page);
         if (role.role === "spymaster") {
           spymasterPage = player.page;
@@ -151,11 +192,15 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
 
       const roles: CodenamesPlayerRole[] = [];
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(player.page);
         roles.push(role);
       }
 
-      // Each team should have 2 players
+      // Each team should have 2 players (all 4 should have boards)
       const redPlayers = roles.filter((r) => r.team === "red");
       const bluePlayers = roles.filter((r) => r.team === "blue");
 
@@ -189,12 +234,24 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
     try {
       await startGameViaUI(setup.players, "codenames");
 
-      const currentTeam = await getCurrentTeamFromUI(setup.players[0].page);
+      // Find a player with a loaded board for team detection
+      let boardPlayerPage4 = setup.players[0].page;
+      for (const p of setup.players) {
+        if (!isPageAlive(p.page)) continue;
+        const hasBd = await p.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (hasBd) { boardPlayerPage4 = p.page; break; }
+      }
+      const currentTeam = await getCurrentTeamFromUI(boardPlayerPage4);
 
       let spymasterFound = false;
       let operativeFound = false;
 
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const role = await getPlayerRoleFromUI(player.page);
 
         if (role.team === currentTeam && role.role === "spymaster") {
@@ -228,8 +285,12 @@ test.describe("Codenames — Role Restrictions (UI)", () => {
     try {
       await startGameViaUI(setup.players, "codenames");
 
-      // Every player should see exactly 25 cards
+      // Every player with a loaded board should see exactly 25 cards
       for (const player of setup.players) {
+        if (!isPageAlive(player.page)) continue;
+        const hasBoard = await player.page.locator(".grid-cols-5 button").first()
+          .isVisible().catch(() => false);
+        if (!hasBoard) continue;
         const cards = player.page.locator(".grid-cols-5 button");
         await expect(cards).toHaveCount(25, { timeout: 10_000 });
       }

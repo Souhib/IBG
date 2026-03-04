@@ -32,7 +32,7 @@ async def handle_undercover_disconnect(
     :param user_id: The user ID of the disconnected player.
     :param redis_room: The Redis room.
     """
-    async with redis_connection.lock(f"game:{redis_room.active_game_id}:disconnect", timeout=10):
+    async with redis_connection.lock(f"game:{redis_room.active_game_id}:state", timeout=10):
         try:
             redis_game = await UndercoverGame.get(redis_room.active_game_id)
         except NotFoundError:
@@ -69,7 +69,7 @@ async def handle_undercover_disconnect(
         # Check win condition
         team_that_won = await check_if_a_team_has_win(redis_game)
         if team_that_won == UndercoverRole.CIVILIAN:
-            civilian_win_payload = {"data": "The civilians have won the game."}
+            civilian_win_payload = {"data": "The civilians have won the game.", "winner": "civilians"}
             for p in redis_game.players:
                 if p.sid:
                     await send_event_to_client(sio, "game_over", civilian_win_payload, room=p.sid)
@@ -78,7 +78,7 @@ async def handle_undercover_disconnect(
             await redis_room.save()
             return
         elif team_that_won == UndercoverRole.UNDERCOVER:
-            undercover_win_payload = {"data": "The undercovers have won the game."}
+            undercover_win_payload = {"data": "The undercovers have won the game.", "winner": "undercovers"}
             for p in redis_game.players:
                 if p.sid:
                     await send_event_to_client(sio, "game_over", undercover_win_payload, room=p.sid)
@@ -111,7 +111,8 @@ async def handle_undercover_disconnect(
                         if team_that_won == UndercoverRole.CIVILIAN
                         else "The undercovers have won the game."
                     )
-                    game_over_payload = {"data": winner_msg}
+                    winner_str = "civilians" if team_that_won == UndercoverRole.CIVILIAN else "undercovers"
+                    game_over_payload = {"data": winner_msg, "winner": winner_str}
                     for p in redis_game.players:
                         if p.sid:
                             await send_event_to_client(sio, "game_over", game_over_payload, room=p.sid)
@@ -138,7 +139,7 @@ async def handle_codenames_disconnect(
     :param user_id: The user ID of the disconnected player.
     :param redis_room: The Redis room.
     """
-    async with redis_connection.lock(f"game:{redis_room.active_game_id}:disconnect", timeout=10):
+    async with redis_connection.lock(f"game:{redis_room.active_game_id}:state", timeout=10):
         try:
             redis_game = await CodenamesGame.get(redis_room.active_game_id)
         except NotFoundError:

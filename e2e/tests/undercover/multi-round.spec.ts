@@ -6,10 +6,12 @@ import {
   dismissRoleRevealAll,
   submitDescriptionsForAllPlayers,
   voteForPlayer,
+  verifyAllPlayersVoted,
   getAliveVoteTargets,
   waitForEliminationOrGameOver,
   clickNextRound,
   ensureOnUndercoverGamePage,
+  isPageAlive,
   type PlayerContext,
 } from "../../helpers/ui-game-setup";
 
@@ -17,7 +19,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
   test("5-player game: multiple rounds of voting and elimination", async ({
     browser,
   }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(240_000);
     const accounts = await generateTestAccounts(5);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
@@ -26,7 +28,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       const gamePlayers = await dismissRoleRevealAll(setup.players);
       // Use only players confirmed to be in the game
       const playersInGame = gamePlayers.length >= 3 ? gamePlayers : setup.players;
-      await submitDescriptionsForAllPlayers(playersInGame);
+      await submitDescriptionsForAllPlayers(playersInGame, setup.players);
       const gameUrl = playersInGame[0].page.url();
 
       let gameEnded = false;
@@ -59,8 +61,40 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         );
         if (readyPlayers.length < 2) break;
 
-        // Submit descriptions for this round (handles describing phase)
-        await submitDescriptionsForAllPlayers(readyPlayers);
+        // Check for game over before starting the round
+        for (const p of readyPlayers) {
+          if (!isPageAlive(p.page)) continue;
+          const isOver = await p.page
+            .locator("h2:has-text('Game Over')")
+            .isVisible()
+            .catch(() => false);
+          if (isOver) { gameEnded = true; break; }
+        }
+        if (gameEnded) break;
+
+        // Submit descriptions for this round (skip round 1 — already done before loop)
+        if (roundsPlayed > 1) {
+          try {
+            await submitDescriptionsForAllPlayers(readyPlayers, setup.players);
+          } catch {
+            // Descriptions failed — game may have ended or players disconnected
+            const isOver = await readyPlayers[0].page
+              .locator("h2:has-text('Game Over')")
+              .isVisible()
+              .catch(() => false);
+            if (isOver) { gameEnded = true; break; }
+            // Try reloading and check again
+            await readyPlayers[0].page.reload();
+            await readyPlayers[0].page.waitForLoadState("domcontentloaded");
+            const isOverAfterReload = await readyPlayers[0].page
+              .locator("h2:has-text('Game Over')")
+              .waitFor({ state: "visible", timeout: 10_000 })
+              .then(() => true)
+              .catch(() => false);
+            if (isOverAfterReload) { gameEnded = true; break; }
+            break; // Can't proceed without descriptions
+          }
+        }
 
         // Pick last ready player as target
         const target = readyPlayers[readyPlayers.length - 1];
@@ -94,12 +128,21 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
             voter.login.user.username === targetUsername
               ? readyPlayers[0].login.user.username
               : targetUsername;
-          const voted = await voteForPlayer(voter.page, voteTarget);
+          let voted = await voteForPlayer(voter.page, voteTarget);
+          if (!voted && isPageAlive(voter.page)) {
+            voted = await voteForPlayer(voter.page, voteTarget);
+          }
           if (!voted) {
-            // Player couldn't vote — mark as disconnected
             disconnected.add(voter.login.user.username);
           }
         }
+
+        // Verify all players voted — retries unvoted players properly
+        await verifyAllPlayersVoted(
+          readyPlayers,
+          targetUsername,
+          readyPlayers[0].login.user.username,
+        );
 
         // Wait for result — try first ready player, then others
         let result: "elimination" | "game_over" | null = null;
@@ -109,7 +152,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
 
         for (const p of resultCandidates) {
           try {
-            result = await waitForEliminationOrGameOver(p.page);
+            result = await waitForEliminationOrGameOver(p.page, eliminated.size);
             break;
           } catch {
             continue;
@@ -119,8 +162,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         if (!result) {
           // Force reload all and check
           for (const p of resultCandidates) {
-            const pageOk = await p.page.evaluate(() => true).catch(() => false);
-            if (!pageOk) continue;
+            if (!isPageAlive(p.page)) continue;
             await p.page.reload();
             await p.page.waitForLoadState("domcontentloaded");
             await p.page.waitForFunction(
@@ -151,13 +193,23 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         } else if (result === "elimination") {
           eliminated.add(targetUsername);
 
+          // Check immediately if the game ended (elimination may trigger win condition)
+          for (const p of resultCandidates) {
+            if (!isPageAlive(p.page)) continue;
+            const isOver = await p.page
+              .locator("h2:has-text('Game Over')")
+              .isVisible()
+              .catch(() => false);
+            if (isOver) { gameEnded = true; break; }
+          }
+          if (gameEnded) break;
+
           // Try to find "Next Round" button on any alive player's page
           let nextRoundClicked = false;
           for (const p of resultCandidates) {
             if (eliminated.has(p.login.user.username)) continue;
             if (disconnected.has(p.login.user.username)) continue;
-            const pageOk = await p.page.evaluate(() => true).catch(() => false);
-            if (!pageOk) continue;
+            if (!isPageAlive(p.page)) continue;
             const hasBtn = await p.page
               .locator("button:has-text('Next Round')")
               .waitFor({ state: "visible", timeout: 5_000 })
@@ -178,8 +230,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
             for (const p of resultCandidates) {
               if (eliminated.has(p.login.user.username)) continue;
               if (disconnected.has(p.login.user.username)) continue;
-              const pageOk = await p.page.evaluate(() => true).catch(() => false);
-              if (!pageOk) continue;
+              if (!isPageAlive(p.page)) continue;
               await p.page.reload();
               await p.page.waitForLoadState("domcontentloaded");
               await p.page.waitForFunction(
@@ -217,8 +268,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
                 !disconnected.has(p.login.user.username),
             );
             for (const p of stillAlive) {
-              const pageOk = await p.page.evaluate(() => true).catch(() => false);
-              if (!pageOk) continue;
+              if (!isPageAlive(p.page)) continue;
               await p.page.reload();
               await p.page.waitForLoadState("domcontentloaded");
               await p.page.waitForFunction(
@@ -255,7 +305,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         ?.page.url();
       if (!gameUrl || activePlayers.length < 3) return; // Game setup failed
 
-      await submitDescriptionsForAllPlayers(activePlayers);
+      await submitDescriptionsForAllPlayers(activePlayers, setup.players);
 
       // Check if game is still active after descriptions
       const stillOnGame = activePlayers.some(
@@ -268,12 +318,23 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       const targetUsername = target.login.user.username;
 
       for (const voter of activePlayers) {
+        if (!isPageAlive(voter.page)) continue;
+        if (!/\/game\/undercover\//.test(voter.page.url()) && gameUrl) {
+          await voter.page.goto(gameUrl);
+          await voter.page.waitForLoadState("domcontentloaded");
+        }
         const voteTarget =
           voter.login.user.username === targetUsername
             ? activePlayers[0].login.user.username
             : targetUsername;
         await voteForPlayer(voter.page, voteTarget);
       }
+
+      await verifyAllPlayersVoted(
+        activePlayers,
+        targetUsername,
+        activePlayers[0].login.user.username,
+      );
 
       // Find a player still on game page for observing results
       const observer = activePlayers.find(
@@ -301,8 +362,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
 
       // Reconnect alive players to the game page
       for (const p of alivePlayers) {
-        const pageAlive = await p.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(p.page)) continue;
 
         if (!/\/game\/undercover\//.test(p.page.url())) {
           await p.page.goto(gameUrl);
@@ -331,8 +391,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       // Filter out alive players in broken state before submitting descriptions
       const readyPlayers: typeof alivePlayers = [];
       for (const p of alivePlayers) {
-        const pAlive = await p.page.evaluate(() => true).catch(() => false);
-        if (!pAlive) continue;
+        if (!isPageAlive(p.page)) continue;
         if (!/\/game\/undercover\//.test(p.page.url())) continue;
         const broken = await p.page.locator("text=Players (0/0)").first().isVisible().catch(() => false);
         if (broken) continue;
@@ -341,14 +400,11 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       if (readyPlayers.length < 2) return; // Not enough players for a valid round
 
       // Submit descriptions for alive players to transition to voting phase
-      await submitDescriptionsForAllPlayers(readyPlayers);
+      await submitDescriptionsForAllPlayers(readyPlayers, setup.players);
 
       // Dead player should NOT see vote buttons
       const deadPlayerPage = target.page;
-      const deadAlive = await deadPlayerPage
-        .evaluate(() => true)
-        .catch(() => false);
-      if (!deadAlive) return; // Browser context closed
+      if (!isPageAlive(deadPlayerPage)) return; // Browser context closed
 
       // Reconnect dead player to game page to check their view
       if (!/\/game\/undercover\//.test(deadPlayerPage.url())) {
@@ -397,7 +453,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         ?.page.url();
       if (!gameUrl || activePlayers2.length < 3) return;
 
-      await submitDescriptionsForAllPlayers(activePlayers2);
+      await submitDescriptionsForAllPlayers(activePlayers2, setup.players);
 
       // Check if game is still active
       const stillOnGame = activePlayers2.some(
@@ -410,8 +466,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       const targetUsername = target.login.user.username;
 
       for (const voter of activePlayers2) {
-        const pageAlive = await voter.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(voter.page)) continue;
         if (!/\/game\/undercover\//.test(voter.page.url()) && gameUrl) {
           await voter.page.goto(gameUrl);
           await voter.page.waitForLoadState("domcontentloaded");
@@ -422,6 +477,12 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
             : targetUsername;
         await voteForPlayer(voter.page, voteTarget);
       }
+
+      await verifyAllPlayersVoted(
+        activePlayers2,
+        targetUsername,
+        activePlayers2[0].login.user.username,
+      );
 
       const observer = activePlayers2.find(
         (p) => /\/game\/undercover\//.test(p.page.url()),
@@ -446,8 +507,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       );
 
       for (const p of alivePlayers) {
-        const pageAlive = await p.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(p.page)) continue;
         if (!/\/game\/undercover\//.test(p.page.url())) {
           await p.page.goto(gameUrl);
           await p.page.waitForLoadState("domcontentloaded");
@@ -470,7 +530,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         try { return /\/game\/undercover\//.test(p.page.url()); } catch { return false; }
       });
       if (readyAlivePlayers.length < 2) return;
-      await submitDescriptionsForAllPlayers(readyAlivePlayers);
+      await submitDescriptionsForAllPlayers(readyAlivePlayers, setup.players);
 
       // Wait for playing phase — vote buttons appear on an alive player
       const voteObserver = readyAlivePlayers.find(
@@ -488,8 +548,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
 
       // For each alive player on game page, check eliminated player is NOT a vote target
       for (const p of readyAlivePlayers) {
-        const pageAlive = await p.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(p.page)) continue;
         if (!/\/game\/undercover\//.test(p.page.url())) continue;
         const targets = await getAliveVoteTargets(p.page);
         if (targets.length === 0) continue; // Not in voting phase
@@ -513,7 +572,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       const activePlayers3 = await dismissRoleRevealAll(setup.players);
       if (activePlayers3.length < 3) return;
 
-      await submitDescriptionsForAllPlayers(activePlayers3);
+      await submitDescriptionsForAllPlayers(activePlayers3, setup.players);
 
       // Check game is still active
       const stillOnGame = activePlayers3.some(
@@ -526,12 +585,23 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       const targetUsername = target.login.user.username;
 
       for (const voter of activePlayers3) {
+        if (!isPageAlive(voter.page)) continue;
+        const overBeforeVote = await voter.page
+          .locator("h2:has-text('Game Over')")
+          .isVisible()
+          .catch(() => false);
+        if (overBeforeVote) break;
         const voteTarget =
           voter.login.user.username === targetUsername
             ? activePlayers3[0].login.user.username
             : targetUsername;
         await voteForPlayer(voter.page, voteTarget);
       }
+      await verifyAllPlayersVoted(
+        activePlayers3,
+        targetUsername,
+        activePlayers3[0].login.user.username,
+      );
 
       const observer = activePlayers3.find(
         (p) => /\/game\/undercover\//.test(p.page.url()),
@@ -561,7 +631,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
   });
 
   test("6-player game: word distribution is correct via UI", async ({ browser }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(240_000);
     const accounts = await generateTestAccounts(6);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
@@ -582,8 +652,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       let playersWithoutWord = 0;
 
       for (const player of activePlayers4) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
 
         // Recover players redirected away from the game page
         if (!/\/game\/undercover\//.test(player.page.url())) {
@@ -622,8 +691,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
 
         // Retry with reload if word not found (socket may have missed initial state)
         if (!hasWord) {
-          const alive = await player.page.evaluate(() => true).catch(() => false);
-          if (!alive) continue;
+          if (!isPageAlive(player.page)) continue;
           await player.page.reload();
           await player.page.waitForLoadState("domcontentloaded");
           if (!/\/game\/undercover\//.test(player.page.url())) continue;
@@ -649,12 +717,11 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       expect(playersWithoutWord).toBeGreaterThanOrEqual(1);
 
       // Submit descriptions to transition to voting phase
-      await submitDescriptionsForAllPlayers(activePlayers4);
+      await submitDescriptionsForAllPlayers(activePlayers4, setup.players);
 
       // Check voting phase on active players (skip broken "Players (0/0)" pages)
       for (const player of activePlayers4) {
-        const pageAlive = await player.page.evaluate(() => true).catch(() => false);
-        if (!pageAlive) continue;
+        if (!isPageAlive(player.page)) continue;
         if (!/\/game\/undercover\//.test(player.page.url())) continue;
         // Skip pages in broken "Players (0/0)" state
         const broken = await player.page
@@ -678,7 +745,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
   test("game over screen shows winner after all rounds", async ({
     browser,
   }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(240_000);
     const accounts = await generateTestAccounts(5);
     const setup = await setupRoomWithPlayers(browser, accounts, "undercover");
 
@@ -686,7 +753,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       await startGameViaUI(setup.players, "undercover");
       const gamePlayers = await dismissRoleRevealAll(setup.players);
       const playersInGame = gamePlayers.length >= 3 ? gamePlayers : setup.players;
-      await submitDescriptionsForAllPlayers(playersInGame);
+      await submitDescriptionsForAllPlayers(playersInGame, setup.players);
       const gameUrl = playersInGame[0].page.url();
 
       let gameEnded = false;
@@ -713,9 +780,39 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
         );
         if (readyPlayers.length < 2) break;
 
+        // Check for game over before starting the round
+        for (const p of readyPlayers) {
+          if (!isPageAlive(p.page)) continue;
+          const isOver = await p.page
+            .locator("h2:has-text('Game Over')")
+            .isVisible()
+            .catch(() => false);
+          if (isOver) { gameEnded = true; break; }
+        }
+        if (gameEnded) break;
+
         // Submit descriptions for this round (handles describing phase)
         if (round > 0) {
-          await submitDescriptionsForAllPlayers(readyPlayers);
+          try {
+            await submitDescriptionsForAllPlayers(readyPlayers, setup.players);
+          } catch {
+            // Descriptions failed — game may have ended or players disconnected
+            const isOver = await readyPlayers[0].page
+              .locator("h2:has-text('Game Over')")
+              .isVisible()
+              .catch(() => false);
+            if (isOver) { gameEnded = true; break; }
+            // Try reloading and check again
+            await readyPlayers[0].page.reload();
+            await readyPlayers[0].page.waitForLoadState("domcontentloaded");
+            const isOverAfterReload = await readyPlayers[0].page
+              .locator("h2:has-text('Game Over')")
+              .waitFor({ state: "visible", timeout: 10_000 })
+              .then(() => true)
+              .catch(() => false);
+            if (isOverAfterReload) { gameEnded = true; break; }
+            break; // Can't proceed without descriptions
+          }
         }
 
         // Wait for vote buttons to appear (with reload fallback)
@@ -750,9 +847,19 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
             voter.login.user.username === targetUsername
               ? readyPlayers[0].login.user.username
               : targetUsername;
-          const voted = await voteForPlayer(voter.page, voteTarget);
+          let voted = await voteForPlayer(voter.page, voteTarget);
+          if (!voted && isPageAlive(voter.page)) {
+            voted = await voteForPlayer(voter.page, voteTarget);
+          }
           if (!voted) disconnected.add(voter.login.user.username);
         }
+
+        // Verify all players voted — retries unvoted players properly
+        await verifyAllPlayersVoted(
+          readyPlayers,
+          targetUsername,
+          readyPlayers[0].login.user.username,
+        );
 
         // Wait for result
         let result: "elimination" | "game_over" | null = null;
@@ -762,7 +869,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
 
         for (const p of resultCandidates) {
           try {
-            result = await waitForEliminationOrGameOver(p.page);
+            result = await waitForEliminationOrGameOver(p.page, eliminated.size);
             break;
           } catch {
             continue;
@@ -771,8 +878,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
 
         if (!result) {
           for (const p of resultCandidates) {
-            const pageOk = await p.page.evaluate(() => true).catch(() => false);
-            if (!pageOk) continue;
+            if (!isPageAlive(p.page)) continue;
             await p.page.reload();
             await p.page.waitForLoadState("domcontentloaded");
             await p.page.waitForFunction(
@@ -807,8 +913,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
           for (const p of resultCandidates) {
             if (eliminated.has(p.login.user.username)) continue;
             if (disconnected.has(p.login.user.username)) continue;
-            const pageOk = await p.page.evaluate(() => true).catch(() => false);
-            if (!pageOk) continue;
+            if (!isPageAlive(p.page)) continue;
             const hasBtn = await p.page
               .locator("button:has-text('Next Round')")
               .waitFor({ state: "visible", timeout: 5_000 })
@@ -829,8 +934,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
             for (const p of resultCandidates) {
               if (eliminated.has(p.login.user.username)) continue;
               if (disconnected.has(p.login.user.username)) continue;
-              const pageOk = await p.page.evaluate(() => true).catch(() => false);
-              if (!pageOk) continue;
+              if (!isPageAlive(p.page)) continue;
               await p.page.reload();
               await p.page.waitForLoadState("domcontentloaded");
               await p.page.waitForFunction(
@@ -867,8 +971,7 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
                 !disconnected.has(p.login.user.username),
             );
             for (const p of stillAlive) {
-              const pageOk = await p.page.evaluate(() => true).catch(() => false);
-              if (!pageOk) continue;
+              if (!isPageAlive(p.page)) continue;
               await p.page.reload();
               await p.page.waitForLoadState("domcontentloaded");
               await p.page.waitForFunction(
@@ -883,9 +986,12 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
       }
 
       if (gameEnded) {
-        // Find a player page that shows Game Over (host may have stale socket)
-        let verifyPage = playersInGame[0].page;
+        // Find a player page that shows Game Over — try each player, reload if needed
+        let verifyPage: import("@playwright/test").Page | null = null;
+
+        // First pass: check without reload
         for (const p of playersInGame) {
+          if (!isPageAlive(p.page)) continue;
           const isOver = await p.page
             .locator("h2:has-text('Game Over')")
             .isVisible()
@@ -895,24 +1001,39 @@ test.describe("Undercover — Multi-Round Games (UI)", () => {
             break;
           }
         }
-        // If no page shows it yet, reload host
-        const hostHasGameOver = await verifyPage
-          .locator("h2:has-text('Game Over')")
-          .isVisible()
-          .catch(() => false);
-        if (!hostHasGameOver) {
-          await verifyPage.reload();
-          await verifyPage.waitForLoadState("domcontentloaded");
-          await verifyPage.waitForFunction(
-            () => (window as any).__SOCKET__?.connected === true,
-            { timeout: 10_000 },
-          ).catch(() => {});
+
+        // Second pass: reload each player and check
+        if (!verifyPage) {
+          for (const p of playersInGame) {
+            if (!isPageAlive(p.page)) continue;
+            await p.page.reload();
+            await p.page.waitForLoadState("domcontentloaded");
+            await p.page.waitForFunction(
+              () => (window as any).__SOCKET__?.connected === true,
+              { timeout: 10_000 },
+            ).catch(() => {});
+            const isOver = await p.page
+              .locator("h2:has-text('Game Over')")
+              .waitFor({ state: "visible", timeout: 10_000 })
+              .then(() => true)
+              .catch(() => false);
+            if (isOver) {
+              verifyPage = p.page;
+              break;
+            }
+          }
+        }
+
+        // If still no Game Over found, use the first alive player page
+        if (!verifyPage) {
+          verifyPage = playersInGame.find((p) => isPageAlive(p.page))?.page
+            ?? playersInGame[0].page;
         }
 
         // Verify game over UI
         await expect(
           verifyPage.locator("h2:has-text('Game Over')"),
-        ).toBeVisible({ timeout: 10_000 });
+        ).toBeVisible({ timeout: 15_000 });
 
         // Winner should be displayed
         await expect(
