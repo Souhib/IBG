@@ -12,14 +12,13 @@ from ibg.api.controllers.auth import AuthController
 from ibg.api.controllers.codenames import CodenamesController
 from ibg.api.controllers.codenames_game import CodenamesGameController
 from ibg.api.controllers.game import GameController
-from ibg.api.controllers.notification import NotificationService
 from ibg.api.controllers.room import RoomController
 from ibg.api.controllers.stats import StatsController
 from ibg.api.controllers.undercover import UndercoverController
 from ibg.api.controllers.undercover_game import UndercoverGameController
 from ibg.api.controllers.user import UserController
 from ibg.api.models.table import User
-from ibg.api.schemas.error import InvalidTokenError, UserNotFoundError
+from ibg.api.schemas.error import InvalidTokenError
 from ibg.database import get_engine as _get_engine
 from ibg.settings import Settings
 
@@ -112,13 +111,7 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
 ) -> User:
-    """Get the current authenticated user from the JWT token.
-
-    :param token: The JWT bearer token from the Authorization header.
-    :param auth_controller: The auth controller for token decoding and user lookup.
-    :return: The authenticated User.
-    :raises InvalidTokenError: If the token is invalid or the user is not found.
-    """
+    """Get the current authenticated user from the JWT token."""
     payload = auth_controller.decode_token(token)
     user = await auth_controller.get_user_by_email(payload.email)
     if user is None:
@@ -129,31 +122,19 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-    """Get the current active user.
-
-    :param current_user: The current authenticated user.
-    :return: The active user.
-    """
+    """Get the current active user."""
     return current_user
-
-
-def get_notification_service() -> NotificationService:
-    """Get NotificationService with the global sio instance."""
-    from ibg.app import get_sio
-    return NotificationService(get_sio())
 
 
 async def get_undercover_game_controller(
     session: Annotated[AsyncSession, Depends(get_session)],
-    notifier: Annotated[NotificationService, Depends(get_notification_service)],
 ) -> UndercoverGameController:
-    """Get UndercoverGameController with injected session and notifier."""
-    return UndercoverGameController(session, notifier)
+    """Get UndercoverGameController with injected session."""
+    return UndercoverGameController(session)
 
 
 async def get_codenames_game_controller(
     session: Annotated[AsyncSession, Depends(get_session)],
-    notifier: Annotated[NotificationService, Depends(get_notification_service)],
 ) -> CodenamesGameController:
-    """Get CodenamesGameController with injected session and notifier."""
-    return CodenamesGameController(session, notifier)
+    """Get CodenamesGameController with injected session."""
+    return CodenamesGameController(session)

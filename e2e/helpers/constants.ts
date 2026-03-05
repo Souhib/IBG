@@ -39,38 +39,3 @@ export const ROUTES = {
   profile: "/profile",
   leaderboard: "/leaderboard",
 } as const;
-
-// ─── Socket.IO Event Names ─────────────────────────────────
-
-export const SOCKET_EVENTS = {
-  // Room events
-  ROOM_STATUS: "room_status",
-  NEW_USER_JOINED: "new_user_joined",
-  USER_LEFT: "user_left",
-  ERROR: "error",
-
-  // Connection events
-  PLAYER_DISCONNECTED: "player_disconnected",
-  PLAYER_RECONNECTED: "player_reconnected",
-  PLAYER_LEFT_PERMANENTLY: "player_left_permanently",
-  OWNER_CHANGED: "owner_changed",
-
-  // Undercover events
-  ROLE_ASSIGNED: "role_assigned",
-  GAME_STARTED: "game_started",
-  VOTE_CASTED: "vote_casted",
-  PLAYER_ELIMINATED: "player_eliminated",
-  GAME_OVER: "game_over",
-  GAME_CANCELLED: "game_cancelled",
-  UNDERCOVER_GAME_STATE: "undercover_game_state",
-  YOU_DIED: "you_died",
-  NOTIFICATION: "notification",
-  WAITING_OTHER_VOTES: "waiting_other_votes",
-
-  // Codenames events
-  CODENAMES_GAME_STARTED: "codenames_game_started",
-  CODENAMES_CLUE_GIVEN: "codenames_clue_given",
-  CODENAMES_CARD_REVEALED: "codenames_card_revealed",
-  CODENAMES_TURN_ENDED: "codenames_turn_ended",
-  CODENAMES_GAME_OVER: "codenames_game_over",
-} as const;

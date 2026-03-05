@@ -1,13 +1,13 @@
 from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.controllers.shared import get_password_hash, verify_password
 from ibg.api.models.table import User
 from ibg.api.models.user import UserCreate
-from ibg.api.schemas.auth import TokenPayload, TokenPairResponse
+from ibg.api.schemas.auth import TokenPairResponse, TokenPayload
 from ibg.api.schemas.error import (
     InvalidCredentialsError,
     InvalidTokenError,
@@ -103,8 +103,8 @@ class AuthController:
             return TokenPayload(**payload)
         except JWTError as e:
             if "expired" in str(e).lower():
-                raise TokenExpiredError()
-            raise InvalidTokenError()
+                raise TokenExpiredError() from e
+            raise InvalidTokenError() from e
 
     async def login(self, email: str, password: str) -> TokenPairResponse:
         """Authenticate a user and return a token pair.
@@ -144,7 +144,5 @@ class AuthController:
         :param email: The email address to search for.
         :return: The User if found, None otherwise.
         """
-        result = await self.session.exec(
-            select(User).where(User.email_address == email)
-        )
+        result = await self.session.exec(select(User).where(User.email_address == email))
         return result.first()

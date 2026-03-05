@@ -2,7 +2,7 @@
 
 ## Overview
 
-FastAPI backend with Socket.IO for real-time multiplayer Islamic board games. Uses SQLModel/SQLAlchemy async for database operations and Redis OM for game state management.
+FastAPI backend for real-time multiplayer Islamic board games. Uses SQLModel/SQLAlchemy async for database operations. Game state stored as JSON in PostgreSQL (`Game.live_state` column). Pure REST architecture with TanStack Query polling on the frontend.
 
 ## Development Commands
 
@@ -35,21 +35,25 @@ api/
 ├── controllers/       # Business logic (async methods)
 │   ├── auth.py        # JWT login, register, refresh
 │   ├── user.py        # User CRUD
-│   ├── room.py        # Room management
+│   ├── room.py        # Room management + heartbeat
 │   ├── game.py        # Game lifecycle
 │   ├── undercover.py  # Undercover word/term pairs
 │   ├── codenames.py   # Codenames words/packs
-│   ├── undercover_game.py # Undercover game logic (REST-first)
-│   ├── codenames_game.py  # Codenames game logic (REST-first)
-│   ├── notification.py    # Socket.IO push notification wrapper
+│   ├── undercover_game.py # Undercover game logic (REST + PostgreSQL JSON)
+│   ├── codenames_game.py  # Codenames game logic (REST + PostgreSQL JSON)
+│   ├── codenames_helpers.py # Board builder, player assigner
+│   ├── game_lock.py   # In-process asyncio.Lock per game_id
+│   ├── disconnect.py  # Background disconnect checker (heartbeat-based)
 │   ├── stats.py       # User statistics
 │   └── achievement.py # Achievement tracking + seeding
 ├── models/            # SQLModel DB tables ONLY
 │   ├── table.py       # User, Room, Game, Event tables
-│   ├── relationship.py # Link tables
+│   ├── game.py        # GameStatus enum, GameBase with live_state JSON
+│   ├── relationship.py # Link tables (RoomUserLink with last_seen_at)
 │   ├── undercover.py  # Word, TermPair tables
 │   ├── codenames.py   # CodenamesWord, CodenamesWordPack
 │   ├── stats.py       # UserStats, AchievementDefinition, UserAchievement
+│   ├── error.py       # Game-specific error classes
 │   └── shared.py      # DBModel (backward compat)
 ├── schemas/           # Pydantic request/response models
 │   ├── shared.py      # BaseModel, BaseTable (USE THESE)
@@ -68,26 +72,38 @@ api/
 └── services/          # External integrations (future)
 ```
 
-### Socket.IO Layer (`ibg/socketio/`)
-
-```
-socketio/
-├── controllers/
-│   ├── room.py        # Room join/leave/start
-│   └── codenames.py   # Codenames game logic
-├── models/
-│   ├── shared.py      # IBGSocket (AsyncServer with lazy session)
-│   ├── user.py        # Redis user models
-│   ├── room.py        # Redis room models
-│   └── codenames.py   # Redis codenames game state
-└── routes/
-    ├── room.py        # Room Socket.IO events
-    ├── undercover.py  # Undercover game events (377 lines of game logic)
-    ├── codenames.py   # Codenames game events
-    └── shared.py      # Shared utilities
-```
-
 ## Key Patterns
+
+### Game State in PostgreSQL
+
+All game state stored in `Game.live_state` JSON column:
+- **Undercover**: `{players, turns, civilian_word, undercover_word, phase, ...}`
+- **Codenames**: `{board, players, current_team, current_turn, status, winner, ...}`
+
+All game mutations use `asyncio.Lock` per game_id:
+```python
+from sqlalchemy.orm.attributes import flag_modified
+from ibg.api.controllers.game_lock import get_game_lock
+
+async def submit_vote(self, game_id: UUID, ...):
+    async with get_game_lock(str(game_id)):
+        game = (await self.session.exec(select(Game).where(Game.id == game_id))).one()
+        state = game.live_state
+        # ... modify state ...
+        game.live_state = state
+        flag_modified(game, "live_state")  # REQUIRED — SQLAlchemy won't detect in-place JSON mutations
+        self.session.add(game)
+        await self.session.commit()
+```
+
+**CRITICAL: Always call `flag_modified(game, "live_state")` before committing.** SQLAlchemy's change detection doesn't see in-place mutations to JSON columns. Without it, `session.commit()` silently does nothing.
+
+### Heartbeat & Disconnect Detection
+
+- `RoomUserLink.last_seen_at` updated on each GET request (piggyback on polling)
+- Background `disconnect_checker_loop` runs every 5s, checks for stale heartbeats
+- `HEARTBEAT_STALE_SECONDS` (10s) → mark disconnected
+- `GRACE_PERIOD_SECONDS` (30s) → permanent removal
 
 ### Base Classes
 **CRITICAL: Always use `ibg.api.schemas.shared.BaseModel` and `BaseTable`**, never `pydantic.BaseModel` or `sqlmodel.SQLModel` directly.
@@ -179,8 +195,9 @@ from ibg.api.constants import MIN_PLAYERS_FOR_GAME, ROOM_PASSWORD_LENGTH
 | Model | Table | Purpose |
 |-------|-------|---------|
 | User | user | Player accounts |
-| Room | room | Game rooms |
-| Game | game | Game sessions |
+| Room | room | Game rooms (with `active_game_id`) |
+| Game | game | Game sessions (with `live_state` JSON, `game_status`) |
+| RoomUserLink | room_user_link | Room membership (with `last_seen_at`, `disconnected_at`) |
 | Event | event | Game events log |
 | Word | word | Undercover words |
 | TermPair | term_pair | Undercover word pairs |
@@ -197,8 +214,8 @@ Settings use `IBG_ENV` selector:
 | File | Purpose |
 |------|---------|
 | `.env` | `IBG_ENV=development` (selector) |
-| `.env.development` | SQLite, local Redis, dev JWT key |
-| `.env.production` | PostgreSQL, Redis service, production keys |
+| `.env.development` | SQLite, dev JWT key |
+| `.env.production` | PostgreSQL, production keys |
 | `.env.example` | Template (committed) |
 
 ## API Documentation

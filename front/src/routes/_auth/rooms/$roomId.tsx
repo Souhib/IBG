@@ -1,10 +1,10 @@
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Check, Copy, Crown, KeyRound, LogOut, Users } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
-import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
 
@@ -13,7 +13,9 @@ interface RoomData {
   public_id: string
   owner_id: string
   password: string
-  users: { id: string; username: string }[]
+  active_game_id?: string | null
+  game_type?: string | null
+  users: { id: string; username: string; is_connected?: boolean; is_disconnected?: boolean }[]
 }
 
 interface Player {
@@ -34,234 +36,91 @@ function RoomLobbyPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { emit, on, isConnected } = useSocket()
-  const [players, setPlayers] = useState<Player[]>([])
-  const [roomData, setRoomData] = useState<RoomData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
   const [copied, setCopied] = useState("")
   const [gameType, setGameType] = useState<GameType>("undercover")
   const [isStartingGame, setIsStartingGame] = useState(false)
   const joinedRef = useRef(false)
   const navigatingToGameRef = useRef(false)
 
-  const isHost = roomData?.owner_id === user?.id
-  const roomDataRef = useRef(roomData)
-  useEffect(() => { roomDataRef.current = roomData }, [roomData])
-
-  // Fetch room details via REST
+  // Join room via REST on mount
   useEffect(() => {
-    apiClient({ method: "GET", url: `/api/v1/rooms/${roomId}` })
-      .then((res) => {
-        const data = res.data as RoomData
-        setRoomData(data)
-        // Set initial players from REST data
-        setPlayers(
-          data.users.map((u) => ({
-            id: u.id,
-            username: u.username,
-            is_host: u.id === data.owner_id,
-          })),
-        )
-      })
-      .catch(() => setError("Failed to load room details"))
-      .finally(() => setIsLoading(false))
-  }, [roomId])
-
-  // Socket.IO join room (leave handled by explicit Leave Room button or disconnect handler)
-  useEffect(() => {
-    if (!isConnected || !roomData || !user) return
-    if (joinedRef.current) return
+    if (!user || joinedRef.current) return
     joinedRef.current = true
 
-    emit("join_room", {
-      user_id: user.id,
-      public_room_id: roomData.public_id,
-      password: roomData.password,
+    // We join via REST — the heartbeat is handled by polling GET /rooms/{roomId}
+    apiClient({
+      method: "PATCH",
+      url: "/api/v1/rooms/join",
+      data: { user_id: user.id, room_id: roomId },
+    }).catch(() => {
+      // Join might fail if already in room (re-join) — that's fine
     })
+  }, [user, roomId])
 
-    return () => {
-      joinedRef.current = false
-    }
-  }, [isConnected, roomData, user, emit])
+  // Poll room state every 2 seconds (uses /state endpoint for heartbeat + connection status)
+  const { data: roomData, isLoading, error: queryError } = useQuery({
+    queryKey: ["room", roomId],
+    queryFn: async () => {
+      const res = await apiClient({
+        method: "GET",
+        url: `/api/v1/rooms/${roomId}/state`,
+      })
+      const state = res.data as {
+        id: string
+        public_id: string
+        owner_id: string
+        password: string
+        active_game_id: string | null
+        game_type: string | null
+        players: { user_id: string; username: string; is_connected: boolean; is_disconnected: boolean; is_host: boolean }[]
+        type: string
+      }
+      return {
+        id: state.id,
+        public_id: state.public_id,
+        owner_id: state.owner_id,
+        password: state.password,
+        active_game_id: state.active_game_id,
+        game_type: state.game_type,
+        users: state.players.map((p) => ({
+          id: p.user_id,
+          username: p.username,
+          is_connected: p.is_connected,
+          is_disconnected: p.is_disconnected,
+        })),
+      } as RoomData
+    },
+    refetchInterval: 2000,
+    refetchOnWindowFocus: true,
+    enabled: !!user,
+  })
 
-  // Listen for socket events (roomData removed from deps to prevent listener teardown race)
+  // Derive players from room data (filter out users who left: connected=false, disconnected=false)
+  const players: Player[] = roomData
+    ? roomData.users
+        .filter((u) => u.is_connected || u.is_disconnected)
+        .map((u) => ({
+          id: u.id,
+          username: u.username,
+          is_host: u.id === roomData.owner_id,
+          is_disconnected: u.is_disconnected,
+        }))
+    : []
+
+  const isHost = roomData?.owner_id === user?.id
+
+  // Auto-navigate when game starts (active_game_id appears)
   useEffect(() => {
-    if (!isConnected) return
-
-    // room_status: sent to the joining user with full room data
-    const offStatus = on("room_status", (data: unknown) => {
-      const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
-      if (payload.data?.users) {
-        setPlayers(
-          payload.data.users.map((u) => ({
-            id: u.id,
-            username: u.username,
-            is_host: u.id === payload.data.owner_id,
-          })),
-        )
-      }
-    })
-
-    // new_user_joined: sent to room when another user joins
-    const offNewUser = on("new_user_joined", (data: unknown) => {
-      const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
-      if (payload.data?.users) {
-        setPlayers((prev) => {
-          const prevIds = new Set(prev.map((p) => p.id))
-          const newUser = payload.data.users.find((u) => !prevIds.has(u.id))
-          if (newUser) {
-            toast.info(t("toast.playerJoined", { username: newUser.username }), { id: `join-${newUser.id}` })
-          }
-          return payload.data.users.map((u) => ({
-            id: u.id,
-            username: u.username,
-            is_host: u.id === payload.data.owner_id,
-          }))
-        })
-      }
-    })
-
-    // user_left: sent to room when a user leaves
-    const offUserLeft = on("user_left", (data: unknown) => {
-      const payload = data as { data: { users: { id: string; username: string }[]; owner_id: string } }
-      if (payload.data?.users) {
-        setPlayers((prev) => {
-          const newIds = new Set(payload.data.users.map((u) => u.id))
-          const leftUser = prev.find((p) => !newIds.has(p.id))
-          if (leftUser) {
-            toast(t("toast.playerLeft", { username: leftUser.username }))
-          }
-          return payload.data.users.map((u) => ({
-            id: u.id,
-            username: u.username,
-            is_host: u.id === payload.data.owner_id,
-          }))
-        })
-      }
-    })
-
-    // game_started: undercover game started, navigate to game page (for non-host players)
-    const offGameStarted = on("game_started", (data: unknown) => {
-      if (navigatingToGameRef.current) return
-      toast.success(t("toast.gameStarting"))
-      navigatingToGameRef.current = true
-      const { game_id, game_type } = data as {
-        game_id: string; game_type: string; players: string[]; mayor: string
-      }
-      if (game_type === "undercover") {
-        // Navigate immediately — game page fetches state from server via get_undercover_state
-        navigate({ to: "/game/undercover/$gameId", params: { gameId: game_id } })
-      } else {
-        navigatingToGameRef.current = false
-      }
-    })
-
-    // codenames_game_started: codenames game started, navigate to game page
-    const offCodenamesStarted = on("codenames_game_started", (data: unknown) => {
-      if (navigatingToGameRef.current) return
-      toast.success(t("toast.gameStarting"))
-      navigatingToGameRef.current = true
-      try {
-        const { game_id } = data as { game_id: string }
-        navigate({ to: "/game/codenames/$gameId", params: { gameId: game_id } })
-      } catch {
-        navigatingToGameRef.current = false
-      }
-    })
-
-    // player_disconnected: a player's connection dropped (grace period active)
-    const offPlayerDisconnected = on("player_disconnected", (data: unknown) => {
-      const payload = data as { user_id: string }
-      setPlayers((prev) => {
-        const player = prev.find((p) => p.id === payload.user_id)
-        if (player) {
-          toast.warning(t("toast.playerDisconnected", { username: player.username }), { id: `disconnect-${payload.user_id}` })
-        }
-        return prev.map((p) => (p.id === payload.user_id ? { ...p, is_disconnected: true } : p))
-      })
-    })
-
-    // player_reconnected: a player reconnected within grace period
-    const offPlayerReconnected = on("player_reconnected", (data: unknown) => {
-      const payload = data as { user_id: string; data?: { users: { id: string; username: string }[]; owner_id: string } }
-      if (payload.data?.users) {
-        const reconnectedUser = payload.data.users.find((u) => u.id === payload.user_id)
-        if (reconnectedUser) {
-          toast.success(t("toast.playerReconnected", { username: reconnectedUser.username }), { id: `reconnect-${payload.user_id}` })
-        }
-        setPlayers(
-          payload.data.users.map((u) => ({
-            id: u.id,
-            username: u.username,
-            is_host: u.id === payload.data!.owner_id,
-            is_disconnected: false,
-          })),
-        )
-      } else {
-        setPlayers((prev) => {
-          const player = prev.find((p) => p.id === payload.user_id)
-          if (player) {
-            toast.success(t("toast.playerReconnected", { username: player.username }), { id: `reconnect-${payload.user_id}` })
-          }
-          return prev.map((p) => (p.id === payload.user_id ? { ...p, is_disconnected: false } : p))
-        })
-      }
-    })
-
-    // player_left_permanently: grace period expired, player removed
-    const offPlayerLeftPermanently = on("player_left_permanently", (data: unknown) => {
-      const payload = data as { user_id: string }
-      setPlayers((prev) => {
-        const player = prev.find((p) => p.id === payload.user_id)
-        if (player) {
-          toast.error(t("toast.playerLeftPermanently", { username: player.username }))
-        }
-        return prev.filter((p) => p.id !== payload.user_id)
-      })
-    })
-
-    // owner_changed: room ownership transferred
-    const offOwnerChanged = on("owner_changed", (data: unknown) => {
-      const payload = data as { new_owner_id: string }
-      setPlayers((prev) => {
-        const newOwner = prev.find((p) => p.id === payload.new_owner_id)
-        if (newOwner) {
-          toast.info(t("toast.ownerChanged", { username: newOwner.username }))
-        }
-        return prev.map((p) => ({ ...p, is_host: p.id === payload.new_owner_id }))
-      })
-      setRoomData((prev) => (prev ? { ...prev, owner_id: payload.new_owner_id } : prev))
-    })
-
-    // user_disconnected: legacy event (backward compat)
-    const offUserDisconnected = on("user_disconnected", (data: unknown) => {
-      const payload = data as { user_id: string }
-      setPlayers((prev) => prev.filter((p) => p.id !== payload.user_id))
-    })
-
-    // error: socket error events
-    const offError = on("error", (data: unknown) => {
-      const payload = data as { frontend_message?: string; message: string }
-      const msg = payload.frontend_message || payload.message || "Socket error"
-      setError(msg)
-      toast.error(msg)
-    })
-
-    return () => {
-      offStatus()
-      offNewUser()
-      offUserLeft()
-      offGameStarted()
-      offCodenamesStarted()
-      offPlayerDisconnected()
-      offPlayerReconnected()
-      offPlayerLeftPermanently()
-      offOwnerChanged()
-      offUserDisconnected()
-      offError()
+    if (!roomData?.active_game_id || navigatingToGameRef.current) return
+    navigatingToGameRef.current = true
+    toast.success(t("toast.gameStarting"))
+    const gt = roomData.game_type || gameType
+    if (gt === "codenames") {
+      navigate({ to: "/game/codenames/$gameId", params: { gameId: roomData.active_game_id } })
+    } else {
+      navigate({ to: "/game/undercover/$gameId", params: { gameId: roomData.active_game_id } })
     }
-  }, [isConnected, on, navigate, t])
+  }, [roomData?.active_game_id, roomData?.game_type, gameType, navigate, t])
 
   const handleStartGame = async () => {
     if (!roomData || isStartingGame) return
@@ -287,13 +146,20 @@ function RoomLobbyPage() {
     }
   }
 
-  const handleLeaveRoom = () => {
-    if (!user || !roomData) return
-    emit("leave_room", {
-      user_id: user.id,
-      room_id: roomData.id,
-      username: user.username,
-    })
+  const handleLeaveRoom = async () => {
+    if (!user || !roomData) {
+      navigate({ to: "/rooms" })
+      return
+    }
+    try {
+      await apiClient({
+        method: "PATCH",
+        url: "/api/v1/rooms/leave",
+        data: { user_id: user.id, room_id: roomData.id },
+      })
+    } catch {
+      // Ignore errors — navigate anyway
+    }
     toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
   }
@@ -301,7 +167,6 @@ function RoomLobbyPage() {
   const minPlayers = gameType === "codenames" ? 4 : 3
 
   const copyToClipboard = useCallback((text: string, label: string) => {
-    // navigator.clipboard requires HTTPS; use fallback for HTTP
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(text).then(
         () => {
@@ -330,7 +195,7 @@ function RoomLobbyPage() {
     setTimeout(() => setCopied(""), 1500)
   }, [t])
 
-  if (isLoading) {
+  if (isLoading && !roomData) {
     return (
       <div className="flex items-center justify-center py-20">
         <p className="text-muted-foreground">{t("common.loading")}</p>
@@ -338,10 +203,12 @@ function RoomLobbyPage() {
     )
   }
 
-  if (error && !roomData) {
+  if (queryError && !roomData) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
-        <div className="rounded-md bg-destructive/10 p-4 text-center text-destructive">{error}</div>
+        <div className="rounded-md bg-destructive/10 p-4 text-center text-destructive">
+          {getApiErrorMessage(queryError, "Failed to load room details")}
+        </div>
       </div>
     )
   }
@@ -393,10 +260,6 @@ function RoomLobbyPage() {
             </button>
           </div>
         </div>
-      )}
-
-      {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive mb-4">{error}</div>
       )}
 
       {/* Players */}
@@ -496,12 +359,6 @@ function RoomLobbyPage() {
         <LogOut className="h-4 w-4" />
         {t("room.leave")}
       </button>
-
-      {!isConnected && (
-        <div className="mt-4 rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
-          Connecting to server...
-        </div>
-      )}
     </div>
   )
 }

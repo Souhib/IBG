@@ -1,10 +1,10 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { LogOut, Users } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
-import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
 
@@ -40,6 +40,7 @@ interface CodenamesGameState {
   status: "waiting" | "in_progress" | "finished"
   winner: "red" | "blue" | null
   players: CodenamesPlayer[]
+  room_id?: string
 }
 
 export const Route = createFileRoute("/_auth/game/codenames/$gameId")({
@@ -51,190 +52,70 @@ function CodenamesGamePage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { socket, emit, on, isConnected } = useSocket()
+  const queryClient = useQueryClient()
   const roomIdRef = useRef<string | null>(null)
-  const [gameState, setGameState] = useState<CodenamesGameState | null>(null)
   const [clueWord, setClueWord] = useState("")
   const [clueNumber, setClueNumber] = useState(1)
-  const [cancelMessage, setCancelMessage] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmittingClue, setIsSubmittingClue] = useState(false)
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false)
+  const [cancelMessage, setCancelMessage] = useState<string | null>(null)
 
-  // Fetch board state from server via REST on mount and reconnect
+  // Poll game state via REST every 2 seconds
+  const { data: serverState, isLoading, error: queryError } = useQuery({
+    queryKey: ["codenames", gameId],
+    queryFn: async () => {
+      const res = await apiClient({
+        method: "GET",
+        url: `/api/v1/codenames/games/${gameId}/board`,
+      })
+      return res.data as {
+        game_id: string
+        room_id?: string
+        team: "red" | "blue"
+        role: "spymaster" | "operative"
+        board: CodenamesCard[]
+        current_team: "red" | "blue"
+        red_remaining: number
+        blue_remaining: number
+        status: string
+        current_turn: CodenamesTurn | null
+        winner: "red" | "blue" | null
+        players?: CodenamesPlayer[]
+      }
+    },
+    refetchInterval: 2000,
+    refetchOnWindowFocus: true,
+    enabled: !!user,
+  })
+
+  // Derive game state from server data
+  const gameState = useMemo<CodenamesGameState | null>(() => {
+    if (!serverState) return null
+    if (serverState.room_id) roomIdRef.current = serverState.room_id
+    return {
+      board: serverState.board,
+      current_team: serverState.current_team,
+      current_turn: serverState.current_turn,
+      my_team: serverState.team,
+      my_role: serverState.role,
+      red_remaining: serverState.red_remaining,
+      blue_remaining: serverState.blue_remaining,
+      status: serverState.status as "waiting" | "in_progress" | "finished",
+      winner: serverState.winner,
+      players: serverState.players || [],
+      room_id: serverState.room_id,
+    }
+  }, [serverState])
+
+  // Handle query error (game not found / cancelled)
   useEffect(() => {
-    if (!isConnected || !user) return
-    const fetchBoard = async () => {
-      try {
-        const res = await apiClient({
-          method: "GET",
-          url: `/api/v1/codenames/games/${gameId}/board`,
-          params: socket?.id ? { sid: socket.id } : undefined,
-        })
-        const d = res.data as {
-          game_id: string
-          room_id?: string
-          team: "red" | "blue"
-          role: "spymaster" | "operative"
-          board: CodenamesCard[]
-          current_team: "red" | "blue"
-          red_remaining: number
-          blue_remaining: number
-          status: string
-          current_turn: CodenamesTurn | null
-          winner: "red" | "blue" | null
-          players?: CodenamesPlayer[]
-        }
-        if (d.room_id) roomIdRef.current = d.room_id
-        setGameState((prev) => ({
-          board: d.board,
-          current_team: d.current_team,
-          current_turn: d.current_turn,
-          my_team: d.team,
-          my_role: d.role,
-          red_remaining: d.red_remaining,
-          blue_remaining: d.blue_remaining,
-          status: d.status as "waiting" | "in_progress" | "finished",
-          winner: d.winner,
-          players: d.players || prev?.players || [],
-        }))
-      } catch (err) {
-        toast.error(getApiErrorMessage(err, "Failed to load game state"))
+    if (queryError) {
+      const errMsg = getApiErrorMessage(queryError, "Game not found")
+      if (errMsg.includes("not found") || errMsg.includes("cancelled") || errMsg.includes("removed")) {
+        setCancelMessage(errMsg)
+        setTimeout(() => navigate({ to: "/" }), 3000)
       }
     }
-    fetchBoard()
-  }, [isConnected, user, gameId])
-
-  useEffect(() => {
-    if (!isConnected) return
-
-    const offClueGiven = on("codenames_clue_given", (data: unknown) => {
-      try {
-        const d = data as { clue_word: string; clue_number: number; team: "red" | "blue"; max_guesses: number }
-        const teamName = d.team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
-        toast.info(t("toast.clueGiven", { team: teamName, word: d.clue_word, number: d.clue_number }))
-        setIsSubmittingClue(false)
-        setGameState((prev) =>
-          prev
-            ? {
-                ...prev,
-                current_turn: {
-                  team: d.team,
-                  clue_word: d.clue_word,
-                  clue_number: d.clue_number,
-                  guesses_made: 0,
-                  max_guesses: d.max_guesses,
-                },
-              }
-            : prev,
-        )
-      } catch {
-        toast.error(t("common.error"))
-        setIsSubmittingClue(false)
-      }
-    })
-
-    const offCardRevealed = on("codenames_card_revealed", (data: unknown) => {
-      try {
-        const d = data as {
-          board: CodenamesCard[]
-          current_team: "red" | "blue"
-          red_remaining: number
-          blue_remaining: number
-          guesses_made: number
-          max_guesses: number
-          word?: string
-        }
-        if (d.word) {
-          toast(t("toast.cardRevealed", { word: d.word }))
-        }
-        setGameState((prev) => {
-          if (!prev) return prev
-          return {
-            ...prev,
-            board: d.board,
-            current_team: d.current_team,
-            red_remaining: d.red_remaining,
-            blue_remaining: d.blue_remaining,
-            current_turn: prev.current_turn
-              ? { ...prev.current_turn, guesses_made: d.guesses_made, max_guesses: d.max_guesses }
-              : prev.current_turn,
-          }
-        })
-      } catch {
-        toast.error(t("common.error"))
-      }
-    })
-
-    const offTurnEnded = on("codenames_turn_ended", (data: unknown) => {
-      try {
-        const d = data as { current_team: "red" | "blue"; reason: string }
-        const teamName = d.current_team === "red" ? t("games.codenames.teams.red") : t("games.codenames.teams.blue")
-        toast.info(t("toast.turnEnded", { team: teamName }))
-        setGameState((prev) =>
-          prev ? { ...prev, current_team: d.current_team, current_turn: null } : prev,
-        )
-      } catch {
-        toast.error(t("common.error"))
-      }
-    })
-
-    const offGameOver = on("codenames_game_over", (data: unknown) => {
-      try {
-        toast.success(t("toast.gameOver"))
-        const d = data as { winner: "red" | "blue"; board: CodenamesCard[] }
-        setGameState((prev) =>
-          prev ? { ...prev, status: "finished", winner: d.winner, board: d.board } : prev,
-        )
-      } catch {
-        toast.error(t("common.error"))
-      }
-    })
-
-    // game_cancelled: not enough players, navigate back
-    const offGameCancelled = on("game_cancelled", (data: unknown) => {
-      toast.error(t("toast.gameCancelled"))
-      const payload = data as { message: string }
-      setCancelMessage(payload.message || "Game cancelled: not enough players.")
-      setTimeout(() => {
-        navigate({ to: "/" })
-      }, 3000)
-    })
-
-    // error: catch backend errors (e.g. game not found, invalid move)
-    const offError = on("error", (data: unknown) => {
-      const payload = data as { name?: string; frontend_message?: string; message?: string; status_code?: number }
-      const msg = payload.frontend_message || payload.message || "An error occurred"
-      toast.error(msg)
-      // Only show fatal error state for non-validation errors (e.g. game not found)
-      if (payload.status_code !== 422) {
-        setErrorMessage(msg)
-      }
-
-      // Fatal game errors — game no longer exists or player was removed
-      if (payload.name === "GameNotFoundError" || payload.name === "PlayerRemovedFromGameError") {
-        setTimeout(() => navigate({ to: "/" }), 2000)
-      }
-    })
-
-    return () => {
-      offClueGiven()
-      offCardRevealed()
-      offTurnEnded()
-      offGameOver()
-      offGameCancelled()
-      offError()
-    }
-  }, [isConnected, on, navigate, t])
-
-  // Loading timeout: if gameState is still null after 15s, show error
-  useEffect(() => {
-    if (gameState) return
-    const timer = setTimeout(() => {
-      setLoadingTimedOut(true)
-    }, 15000)
-    return () => clearTimeout(timer)
-  }, [gameState])
+  }, [queryError, navigate])
 
   const handleGiveClue = useCallback(async () => {
     if (!clueWord.trim() || isSubmittingClue) return
@@ -247,11 +128,13 @@ function CodenamesGamePage() {
       })
       setClueWord("")
       setClueNumber(1)
+      queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to give clue"))
+    } finally {
       setIsSubmittingClue(false)
     }
-  }, [gameId, clueWord, clueNumber, isSubmittingClue])
+  }, [gameId, clueWord, clueNumber, isSubmittingClue, queryClient])
 
   const handleGuessCard = useCallback(
     async (index: number) => {
@@ -261,11 +144,12 @@ function CodenamesGamePage() {
           url: `/api/v1/codenames/games/${gameId}/guess`,
           data: { card_index: index },
         })
+        queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
       } catch (err) {
         toast.error(getApiErrorMessage(err, "Failed to guess card"))
       }
     },
-    [gameId],
+    [gameId, queryClient],
   )
 
   const handleEndTurn = useCallback(async () => {
@@ -274,24 +158,29 @@ function CodenamesGamePage() {
         method: "POST",
         url: `/api/v1/codenames/games/${gameId}/end-turn`,
       })
+      queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to end turn"))
     }
-  }, [gameId])
+  }, [gameId, queryClient])
 
-  const handleLeaveRoom = useCallback(() => {
+  const handleLeaveRoom = useCallback(async () => {
     if (!user || !roomIdRef.current) {
       navigate({ to: "/rooms" })
       return
     }
-    emit("leave_room", {
-      user_id: user.id,
-      room_id: roomIdRef.current,
-      username: user.username,
-    })
+    try {
+      await apiClient({
+        method: "PATCH",
+        url: "/api/v1/rooms/leave",
+        data: { user_id: user.id, room_id: roomIdRef.current },
+      })
+    } catch {
+      // Ignore errors — navigate anyway
+    }
     toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
-  }, [user, emit, navigate, t])
+  }, [user, navigate, t])
 
   if (cancelMessage) {
     return (
@@ -305,12 +194,19 @@ function CodenamesGamePage() {
     )
   }
 
-  if (errorMessage) {
+  if (!gameState) {
+    if (isLoading) {
+      return (
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <p className="text-muted-foreground">{t("common.loading")}</p>
+        </div>
+      )
+    }
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-xl border bg-destructive/10 p-8 text-center">
           <h2 className="text-xl font-bold text-destructive mb-2">{t("common.error")}</h2>
-          <p className="text-muted-foreground">{errorMessage}</p>
+          <p className="text-muted-foreground">Failed to load game state. The game may no longer exist.</p>
           <button
             type="button"
             onClick={() => navigate({ to: "/" })}
@@ -319,31 +215,6 @@ function CodenamesGamePage() {
             {t("common.goHome")}
           </button>
         </div>
-      </div>
-    )
-  }
-
-  if (!gameState) {
-    if (loadingTimedOut) {
-      return (
-        <div className="mx-auto max-w-4xl px-4 py-8">
-          <div className="rounded-xl border bg-destructive/10 p-8 text-center">
-            <h2 className="text-xl font-bold text-destructive mb-2">{t("common.error")}</h2>
-            <p className="text-muted-foreground">Failed to load game state. The game may no longer exist.</p>
-            <button
-              type="button"
-              onClick={() => navigate({ to: "/" })}
-              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              {t("common.goHome")}
-            </button>
-          </div>
-        </div>
-      )
-    }
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">{t("common.loading")}</p>
       </div>
     )
   }

@@ -29,7 +29,7 @@ class UserView(UserBase):
 
     class Config:
         # Custom JSON encoders dictionary
-        json_encoders = {UUID: lambda x: str(x)}  # Convert UUIDs to strings
+        json_encoders = {UUID: str}  # Convert UUIDs to strings
 
 
 class RoomView(RoomBase):
@@ -44,4 +44,4 @@ class RoomView(RoomBase):
 
     class Config:
         # Custom JSON encoders dictionary
-        json_encoders = {UUID: lambda x: str(x)}  # Convert UUIDs to strings
+        json_encoders = {UUID: str}  # Convert UUIDs to strings

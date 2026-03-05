@@ -1,9 +1,10 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 import uvicorn
-from aredis_om import Migrator
 from fastapi import FastAPI
 
+from ibg.api.controllers.disconnect import disconnect_checker_loop
 from ibg.app import create_app
 from ibg.database import create_app_engine, create_db_and_tables
 from ibg.logger_config import configure_logger
@@ -18,13 +19,12 @@ async def lifespan(app: FastAPI):
         log_level=settings.log_level,
         serialize=settings.environment == "production",
     )
-    await Migrator().run()
     engine = await create_app_engine(settings)
     await create_db_and_tables(engine)
+    # Start disconnect checker background task
+    task = asyncio.create_task(disconnect_checker_loop(engine))
     yield
-    from ibg.socketio.utils.disconnect_tasks import stop_polling
-
-    stop_polling()
+    task.cancel()
     await engine.dispose()
 
 

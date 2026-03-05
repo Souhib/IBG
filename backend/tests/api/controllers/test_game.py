@@ -12,7 +12,7 @@ from ibg.api.models.event import EventCreate
 from ibg.api.models.game import GameCreate, GameType, GameUpdate
 from ibg.api.models.room import RoomType
 from ibg.api.models.table import Room
-from ibg.api.schemas.error import ErrorRoomIsNotActive, GameNotFoundError, NoTurnInsideGameError
+from ibg.api.schemas.error import GameNotFoundError, NoTurnInsideGameError, RoomIsNotActiveError
 
 
 async def test_create_game_success(sample_room: Room, game_controller: GameController):
@@ -35,7 +35,7 @@ async def test_create_game_success(sample_room: Room, game_controller: GameContr
 async def test_create_game_inactive_room(
     create_user, create_room, game_controller: GameController, session: AsyncSession
 ):
-    """Creating a game in an inactive room raises ErrorRoomIsNotActive."""
+    """Creating a game in an inactive room raises RoomIsNotActiveError."""
     # Arrange
     owner = await create_user(username="owner", email="owner@test.com")
     room = await create_room(owner=owner)
@@ -45,7 +45,7 @@ async def test_create_game_inactive_room(
     await session.commit()
 
     # Act & Assert
-    with pytest.raises(ErrorRoomIsNotActive):
+    with pytest.raises(RoomIsNotActiveError):
         await game_controller.create_game(GameCreate(room_id=room.id, type=GameType.UNDERCOVER, number_of_players=4))
 
 

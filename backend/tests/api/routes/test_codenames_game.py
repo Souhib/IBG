@@ -37,9 +37,7 @@ class TestStartCodenamesGame:
         game_id = uuid4()
         user = _mock_user()
         mock_controller = Mock(spec=CodenamesGameController)
-        mock_controller.create_and_start = AsyncMock(
-            return_value={"game_id": str(game_id), "room_id": str(room_id)}
-        )
+        mock_controller.create_and_start = AsyncMock(return_value={"game_id": str(game_id), "room_id": str(room_id)})
         test_app.dependency_overrides[get_current_user] = lambda: user
         test_app.dependency_overrides[get_codenames_game_controller] = lambda: mock_controller
 
@@ -64,9 +62,7 @@ class TestStartCodenamesGame:
         pack_id = uuid4()
         user = _mock_user()
         mock_controller = Mock(spec=CodenamesGameController)
-        mock_controller.create_and_start = AsyncMock(
-            return_value={"game_id": str(game_id), "room_id": str(room_id)}
-        )
+        mock_controller.create_and_start = AsyncMock(return_value={"game_id": str(game_id), "room_id": str(room_id)})
         test_app.dependency_overrides[get_current_user] = lambda: user
         test_app.dependency_overrides[get_codenames_game_controller] = lambda: mock_controller
 
@@ -370,9 +366,7 @@ class TestEndTurn:
         game_id = uuid4()
         user = _mock_user()
         mock_controller = Mock(spec=CodenamesGameController)
-        mock_controller.end_turn = AsyncMock(
-            return_value={"game_id": str(game_id), "current_team": "blue"}
-        )
+        mock_controller.end_turn = AsyncMock(return_value={"game_id": str(game_id), "current_team": "blue"})
         test_app.dependency_overrides[get_current_user] = lambda: user
         test_app.dependency_overrides[get_codenames_game_controller] = lambda: mock_controller
 

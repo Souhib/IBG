@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
@@ -25,11 +25,7 @@ class StatsController:
         :param user_id: The id of the user.
         :return: The user's stats record.
         """
-        result = (
-            await self.session.exec(
-                select(UserStats).where(UserStats.user_id == user_id)
-            )
-        ).first()
+        result = (await self.session.exec(select(UserStats).where(UserStats.user_id == user_id))).first()
 
         if result is not None:
             return result
@@ -48,15 +44,11 @@ class StatsController:
         :raises UserNotFoundError: If no stats record exists for this user.
         """
         try:
-            return (
-                await self.session.exec(
-                    select(UserStats).where(UserStats.user_id == user_id)
-                )
-            ).one()
+            return (await self.session.exec(select(UserStats).where(UserStats.user_id == user_id))).one()
         except NoResultFound:
-            raise UserNotFoundError(user_id=user_id)
+            raise UserNotFoundError(user_id=user_id) from None
 
-    async def update_stats_after_game(
+    async def update_stats_after_game(  # noqa: C901, PLR0912, PLR0915
         self,
         user_id: UUID,
         game_type: str,
@@ -89,7 +81,7 @@ class StatsController:
             stats.current_win_streak = 0
 
         # Play streak tracking
-        now = datetime.now(UTC)
+        now = datetime.now()
         if stats.last_played_at is not None:
             days_since_last = (now.date() - stats.last_played_at.date()).days
             if days_since_last == 1:

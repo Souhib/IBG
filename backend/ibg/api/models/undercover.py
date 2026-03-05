@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from pydantic import model_validator
@@ -48,17 +48,17 @@ class TermPairCreate(TermPairBase):
     pass
 
 
-class CodeNameTeam(str, Enum):
+class CodeNameTeam(StrEnum):
     RED = "red"
     BLUE = "blue"
 
 
-class CodeNameRole(str, Enum):
+class CodeNameRole(StrEnum):
     SPYMASTER = "spymaster"
     OPERATIVE = "operative"
 
 
-class UndercoverRole(str, Enum):
+class UndercoverRole(StrEnum):
     UNDERCOVER = "undercover"
     CIVILIAN = "civilian"
     MR_WHITE = "mr_white"

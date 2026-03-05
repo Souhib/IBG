@@ -37,9 +37,7 @@ class TestStartUndercoverGame:
         game_id = uuid4()
         user = _mock_user()
         mock_controller = Mock(spec=UndercoverGameController)
-        mock_controller.create_and_start = AsyncMock(
-            return_value={"game_id": str(game_id), "room_id": str(room_id)}
-        )
+        mock_controller.create_and_start = AsyncMock(return_value={"game_id": str(game_id), "room_id": str(room_id)})
         test_app.dependency_overrides[get_current_user] = lambda: user
         test_app.dependency_overrides[get_undercover_game_controller] = lambda: mock_controller
 
@@ -267,9 +265,7 @@ class TestSubmitVote:
         voted_for = uuid4()
         user = _mock_user()
         mock_controller = Mock(spec=UndercoverGameController)
-        mock_controller.submit_vote = AsyncMock(
-            return_value={"game_id": str(game_id), "all_voted": False}
-        )
+        mock_controller.submit_vote = AsyncMock(return_value={"game_id": str(game_id), "all_voted": False})
         test_app.dependency_overrides[get_current_user] = lambda: user
         test_app.dependency_overrides[get_undercover_game_controller] = lambda: mock_controller
 

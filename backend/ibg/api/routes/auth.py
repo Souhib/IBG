@@ -9,6 +9,7 @@ from ibg.api.controllers.auth import AuthController
 from ibg.api.models.user import UserCreate
 from ibg.api.models.view import UserView
 from ibg.api.schemas.auth import LoginRequest, LoginResponse, LoginUserData, TokenPairResponse
+from ibg.api.schemas.error import InvalidCredentialsError
 from ibg.dependencies import get_auth_controller
 
 limiter = Limiter(
@@ -25,7 +26,7 @@ router = APIRouter(
 @router.post("/register", response_model=UserView, status_code=201)
 @limiter.limit("5/minute")
 async def register(
-    request: Request,
+    request: Request,  # noqa: ARG001
     *,
     user: UserCreate,
     auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
@@ -38,7 +39,7 @@ async def register(
 @router.post("/login", response_model=LoginResponse)
 @limiter.limit("5/minute")
 async def login(
-    request: Request,
+    request: Request,  # noqa: ARG001
     *,
     login_request: LoginRequest,
     auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
@@ -46,13 +47,9 @@ async def login(
     """Login and get JWT token pair with user data."""
     user = await auth_controller.get_user_by_email(login_request.email)
     if user is None:
-        from ibg.api.schemas.error import InvalidCredentialsError
-
         raise InvalidCredentialsError(email=login_request.email)
 
     if not auth_controller.verify_password(login_request.password, user.password):
-        from ibg.api.schemas.error import InvalidCredentialsError
-
         raise InvalidCredentialsError(email=login_request.email)
 
     tokens = auth_controller.create_token_pair(str(user.id), user.email_address)
@@ -70,7 +67,7 @@ async def login(
 @router.post("/refresh", response_model=TokenPairResponse)
 @limiter.limit("10/minute")
 async def refresh_token(
-    request: Request,
+    request: Request,  # noqa: ARG001
     *,
     refresh_token: str,
     auth_controller: Annotated[AuthController, Depends(get_auth_controller)],

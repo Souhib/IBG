@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import Field, field_validator
@@ -7,12 +7,12 @@ from ibg.api.models.game import GameType
 from ibg.api.models.shared import DBModel
 
 
-class RoomType(str, Enum):
+class RoomType(StrEnum):
     ACTIVE = "active"
     INACTIVE = "inactive"
 
 
-class RoomStatus(str, Enum):
+class RoomStatus(StrEnum):
     OFFLINE = "offline"
     ONLINE = "online"
 
@@ -40,6 +40,7 @@ class RoomCreate(RoomBase):
 
 class RoomCreateRequest(DBModel):
     """Frontend-facing schema: only game_type is needed."""
+
     game_type: GameType
 
 

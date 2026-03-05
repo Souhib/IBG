@@ -1,28 +1,33 @@
 """Test configuration and fixtures for IBG backend."""
 
+from datetime import datetime
+
 import pytest
 import pytest_asyncio
 from faker import Faker
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.controllers.achievement import AchievementController
 from ibg.api.controllers.auth import AuthController
 from ibg.api.controllers.codenames import CodenamesController
+from ibg.api.controllers.codenames_game import CodenamesGameController
 from ibg.api.controllers.game import GameController
 from ibg.api.controllers.room import RoomController
 from ibg.api.controllers.shared import get_password_hash
 from ibg.api.controllers.stats import StatsController
 from ibg.api.controllers.undercover import UndercoverController
+from ibg.api.controllers.undercover_game import UndercoverGameController
 from ibg.api.controllers.user import UserController
-from ibg.api.models.codenames import CodenamesWordPack, CodenamesWordPackCreate
+from ibg.api.models.codenames import CodenamesWord, CodenamesWordPack, CodenamesWordPackCreate
 from ibg.api.models.game import GameCreate, GameType
+from ibg.api.models.relationship import RoomUserLink
 from ibg.api.models.room import RoomCreate, RoomStatus
 from ibg.api.models.table import Room, User
-from ibg.api.models.undercover import Word, WordCreate
+from ibg.api.models.undercover import TermPair, Word, WordCreate
 from ibg.settings import Settings
 
 # ========== Core Infrastructure ==========
@@ -39,7 +44,6 @@ def get_test_settings() -> Settings:
     """Get test settings with safe defaults."""
     return Settings(
         database_url="sqlite+aiosqlite:///:memory:",
-        redis_om_url="redis://localhost:6379",
         jwt_secret_key="test-secret-key-for-unit-tests",
         jwt_encryption_algorithm="HS256",
         access_token_expire_minutes=15,
@@ -145,6 +149,18 @@ async def get_stats_controller(session: AsyncSession) -> StatsController:
 async def get_achievement_controller(session: AsyncSession) -> AchievementController:
     """Create an AchievementController instance for testing."""
     return AchievementController(session)
+
+
+@pytest_asyncio.fixture(name="undercover_game_controller")
+async def get_undercover_game_controller(session: AsyncSession) -> UndercoverGameController:
+    """Create an UndercoverGameController instance for testing."""
+    return UndercoverGameController(session)
+
+
+@pytest_asyncio.fixture(name="codenames_game_controller")
+async def get_codenames_game_controller(session: AsyncSession) -> CodenamesGameController:
+    """Create a CodenamesGameController instance for testing."""
+    return CodenamesGameController(session)
 
 
 # ========== Factory Fixtures ==========
@@ -258,3 +274,160 @@ async def get_sample_word(create_word) -> Word:
         short_description="Place of worship",
         long_description="A place where Muslims gather for prayer",
     )
+
+
+# ========== Game Setup Factories ==========
+
+
+@pytest_asyncio.fixture(name="setup_undercover_game")
+async def get_setup_undercover_game(session: AsyncSession, create_user, create_room):
+    """Factory fixture that creates N users + room + RoomUserLinks + Word + TermPair.
+
+    Returns a dict with users, room, word1, word2, term_pair.
+    """
+
+    async def _setup(num_players: int = 3) -> dict:
+        users = []
+        for i in range(num_players):
+            user = await create_user(
+                username=f"player{i}",
+                email=f"player{i}@test.com",
+                password="password123",
+            )
+            users.append(user)
+
+        room = await create_room(owner=users[0])
+
+        # Create RoomUserLinks for all players (connected=True)
+        for user in users:
+            existing = (
+                await session.exec(
+                    select(RoomUserLink).where(RoomUserLink.room_id == room.id).where(RoomUserLink.user_id == user.id)
+                )
+            ).first()
+            if not existing:
+                link = RoomUserLink(
+                    room_id=room.id,
+                    user_id=user.id,
+                    connected=True,
+                    last_seen_at=datetime.now(),
+                )
+                session.add(link)
+        await session.commit()
+
+        # Create words and term pair
+        word1 = Word(word="mosque", category="islamic", short_description="A", long_description="B")
+        word2 = Word(word="church", category="islamic", short_description="C", long_description="D")
+        session.add(word1)
+        session.add(word2)
+        await session.commit()
+        await session.refresh(word1)
+        await session.refresh(word2)
+
+        term_pair = TermPair(word1_id=word1.id, word2_id=word2.id)
+        session.add(term_pair)
+        await session.commit()
+        await session.refresh(term_pair)
+
+        return {
+            "users": users,
+            "room": room,
+            "word1": word1,
+            "word2": word2,
+            "term_pair": term_pair,
+        }
+
+    return _setup
+
+
+@pytest_asyncio.fixture(name="setup_codenames_game")
+async def get_setup_codenames_game(session: AsyncSession, create_user, create_room):
+    """Factory fixture that creates N users + room + RoomUserLinks + WordPack with 25+ words.
+
+    Returns a dict with users, room, word_pack, words.
+    """
+
+    async def _setup(num_players: int = 4) -> dict:
+        users = []
+        for i in range(num_players):
+            user = await create_user(
+                username=f"cnplayer{i}",
+                email=f"cnplayer{i}@test.com",
+                password="password123",
+            )
+            users.append(user)
+
+        room = await create_room(owner=users[0])
+
+        # Create RoomUserLinks for all players (connected=True)
+        for user in users:
+            existing = (
+                await session.exec(
+                    select(RoomUserLink).where(RoomUserLink.room_id == room.id).where(RoomUserLink.user_id == user.id)
+                )
+            ).first()
+            if not existing:
+                link = RoomUserLink(
+                    room_id=room.id,
+                    user_id=user.id,
+                    connected=True,
+                    last_seen_at=datetime.now(),
+                )
+                session.add(link)
+        await session.commit()
+
+        # Create word pack with 30 words (more than the 25 needed)
+        word_pack = CodenamesWordPack(name="Test Pack", description="Test")
+        session.add(word_pack)
+        await session.commit()
+        await session.refresh(word_pack)
+
+        words = []
+        word_list = [
+            "Quran",
+            "Salah",
+            "Zakat",
+            "Hajj",
+            "Sawm",
+            "Iman",
+            "Ihsan",
+            "Taqwa",
+            "Dua",
+            "Dhikr",
+            "Mosque",
+            "Minaret",
+            "Mihrab",
+            "Minbar",
+            "Wudu",
+            "Adhan",
+            "Iqama",
+            "Sunnah",
+            "Hadith",
+            "Fiqh",
+            "Sharia",
+            "Ummah",
+            "Hijab",
+            "Sadaqah",
+            "Dawah",
+            "Barakah",
+            "Jannat",
+            "Tawhid",
+            "Khalifah",
+            "Makkah",
+        ]
+        for w in word_list:
+            word = CodenamesWord(word=w, word_pack_id=word_pack.id)
+            session.add(word)
+            words.append(word)
+        await session.commit()
+        for w in words:
+            await session.refresh(w)
+
+        return {
+            "users": users,
+            "room": room,
+            "word_pack": word_pack,
+            "words": words,
+        }
+
+    return _setup

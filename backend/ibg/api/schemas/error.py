@@ -1,14 +1,16 @@
 import re
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
 from fastapi import status
 from loguru import logger
 
+from ibg.api.constants import CODENAMES_BOARD_SIZE
 
-class LogLevel(str, Enum):
+
+class LogLevel(StrEnum):
     """Enum for log levels."""
 
     DEBUG = "DEBUG"
@@ -56,10 +58,7 @@ class BaseError(Exception):
         self.timestamp = datetime.now(UTC)
 
         if log_level is None:
-            if status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
-                log_level = LogLevel.ERROR
-            else:
-                log_level = LogLevel.WARNING
+            log_level = LogLevel.ERROR if status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR else LogLevel.WARNING
 
         log_function = {
             LogLevel.DEBUG: logger.debug,
@@ -228,7 +227,7 @@ class WrongRoomPasswordError(BaseError):
         )
 
 
-class ErrorRoomIsNotActive(BaseError):
+class RoomIsNotActiveError(BaseError):
     """Room is not active."""
 
     def __init__(self, room_id: UUID):
@@ -282,7 +281,7 @@ class WordAlreadyExistsError(BaseError):
         )
 
 
-class WordNotFoundErrorId(BaseError):
+class WordNotFoundByIdError(BaseError):
     """Word not found by ID."""
 
     def __init__(self, word_id: UUID):
@@ -294,7 +293,7 @@ class WordNotFoundErrorId(BaseError):
         )
 
 
-class WordNotFoundErrorName(BaseError):
+class WordNotFoundByNameError(BaseError):
     """Word not found by name."""
 
     def __init__(self, word: str):
@@ -381,16 +380,111 @@ class PlayerRemovedFromGameError(BaseError):
         )
 
 
-# Redis Errors
+# Codenames Game Errors
 
 
-class RedisUnavailableError(BaseError):
-    """Redis is unavailable or misconfigured (e.g., MISCONF RDB snapshot failure)."""
+class NotSpymasterError(BaseError):
+    """Raised when a non-spymaster tries to give a clue."""
 
-    def __init__(self, operation: str, original_error: str | None = None):
+    def __init__(self, user_id: str):
         super().__init__(
-            message=f"Redis unavailable during {operation}: {original_error}",
-            frontend_message="The server is experiencing a temporary issue. Please try again.",
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            details={"operation": operation, "original_error": original_error or ""},
+            message=f"User {user_id} is not the spymaster for the current team",
+            frontend_message="Only the spymaster can give clues.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            details={"user_id": user_id},
+        )
+
+
+class NotOperativeError(BaseError):
+    """Raised when a non-operative tries to guess a card."""
+
+    def __init__(self, user_id: str):
+        super().__init__(
+            message=f"User {user_id} is not an operative for the current team",
+            frontend_message="Only operatives can guess cards.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            details={"user_id": user_id},
+        )
+
+
+class NotYourTurnError(BaseError):
+    """Raised when a player acts out of turn."""
+
+    def __init__(self, user_id: str):
+        super().__init__(
+            message=f"It is not user {user_id}'s team's turn",
+            frontend_message="It's not your team's turn.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            details={"user_id": user_id},
+        )
+
+
+class CardAlreadyRevealedError(BaseError):
+    """Raised when trying to guess an already revealed card."""
+
+    def __init__(self, card_index: int):
+        super().__init__(
+            message=f"Card at index {card_index} is already revealed",
+            frontend_message="This card has already been revealed.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details={"card_index": card_index},
+        )
+
+
+class InvalidCardIndexError(BaseError):
+    """Raised when the card index is out of range."""
+
+    def __init__(self, card_index: int):
+        super().__init__(
+            message=f"Card index {card_index} is out of range (0-{CODENAMES_BOARD_SIZE - 1})",
+            frontend_message="Invalid card selection.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details={"card_index": card_index},
+        )
+
+
+class NoClueGivenError(BaseError):
+    """Raised when trying to guess before a clue has been given."""
+
+    def __init__(self):
+        super().__init__(
+            message="No clue has been given yet for this turn",
+            frontend_message="Wait for the spymaster to give a clue first.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class GameNotInProgressError(BaseError):
+    """Raised when trying to take an action on a game that is not in progress."""
+
+    def __init__(self, game_id: str):
+        super().__init__(
+            message=f"Game {game_id} is not in progress",
+            frontend_message="This game is not currently in progress.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details={"game_id": game_id},
+        )
+
+
+class NotEnoughPlayersError(BaseError):
+    """Raised when there are not enough players to start a game."""
+
+    def __init__(self, player_count: int):
+        super().__init__(
+            message=f"Need at least 4 players for Codenames, got {player_count}",
+            frontend_message="At least 4 players are needed to start Codenames.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details={"player_count": player_count},
+        )
+
+
+class ClueWordIsOnBoardError(BaseError):
+    """Raised when the clue word matches a word on the board."""
+
+    def __init__(self, clue_word: str):
+        super().__init__(
+            message=f"Clue word '{clue_word}' is on the board and cannot be used as a clue",
+            frontend_message="Your clue word cannot be a word that's on the board.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details={"clue_word": clue_word},
         )

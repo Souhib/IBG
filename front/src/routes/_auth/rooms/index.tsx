@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { Loader2, LogIn, Plus } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { motion } from "motion/react"
 import { toast } from "sonner"
-import { useSocket } from "@/hooks/use-socket"
+import apiClient, { getApiErrorMessage } from "@/api/client"
 import { useAuth } from "@/providers/AuthProvider"
 
 export const Route = createFileRoute("/_auth/rooms/")({
@@ -15,43 +15,10 @@ function RoomsPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { emit, on, isConnected } = useSocket()
   const [roomCode, setRoomCode] = useState("")
   const [password, setPassword] = useState(["", "", "", ""])
   const [isJoining, setIsJoining] = useState(false)
   const pinRefs = useRef<(HTMLInputElement | null)[]>([])
-  const joiningRef = useRef(false)
-
-  // Listen for socket responses when joining
-  useEffect(() => {
-    if (!isConnected) return
-
-    const offRoomStatus = on("room_status", (data: unknown) => {
-      if (!joiningRef.current) return
-      joiningRef.current = false
-      setIsJoining(false)
-
-      const payload = data as { data: { id?: string; users: unknown[] } }
-      const roomId = payload.data?.id
-      if (roomId) {
-        navigate({ to: "/rooms/$roomId", params: { roomId } })
-      }
-    })
-
-    const offError = on("error", (data: unknown) => {
-      if (!joiningRef.current) return
-      joiningRef.current = false
-      setIsJoining(false)
-
-      const payload = data as { frontend_message?: string; message?: string }
-      toast.error(payload.frontend_message || payload.message || t("room.joinFailed"))
-    })
-
-    return () => {
-      offRoomStatus()
-      offError()
-    }
-  }, [isConnected, on, navigate, t])
 
   const handleRoomCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 5)
@@ -99,7 +66,7 @@ function RoomsPage() {
   }, [])
 
   const handleJoin = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault()
       if (roomCode.length !== 5) {
         toast.error(t("room.invalidCode"))
@@ -110,27 +77,30 @@ function RoomsPage() {
         toast.error(t("room.invalidPassword"))
         return
       }
-      if (!user || !isConnected) return
+      if (!user) return
 
       setIsJoining(true)
-      joiningRef.current = true
-
-      emit("join_room", {
-        user_id: user.id,
-        public_room_id: roomCode,
-        password: pin,
-      })
-
-      // Timeout fallback in case no response comes back
-      setTimeout(() => {
-        if (joiningRef.current) {
-          joiningRef.current = false
-          setIsJoining(false)
-          toast.error(t("room.joinFailed"))
+      try {
+        const res = await apiClient({
+          method: "PATCH",
+          url: "/api/v1/rooms/join",
+          data: {
+            user_id: user.id,
+            public_room_id: roomCode,
+            password: pin,
+          },
+        })
+        const data = res.data as { id?: string }
+        if (data.id) {
+          navigate({ to: "/rooms/$roomId", params: { roomId: data.id } })
         }
-      }, 10000)
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, t("room.joinFailed")))
+      } finally {
+        setIsJoining(false)
+      }
     },
-    [roomCode, password, user, isConnected, emit, t],
+    [roomCode, password, user, navigate, t],
   )
 
   const isFormValid = roomCode.length === 5 && password.every((d) => d !== "")
@@ -226,18 +196,13 @@ function RoomsPage() {
               {/* Join Button */}
               <button
                 type="submit"
-                disabled={!isFormValid || isJoining || !isConnected}
+                disabled={!isFormValid || isJoining}
                 className="w-full flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {isJoining ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     {t("room.joining")}
-                  </>
-                ) : !isConnected ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t("toast.connectionLost")}
                   </>
                 ) : (
                   t("room.join")

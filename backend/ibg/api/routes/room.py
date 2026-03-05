@@ -21,7 +21,7 @@ router = APIRouter(
 @router.post("", response_model=RoomView, status_code=HTTP_201_CREATED)
 async def create_room(
     *,
-    body: RoomCreateRequest,
+    body: RoomCreateRequest,  # noqa: ARG001
     current_user: Annotated[User, Depends(get_current_user)],
     room_controller: RoomController = Depends(get_room_controller),
 ) -> RoomView:
@@ -49,6 +49,16 @@ async def get_room(
     room_controller: RoomController = Depends(get_room_controller),
 ) -> RoomView:
     return RoomView.model_validate(await room_controller.get_room_by_id(room_id))
+
+
+@router.get("/{room_id}/state")
+async def get_room_state(
+    room_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    room_controller: RoomController = Depends(get_room_controller),
+) -> dict:
+    """Get room state with player connection status. Updates heartbeat."""
+    return await room_controller.get_room_state(room_id, current_user.id)
 
 
 @router.patch("/join", response_model=RoomView)

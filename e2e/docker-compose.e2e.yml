@@ -1,5 +1,5 @@
 # IBG - E2E Testing Docker Compose
-# Non-standard ports to avoid conflicts with local dev (54331, 63791, 5051, 3051)
+# Non-standard ports to avoid conflicts with local dev (54339, 5049, 3049)
 # Usage: docker compose -f docker-compose.e2e.yml up -d --build
 
 services:
@@ -22,23 +22,6 @@ services:
     networks:
       - ibg-e2e-network
 
-  # ─── Redis Stack ──────────────────────────────────────────
-
-  redis:
-    image: redis/redis-stack:latest
-    container_name: ibg-e2e-redis
-    environment:
-      - REDIS_ARGS=--stop-writes-on-bgsave-error no
-    ports:
-      - "63799:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ibg-e2e-network
-
   # ─── Backend API ──────────────────────────────────────────
 
   backend:
@@ -53,21 +36,16 @@ services:
       - "5049:5000"
     environment:
       DATABASE_URL: postgresql+asyncpg://ibg:ibg@db:5432/ibg
-      REDIS_OM_URL: redis://redis:6379
       ENVIRONMENT: development
       IBG_ENV: development
       JWT_SECRET_KEY: e2e-secret-key
       CORS_ORIGINS: "*"
       LOG_LEVEL: WARNING
       DISCONNECT_GRACE_PERIOD_SECONDS: "30"
-      GAME_FINISHED_TTL: "5"
+      HEARTBEAT_STALE_SECONDS: "10"
       RATE_LIMIT_ENABLED: "false"
-      SIO_PING_INTERVAL: "25"
-      SIO_PING_TIMEOUT: "20"
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]

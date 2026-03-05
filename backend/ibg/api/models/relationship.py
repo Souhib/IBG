@@ -12,6 +12,8 @@ class RoomUserLink(DBModel, table=True):
     user_id: UUID | None = Field(default=None, foreign_key="user.id", index=True)
     joined_at: datetime = Field(default_factory=datetime.now)
     connected: bool = True
+    last_seen_at: datetime | None = None
+    disconnected_at: datetime | None = None
 
 
 class RoomGameLink(DBModel, table=True):

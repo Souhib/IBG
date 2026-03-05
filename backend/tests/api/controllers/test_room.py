@@ -1,4 +1,3 @@
-from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -38,8 +37,7 @@ async def test_create_room_success(room_controller: RoomController, create_user)
     assert room.users[0].id == owner.id
 
 
-@patch.object(RoomController, "_is_room_link_stale", new_callable=AsyncMock, return_value=False)
-async def test_create_room_owner_already_in_room(mock_stale, create_user, create_room):
+async def test_create_room_owner_already_in_room(create_user, create_room):
     """Creating a second room with the same owner raises UserAlreadyInRoomError."""
 
     # Arrange
@@ -49,43 +47,6 @@ async def test_create_room_owner_already_in_room(mock_stale, create_user, create
     # Act / Assert
     with pytest.raises(UserAlreadyInRoomError):
         await create_room(owner=owner)
-
-
-async def test_create_room_cleans_stale_link(create_user, room_controller: RoomController):
-    """Creating a room succeeds when the user has a stale connected link from a previous disconnected session."""
-
-    # Arrange — create user and first room
-    owner = await create_user(username="owner", email="owner@test.com")
-    room1 = await room_controller.create_room(RoomCreate(status=RoomStatus.ONLINE, password="1234", owner_id=owner.id))
-    room1_id = room1.id
-    owner_id = owner.id
-
-    # Verify the connected link exists
-    link = (await room_controller.session.exec(
-        select(RoomUserLink)
-        .where(RoomUserLink.user_id == owner_id)
-        .where(RoomUserLink.connected == True)  # noqa: E712
-    )).first()
-    assert link is not None
-
-    # Act — simulate stale state (user no longer in Redis) and create a second room
-    with patch.object(RoomController, "_is_room_link_stale", new_callable=AsyncMock, return_value=True):
-        room2 = await room_controller.create_room(RoomCreate(status=RoomStatus.ONLINE, password="5678", owner_id=owner_id))
-
-    # Assert — new room created successfully
-    assert room2.id is not None
-    assert room2.id != room1_id
-    assert room2.owner_id == owner_id
-
-    # Assert — old link was cleaned up (connected=False)
-    room_controller.session.expire_all()
-    old_link = (await room_controller.session.exec(
-        select(RoomUserLink)
-        .where(RoomUserLink.user_id == owner_id)
-        .where(RoomUserLink.room_id == room1_id)
-    )).first()
-    assert old_link is not None
-    assert old_link.connected is False
 
 
 async def test_get_rooms_empty(room_controller: RoomController):
@@ -196,8 +157,8 @@ async def test_join_room_user_not_found(sample_owner: User, sample_room: Room, r
         await room_controller.join_room(RoomJoin(user_id=fake_user_id, room_id=sample_room.id, password="1234"))
 
 
-async def test_join_room_already_in_room(create_user, create_room, room_controller: RoomController):
-    """Joining a room a second time raises UserAlreadyInRoomError."""
+async def test_join_room_already_in_room_rejoins(create_user, create_room, room_controller: RoomController):
+    """Joining a room a second time succeeds (re-join updates heartbeat)."""
 
     # Arrange
     owner = await create_user(username="owner", email="owner@test.com")
@@ -205,9 +166,13 @@ async def test_join_room_already_in_room(create_user, create_room, room_controll
     room = await create_room(owner=owner, password="5678")
     await room_controller.join_room(RoomJoin(user_id=joiner.id, room_id=room.id, password="5678"))
 
-    # Act / Assert
-    with pytest.raises(UserAlreadyInRoomError):
-        await room_controller.join_room(RoomJoin(user_id=joiner.id, room_id=room.id, password="5678"))
+    # Act — join again (should succeed as a re-join)
+    updated = await room_controller.join_room(RoomJoin(user_id=joiner.id, room_id=room.id, password="5678"))
+
+    # Assert — still only 2 links (no duplicate)
+    links = (await room_controller.session.exec(select(RoomUserLink).where(RoomUserLink.room_id == room.id))).all()
+    assert len(links) == 2
+    assert updated.id == room.id
 
 
 async def test_leave_room_success(create_user, create_room, room_controller: RoomController):

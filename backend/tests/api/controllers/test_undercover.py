@@ -9,8 +9,8 @@ from ibg.api.schemas.error import (
     TermPairAlreadyExistsError,
     TermPairNotFoundError,
     WordAlreadyExistsError,
-    WordNotFoundErrorId,
-    WordNotFoundErrorName,
+    WordNotFoundByIdError,
+    WordNotFoundByNameError,
 )
 
 # --- Word CRUD ---
@@ -97,12 +97,12 @@ async def test_get_word_by_id_success(undercover_controller: UndercoverControlle
 
 
 async def test_get_word_by_id_not_found(undercover_controller: UndercoverController):
-    """Retrieving a word with a nonexistent UUID raises WordNotFoundErrorId."""
+    """Retrieving a word with a nonexistent UUID raises WordNotFoundByIdError."""
     # Arrange
     random_id = uuid4()
 
     # Act & Assert
-    with pytest.raises(WordNotFoundErrorId):
+    with pytest.raises(WordNotFoundByIdError):
         await undercover_controller.get_word_by_id(random_id)
 
 
@@ -119,17 +119,17 @@ async def test_get_word_by_word_success(undercover_controller: UndercoverControl
 
 
 async def test_get_word_by_word_not_found(undercover_controller: UndercoverController):
-    """Retrieving a word with a nonexistent string raises WordNotFoundErrorName."""
+    """Retrieving a word with a nonexistent string raises WordNotFoundByNameError."""
     # Arrange
     # (no words created)
 
     # Act & Assert
-    with pytest.raises(WordNotFoundErrorName):
+    with pytest.raises(WordNotFoundByNameError):
         await undercover_controller.get_word_by_word("nonexistent_word")
 
 
 async def test_delete_word_success(undercover_controller: UndercoverController, create_word):
-    """Deleting an existing word removes it so that get_word_by_id raises WordNotFoundErrorId."""
+    """Deleting an existing word removes it so that get_word_by_id raises WordNotFoundByIdError."""
     # Arrange
     word = await create_word(word="to_delete")
 
@@ -137,7 +137,7 @@ async def test_delete_word_success(undercover_controller: UndercoverController, 
     await undercover_controller.delete_word(word.id)
 
     # Assert
-    with pytest.raises(WordNotFoundErrorId):
+    with pytest.raises(WordNotFoundByIdError):
         await undercover_controller.get_word_by_id(word.id)
 
 
@@ -179,7 +179,7 @@ async def test_update_word_success(undercover_controller: UndercoverController, 
 
 
 async def test_update_word_not_found(undercover_controller: UndercoverController):
-    """Updating a word with a nonexistent UUID raises WordNotFoundErrorId."""
+    """Updating a word with a nonexistent UUID raises WordNotFoundByIdError."""
     # Arrange
     random_id = uuid4()
     word_update = WordUpdate(
@@ -190,7 +190,7 @@ async def test_update_word_not_found(undercover_controller: UndercoverController
     )
 
     # Act & Assert
-    with pytest.raises(WordNotFoundErrorId):
+    with pytest.raises(WordNotFoundByIdError):
         await undercover_controller.update_word(random_id, word_update)
 
 

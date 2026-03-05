@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, ForeignKey
 from sqlmodel import Field, Relationship
 
 from ibg.api.models.codenames import CodenamesWord, CodenamesWordPack  # noqa: F401
@@ -27,6 +27,10 @@ class Room(RoomBase, table=True):
     owner_id: UUID | None = Field(default=None, foreign_key="user.id", nullable=False)
     created_at: datetime = Field(default_factory=datetime.now)
     type: RoomType = RoomType.ACTIVE
+    active_game_id: UUID | None = Field(
+        default=None,
+        sa_column=Column(ForeignKey("game.id", use_alter=True, name="fk_room_active_game_id"), nullable=True),
+    )
     users: list["User"] = Relationship(
         back_populates="rooms",
         link_model=RoomUserLink,

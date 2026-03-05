@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 
 from ibg.api.controllers.undercover import UndercoverController
 from ibg.api.models.undercover import TermPair, Word
-from ibg.api.schemas.error import TermPairNotFoundError, WordNotFoundErrorId, WordNotFoundErrorName
+from ibg.api.schemas.error import TermPairNotFoundError, WordNotFoundByIdError, WordNotFoundByNameError
 from ibg.dependencies import get_undercover_controller
 
 
@@ -167,7 +167,7 @@ class TestWords:
         # Arrange
         word_id = uuid.uuid4()
         mock_controller = Mock(spec=UndercoverController)
-        mock_controller.get_word_by_id = AsyncMock(side_effect=WordNotFoundErrorId(word_id=word_id))
+        mock_controller.get_word_by_id = AsyncMock(side_effect=WordNotFoundByIdError(word_id=word_id))
         test_app.dependency_overrides[get_undercover_controller] = lambda: mock_controller
 
         # Act
@@ -176,8 +176,8 @@ class TestWords:
         # Assert
         assert response.status_code == 404
         data = response.json()
-        assert data["error"] == "WordNotFoundErrorId"
-        assert data["error_key"] == "errors.api.wordNotFoundErrorId"
+        assert data["error"] == "WordNotFoundByIdError"
+        assert data["error_key"] == "errors.api.wordNotFoundById"
 
         test_app.dependency_overrides.clear()
 
@@ -215,7 +215,7 @@ class TestWords:
         """Searching for a non-existent word by name returns 404."""
         # Arrange
         mock_controller = Mock(spec=UndercoverController)
-        mock_controller.get_word_by_word = AsyncMock(side_effect=WordNotFoundErrorName(word="nonexistent"))
+        mock_controller.get_word_by_word = AsyncMock(side_effect=WordNotFoundByNameError(word="nonexistent"))
         test_app.dependency_overrides[get_undercover_controller] = lambda: mock_controller
 
         # Act
@@ -224,8 +224,8 @@ class TestWords:
         # Assert
         assert response.status_code == 404
         data = response.json()
-        assert data["error"] == "WordNotFoundErrorName"
-        assert data["error_key"] == "errors.api.wordNotFoundErrorName"
+        assert data["error"] == "WordNotFoundByNameError"
+        assert data["error_key"] == "errors.api.wordNotFoundByName"
 
         test_app.dependency_overrides.clear()
 
@@ -251,7 +251,7 @@ class TestWords:
         # Arrange
         word_id = uuid.uuid4()
         mock_controller = Mock(spec=UndercoverController)
-        mock_controller.delete_word = AsyncMock(side_effect=WordNotFoundErrorId(word_id=word_id))
+        mock_controller.delete_word = AsyncMock(side_effect=WordNotFoundByIdError(word_id=word_id))
         test_app.dependency_overrides[get_undercover_controller] = lambda: mock_controller
 
         # Act
@@ -260,8 +260,8 @@ class TestWords:
         # Assert
         assert response.status_code == 404
         data = response.json()
-        assert data["error"] == "WordNotFoundErrorId"
-        assert data["error_key"] == "errors.api.wordNotFoundErrorId"
+        assert data["error"] == "WordNotFoundByIdError"
+        assert data["error_key"] == "errors.api.wordNotFoundById"
 
         test_app.dependency_overrides.clear()
 
