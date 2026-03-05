@@ -76,6 +76,15 @@ async def submit_vote(
     return await controller.submit_vote(game_id, current_user.id, body.voted_for)
 
 
+@router.post("/games/{game_id}/timer-expired")
+async def timer_expired(
+    game_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+) -> dict:
+    return await controller.handle_timer_expired(game_id, current_user.id)
+
+
 @router.post("/games/{game_id}/next-round")
 async def start_next_round(
     game_id: UUID,

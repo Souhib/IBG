@@ -6,10 +6,13 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.shared import get_password_hash
+from ipg.api.controllers.shared import get_password_hash, verify_password
 from ipg.api.models.error import UserAlreadyExistsError, UserNotFoundError
-from ipg.api.models.table import User
+from ipg.api.models.relationship import RoomUserLink
+from ipg.api.models.room import RoomType
+from ipg.api.models.table import Room, User
 from ipg.api.models.user import UserCreate, UserUpdate
+from ipg.api.schemas.error import InvalidCredentialsError
 
 
 class UserController:
@@ -84,6 +87,35 @@ class UserController:
             await self.session.commit()
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id) from None
+
+    async def delete_user_account(self, user_id: UUID, password: str) -> None:
+        """Delete a user account after password confirmation. Leaves rooms and deactivates owned rooms."""
+        try:
+            db_user = (await self.session.exec(select(User).where(User.id == user_id))).one()
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id) from None
+
+        if not verify_password(password, db_user.password):
+            raise InvalidCredentialsError()
+
+        # Mark connected room links as disconnected
+        links = (
+            await self.session.exec(
+                select(RoomUserLink).where(RoomUserLink.user_id == user_id).where(RoomUserLink.connected == True)  # noqa: E712
+            )
+        ).all()
+        for link in links:
+            link.connected = False
+            self.session.add(link)
+
+        # Deactivate rooms owned by this user
+        owned_rooms = (await self.session.exec(select(Room).where(Room.owner_id == user_id))).all()
+        for room in owned_rooms:
+            room.type = RoomType.INACTIVE
+            self.session.add(room)
+
+        await self.session.delete(db_user)
+        await self.session.commit()
 
     async def update_user_password(self, user_id: UUID, password: str) -> User:
         """

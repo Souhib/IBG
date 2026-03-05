@@ -1,12 +1,18 @@
 import random
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import CODENAMES_BOARD_SIZE
+from ipg.api.constants import (
+    CODENAMES_BOARD_SIZE,
+    DEFAULT_CODENAMES_CLUE_TIMER_SECONDS,
+    DEFAULT_CODENAMES_GUESS_TIMER_SECONDS,
+)
+from ipg.api.controllers.achievement import AchievementController
 from ipg.api.controllers.codenames import CodenamesController
 from ipg.api.controllers.codenames_helpers import (
     CodenamesCardType,
@@ -21,6 +27,7 @@ from ipg.api.controllers.codenames_helpers import (
 from ipg.api.controllers.game import GameController
 from ipg.api.controllers.game_lock import cleanup_game_lock, get_game_lock
 from ipg.api.controllers.room import RoomController
+from ipg.api.controllers.stats import StatsController
 from ipg.api.models.error import (
     CardAlreadyRevealedError,
     ClueWordIsOnBoardError,
@@ -51,6 +58,8 @@ class CodenamesGameController:
         self._room_controller = RoomController(session)
         self._game_controller = GameController(session)
         self._codenames_controller = CodenamesController(session)
+        self._stats_controller = StatsController(session)
+        self._achievement_controller = AchievementController(session)
 
     async def create_and_start(
         self,
@@ -68,10 +77,14 @@ class CodenamesGameController:
                 status_code=400,
             )
 
-        # Get connected players from RoomUserLink
+        # Get connected non-spectator players from RoomUserLink
         links = (
             await self.session.exec(
-                select(RoomUserLink).where(RoomUserLink.room_id == db_room.id).where(RoomUserLink.connected == True)  # noqa: E712
+                select(RoomUserLink).where(
+                    RoomUserLink.room_id == db_room.id,
+                    RoomUserLink.connected == True,  # noqa: E712
+                    RoomUserLink.is_spectator == False,  # noqa: E712
+                )
             )
         ).all()
 
@@ -129,6 +142,16 @@ class CodenamesGameController:
             "blue_remaining": blue_remaining,
             "status": CodenamesGameStatus.IN_PROGRESS.value,
             "winner": None,
+            "clue_history": [],
+            "timer_config": {
+                "clue_seconds": (getattr(db_room, "settings", None) or {}).get(
+                    "codenames_clue_timer", DEFAULT_CODENAMES_CLUE_TIMER_SECONDS
+                ),
+                "guess_seconds": (getattr(db_room, "settings", None) or {}).get(
+                    "codenames_guess_timer", DEFAULT_CODENAMES_GUESS_TIMER_SECONDS
+                ),
+            },
+            "timer_started_at": datetime.now().isoformat(),
         }
 
         db_game.live_state = live_state
@@ -173,6 +196,20 @@ class CodenamesGameController:
                 "max_guesses": clue_number + 1,
             }
 
+            state["timer_started_at"] = datetime.now().isoformat()
+
+            # Append to clue history
+            if "clue_history" not in state:
+                state["clue_history"] = []
+            state["clue_history"].append(
+                {
+                    "team": state["current_team"],
+                    "clue_word": clue_word,
+                    "clue_number": clue_number,
+                    "guesses": [],
+                }
+            )
+
             game.live_state = state
             flag_modified(game, "live_state")
             self.session.add(game)
@@ -198,6 +235,17 @@ class CodenamesGameController:
 
             result = self._resolve_card(state, card)
 
+            # Append guess to clue history
+            clue_history = state.get("clue_history", [])
+            if clue_history:
+                clue_history[-1]["guesses"].append(
+                    {
+                        "word": card["word"],
+                        "card_type": card["card_type"],
+                        "correct": card["card_type"] == state["current_team"],
+                    }
+                )
+
             if (
                 result in ("opponent_card", "neutral", "max_guesses")
                 and state["status"] == CodenamesGameStatus.IN_PROGRESS.value
@@ -213,6 +261,11 @@ class CodenamesGameController:
                     room.active_game_id = None
                     self.session.add(room)
                 cleanup_game_lock(str(game_id))
+                # Process stats and achievements
+                winner_team = state.get("winner", "")
+                newly_unlocked = await self._process_game_end_stats(state, winner_team)
+                if newly_unlocked:
+                    state["newly_unlocked_achievements"] = newly_unlocked
 
             game.live_state = state
             flag_modified(game, "live_state")
@@ -260,7 +313,15 @@ class CodenamesGameController:
         state = game.live_state
 
         player = get_player_from_game(state["players"], str(user_id))
-        board_view = get_board_for_player(state["board"], player)
+
+        # End-game board reveal: show all card types when game is finished
+        if state["status"] == CodenamesGameStatus.FINISHED.value:
+            board_view = [
+                {"index": i, "word": card["word"], "revealed": True, "card_type": card["card_type"]}
+                for i, card in enumerate(state["board"])
+            ]
+        else:
+            board_view = get_board_for_player(state["board"], player)
 
         # Update heartbeat
         link = (
@@ -288,6 +349,9 @@ class CodenamesGameController:
             "status": state["status"],
             "current_turn": state["current_turn"],
             "winner": state["winner"],
+            "clue_history": state.get("clue_history", []),
+            "timer_config": state.get("timer_config"),
+            "timer_started_at": state.get("timer_started_at"),
             "players": [
                 {
                     "user_id": p["user_id"],
@@ -298,6 +362,43 @@ class CodenamesGameController:
                 for p in state["players"]
             ],
         }
+
+    async def handle_timer_expired(self, game_id: UUID, user_id: UUID) -> dict:
+        """Handle timer expiration — auto end-turn. Validates timer actually expired."""
+        async with get_game_lock(str(game_id)):
+            game = await self._get_game(game_id)
+            state = game.live_state
+
+            if state["status"] != CodenamesGameStatus.IN_PROGRESS.value:
+                raise GameNotInProgressError(game_id=str(game_id))
+
+            # Server-side validation: check the timer has actually expired
+            timer_config = state.get("timer_config", {})
+            timer_started_at = state.get("timer_started_at")
+            if timer_started_at:
+                started = datetime.fromisoformat(timer_started_at)
+                if started.tzinfo is None:
+                    started = started.replace(tzinfo=UTC)
+                now = datetime.now(UTC)
+                elapsed = (now - started).total_seconds()
+                # Use the appropriate timer based on whether a clue has been given
+                current_turn = state.get("current_turn", {})
+                if current_turn and current_turn.get("clue_word"):
+                    allowed = timer_config.get("guess_seconds", DEFAULT_CODENAMES_GUESS_TIMER_SECONDS)
+                else:
+                    allowed = timer_config.get("clue_seconds", DEFAULT_CODENAMES_CLUE_TIMER_SECONDS)
+                # Allow 2s tolerance for network latency
+                if elapsed < allowed - 2:
+                    return {"game_id": str(game_id), "action": "timer_not_expired"}
+
+            self._switch_turn(state)
+
+            game.live_state = state
+            flag_modified(game, "live_state")
+            self.session.add(game)
+            await self.session.commit()
+
+        return {"game_id": str(game_id), "action": "auto_end_turn"}
 
     async def _get_game(self, game_id: UUID) -> Game:
         """Fetch a Game from PostgreSQL or raise GameNotFoundError."""
@@ -362,6 +463,34 @@ class CodenamesGameController:
 
         return "neutral"
 
+    async def _process_game_end_stats(self, state: dict, winner: str) -> list[dict]:
+        """Update stats and check achievements for all players after game ends.
+
+        Returns a list of {user_id, achievements: [{code, name, icon, tier}]} for newly unlocked.
+        """
+        newly_unlocked_all: list[dict] = []
+        for player in state.get("players", []):
+            user_id = UUID(player["user_id"])
+            role = player.get("role", "operative")
+            won = player.get("team") == winner
+            try:
+                stats = await self._stats_controller.update_stats_after_game(
+                    user_id=user_id, game_type="codenames", won=won, role=role
+                )
+                unlocked = await self._achievement_controller.check_achievements(user_id, stats)
+                if unlocked:
+                    newly_unlocked_all.append(
+                        {
+                            "user_id": str(user_id),
+                            "achievements": [
+                                {"code": a.code, "name": a.name, "icon": a.icon, "tier": a.tier} for a in unlocked
+                            ],
+                        }
+                    )
+            except Exception:
+                logger.exception("Failed to update stats/achievements for user {user_id}", user_id=user_id)
+        return newly_unlocked_all
+
     def _decrement_remaining(self, state: dict, team: str) -> int:
         """Decrement the remaining card count for a team and return the new count."""
         if team == CodenamesTeam.RED.value:
@@ -383,3 +512,4 @@ class CodenamesGameController:
             "guesses_made": 0,
             "max_guesses": 0,
         }
+        state["timer_started_at"] = datetime.now().isoformat()

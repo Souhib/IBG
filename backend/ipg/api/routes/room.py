@@ -9,6 +9,7 @@ from ipg.api.controllers.room import RoomController
 from ipg.api.models.room import RoomCreate, RoomCreateRequest, RoomJoin, RoomLeave, RoomStatus
 from ipg.api.models.table import User
 from ipg.api.models.view import RoomView
+from ipg.api.schemas.shared import BaseModel as PydanticBaseModel
 from ipg.dependencies import get_current_user, get_room_controller
 
 router = APIRouter(
@@ -77,6 +78,50 @@ async def leave_room(
     room_controller: RoomController = Depends(get_room_controller),
 ) -> RoomView:
     return RoomView.model_validate(await room_controller.leave_room(room_leave))
+
+
+class JoinSpectatorRequest(PydanticBaseModel):
+    room_id: UUID
+
+
+@router.patch("/join-spectator", response_model=RoomView)
+async def join_room_as_spectator(
+    *,
+    body: JoinSpectatorRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    room_controller: RoomController = Depends(get_room_controller),
+) -> RoomView:
+    """Join a room as a spectator (watch-only mode)."""
+    return RoomView.model_validate(await room_controller.join_room_as_spectator(body.room_id, current_user.id))
+
+
+class RoomSettingsRequest(PydanticBaseModel):
+    description_timer: int | None = None
+    voting_timer: int | None = None
+    codenames_clue_timer: int | None = None
+    codenames_guess_timer: int | None = None
+    enable_mr_white: bool | None = None
+    custom_word_packs: list[str] | None = None
+
+
+@router.patch("/{room_id}/settings")
+async def update_room_settings(
+    room_id: UUID,
+    body: RoomSettingsRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    room_controller: RoomController = Depends(get_room_controller),
+) -> dict:
+    settings = {k: v for k, v in body.model_dump().items() if v is not None}
+    return await room_controller.update_room_settings(room_id, current_user.id, settings)
+
+
+@router.post("/{room_id}/rematch")
+async def rematch(
+    room_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    room_controller: RoomController = Depends(get_room_controller),
+) -> dict:
+    return await room_controller.rematch(room_id, current_user.id)
 
 
 @router.delete("/{room_id}", status_code=HTTP_204_NO_CONTENT)

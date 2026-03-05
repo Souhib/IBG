@@ -391,6 +391,75 @@ export async function rawPost(
   });
 }
 
+// ─── Friend API ─────────────────────────────────────────────
+
+export async function apiSendFriendRequest(
+  addresseeId: string,
+  token: string,
+): Promise<{ friendship_id: string; status: string }> {
+  return postJSON("/api/v1/friends/request", { addressee_id: addresseeId }, token);
+}
+
+export async function apiAcceptFriendRequest(
+  friendshipId: string,
+  token: string,
+): Promise<{ friendship_id: string; status: string }> {
+  return postJSON(`/api/v1/friends/${friendshipId}/accept`, {}, token);
+}
+
+export async function apiGetFriends(
+  token: string,
+): Promise<{ user_id: string; username: string; status: string }[]> {
+  return getJSON("/api/v1/friends", token);
+}
+
+export async function apiGetPendingRequests(
+  token: string,
+): Promise<{ user_id: string; username: string; status: string; friendship_id: string }[]> {
+  return getJSON("/api/v1/friends/pending", token);
+}
+
+// ─── Challenge API ──────────────────────────────────────────
+
+export async function apiSeedChallenges(
+  token: string,
+): Promise<void> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  };
+  const res = await fetch(`${API_URL}/api/v1/challenges/seed`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`POST /api/v1/challenges/seed failed (${res.status}): ${text}`);
+  }
+}
+
+export async function apiGetActiveChallenges(
+  token: string,
+): Promise<{ id: string; code: string; description: string; challenge_type: string; progress: number; completed: boolean }[]> {
+  return getJSON("/api/v1/challenges/active", token);
+}
+
+// ─── Room Settings API ───────────────────────────────────────
+
+export async function apiUpdateRoomSettings(
+  roomId: string,
+  settings: {
+    description_timer?: number;
+    voting_timer?: number;
+    codenames_clue_timer?: number;
+    codenames_guess_timer?: number;
+  },
+  token: string,
+): Promise<Record<string, unknown>> {
+  return patchJSON(`/api/v1/rooms/${roomId}/settings`, settings, token);
+}
+
 // ─── Health Checks ──────────────────────────────────────────
 
 export async function waitForBackend(

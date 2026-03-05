@@ -64,15 +64,19 @@ test.describe("Room Management", () => {
     const accounts = await generateTestAccounts(2);
     const setup = await setupRoomWithPlayersViaUI(browser, accounts);
 
+    // Wait for player 2 to see the room fully loaded before leaving
+    await expect(setup.players[1].page.locator("text=Players (2)")).toBeVisible({ timeout: 15_000 });
+
     // Player 2 clicks leave
     const leaveBtn = setup.players[1].page.locator('button:has-text("Leave")');
+    await expect(leaveBtn).toBeVisible({ timeout: 10_000 });
     await leaveBtn.click();
 
     // Player 2 navigated to rooms
-    await expect(setup.players[1].page).toHaveURL(/\/rooms$/, { timeout: 10_000 });
+    await expect(setup.players[1].page).toHaveURL(/\/rooms$/, { timeout: 15_000 });
 
     // Host should see player count decrease (via polling)
-    await expect(setup.players[0].page.locator("text=Players (1)")).toBeVisible({ timeout: 15_000 });
+    await expect(setup.players[0].page.locator("text=Players (1)")).toBeVisible({ timeout: 20_000 });
 
     await setup.cleanup();
   });

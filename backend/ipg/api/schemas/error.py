@@ -478,6 +478,17 @@ class NotEnoughPlayersError(BaseError):
         )
 
 
+class InvalidOrExpiredTokenError(BaseError):
+    """Password reset or email verification token is invalid or expired."""
+
+    def __init__(self, message: str = "Invalid or expired token"):
+        super().__init__(
+            message=message,
+            frontend_message="This link is invalid or has expired. Please request a new one.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class ClueWordIsOnBoardError(BaseError):
     """Raised when the clue word matches a word on the board."""
 

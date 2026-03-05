@@ -1,18 +1,25 @@
+import secrets
 from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
+from loguru import logger
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ipg.api.constants import EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS, PASSWORD_RESET_TOKEN_EXPIRE_HOURS
 from ipg.api.controllers.shared import get_password_hash, verify_password
 from ipg.api.models.table import User
+from ipg.api.models.token import EmailVerificationToken, PasswordResetToken
 from ipg.api.models.user import UserCreate
 from ipg.api.schemas.auth import LoginResult, LoginUserData, TokenPairResponse, TokenPayload
 from ipg.api.schemas.error import (
     InvalidCredentialsError,
+    InvalidOrExpiredTokenError,
     InvalidTokenError,
     TokenExpiredError,
+    UserNotFoundError,
 )
+from ipg.api.services.email import EmailService
 from ipg.settings import Settings
 
 
@@ -155,3 +162,82 @@ class AuthController:
         """
         result = await self.session.exec(select(User).where(User.email_address == email))
         return result.first()
+
+    async def request_password_reset(self, email: str, email_service: EmailService) -> bool:
+        """Generate a password reset token and send email."""
+        user = await self.get_user_by_email(email)
+        if not user:
+            # Don't reveal whether user exists — return silently
+            logger.info("Password reset requested for non-existent email: {email}", email=email)
+            return True
+
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(UTC) + timedelta(hours=PASSWORD_RESET_TOKEN_EXPIRE_HOURS)
+        reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
+        self.session.add(reset_token)
+        await self.session.commit()
+
+        reset_url = f"{self.settings.frontend_url}/auth/reset-password?token={token}"
+        await email_service.send_password_reset_email(user.email_address, user.username, reset_url)
+        return True
+
+    async def reset_password(self, token: str, new_password: str) -> bool:
+        """Validate reset token and update password."""
+        result = await self.session.exec(
+            select(PasswordResetToken).where(PasswordResetToken.token == token).where(PasswordResetToken.used == False)  # noqa: E712
+        )
+        reset_token = result.first()
+        if not reset_token or reset_token.expires_at < datetime.now(UTC):
+            raise InvalidOrExpiredTokenError()
+
+        user = (await self.session.exec(select(User).where(User.id == reset_token.user_id))).first()
+        if not user:
+            raise UserNotFoundError(user_id=reset_token.user_id)
+
+        user.password = get_password_hash(new_password)
+        reset_token.used = True
+        self.session.add(user)
+        self.session.add(reset_token)
+        await self.session.commit()
+        return True
+
+    async def send_verification_email(self, user: User, email_service: EmailService) -> bool:
+        """Generate verification token and send email."""
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(UTC) + timedelta(hours=EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS)
+        verify_token = EmailVerificationToken(user_id=user.id, token=token, expires_at=expires_at)
+        self.session.add(verify_token)
+        await self.session.commit()
+
+        verify_url = f"{self.settings.frontend_url}/auth/verify-email?token={token}"
+        await email_service.send_verification_email(user.email_address, user.username, verify_url)
+        return True
+
+    async def verify_email(self, token: str) -> bool:
+        """Validate verification token and mark email as verified."""
+        result = await self.session.exec(
+            select(EmailVerificationToken)
+            .where(EmailVerificationToken.token == token)
+            .where(EmailVerificationToken.used == False)  # noqa: E712
+        )
+        verify_token = result.first()
+        if not verify_token or verify_token.expires_at < datetime.now(UTC):
+            raise InvalidOrExpiredTokenError()
+
+        user = (await self.session.exec(select(User).where(User.id == verify_token.user_id))).first()
+        if not user:
+            raise UserNotFoundError(user_id=verify_token.user_id)
+
+        user.email_verified = True
+        verify_token.used = True
+        self.session.add(user)
+        self.session.add(verify_token)
+        await self.session.commit()
+        return True
+
+    async def resend_verification(self, email: str, email_service: EmailService) -> bool:
+        """Resend verification email."""
+        user = await self.get_user_by_email(email)
+        if not user or user.email_verified:
+            return True  # Don't reveal info
+        return await self.send_verification_email(user, email_service)

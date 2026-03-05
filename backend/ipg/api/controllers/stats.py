@@ -1,15 +1,18 @@
+from collections import defaultdict
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ipg.api.models.game import GameStatus, GameType
+from ipg.api.models.relationship import UserGameLink
 from ipg.api.models.stats import UserStats
-from ipg.api.models.table import User
+from ipg.api.models.table import Game, User
 from ipg.api.schemas.error import UserNotFoundError
-from ipg.api.schemas.stats import LeaderboardEntry
+from ipg.api.schemas.stats import DailyGameRecord, GameDurationStats, HeadToHeadStats, LeaderboardEntry
 from ipg.api.utils.cache import cache
 
 LEADERBOARD_TTL_SECONDS = 30
@@ -186,3 +189,171 @@ class StatsController:
 
         cache.set(cache_key, entries, LEADERBOARD_TTL_SECONDS)
         return entries
+
+    async def get_game_history_for_charts(self, user_id: UUID, days: int = 30) -> list[DailyGameRecord]:
+        """Get daily win/loss counts for a user over the last N days."""
+        cutoff = datetime.now() - timedelta(days=days)
+        results = await self.session.exec(
+            select(Game)
+            .join(UserGameLink, Game.id == UserGameLink.game_id)
+            .where(UserGameLink.user_id == user_id)
+            .where(Game.game_status == GameStatus.FINISHED)
+            .where(Game.end_time >= cutoff)
+        )
+        games = results.all()
+
+        daily: dict[str, dict[str, int]] = defaultdict(lambda: {"wins": 0, "losses": 0})
+        for game in games:
+            if not game.end_time:
+                continue
+            day_str = game.end_time.date().isoformat()
+            state = game.live_state or {}
+            winner = state.get("winner")
+            # Determine if this user won
+            won = self._did_user_win(game, user_id, winner)
+            if won:
+                daily[day_str]["wins"] += 1
+            else:
+                daily[day_str]["losses"] += 1
+
+        records = []
+        for day_str in sorted(daily):
+            d = daily[day_str]
+            records.append(
+                DailyGameRecord(
+                    date=day_str,
+                    wins=d["wins"],
+                    losses=d["losses"],
+                    total=d["wins"] + d["losses"],
+                )
+            )
+        return records
+
+    async def get_game_duration_stats(self, user_id: UUID) -> GameDurationStats:
+        """Compute game duration analytics for a user."""
+        results = await self.session.exec(
+            select(Game)
+            .join(UserGameLink, Game.id == UserGameLink.game_id)
+            .where(UserGameLink.user_id == user_id)
+            .where(Game.game_status == GameStatus.FINISHED)
+            .where(Game.end_time.is_not(None))  # type: ignore[union-attr]
+        )
+        games = results.all()
+
+        durations: list[float] = []
+        undercover_durations: list[float] = []
+        codenames_durations: list[float] = []
+
+        for game in games:
+            if not game.end_time or not game.start_time:
+                continue
+            seconds = (game.end_time - game.start_time).total_seconds()
+            if seconds <= 0:
+                continue
+            durations.append(seconds)
+            if game.type == GameType.UNDERCOVER:
+                undercover_durations.append(seconds)
+            elif game.type == GameType.CODENAMES:
+                codenames_durations.append(seconds)
+
+        if not durations:
+            return GameDurationStats(
+                average_seconds=0,
+                fastest_seconds=None,
+                longest_seconds=None,
+                undercover_avg_seconds=None,
+                codenames_avg_seconds=None,
+                total_games_with_duration=0,
+            )
+
+        return GameDurationStats(
+            average_seconds=round(sum(durations) / len(durations), 1),
+            fastest_seconds=round(min(durations), 1),
+            longest_seconds=round(max(durations), 1),
+            undercover_avg_seconds=(
+                round(sum(undercover_durations) / len(undercover_durations), 1) if undercover_durations else None
+            ),
+            codenames_avg_seconds=(
+                round(sum(codenames_durations) / len(codenames_durations), 1) if codenames_durations else None
+            ),
+            total_games_with_duration=len(durations),
+        )
+
+    async def get_head_to_head(self, user_id: UUID, opponent_id: UUID) -> HeadToHeadStats:
+        """Get head-to-head stats between two players."""
+        # Find games both players participated in
+        opponent_games_query = select(UserGameLink.game_id).where(UserGameLink.user_id == opponent_id)
+
+        shared_game_ids = (
+            await self.session.exec(
+                select(UserGameLink.game_id)
+                .where(UserGameLink.user_id == user_id)
+                .where(UserGameLink.game_id.in_(opponent_games_query))  # type: ignore[union-attr]
+            )
+        ).all()
+
+        if not shared_game_ids:
+            return HeadToHeadStats(
+                user_id=user_id,
+                opponent_id=opponent_id,
+                user_wins=0,
+                opponent_wins=0,
+                draws=0,
+                total_games=0,
+            )
+
+        games = (
+            await self.session.exec(
+                select(Game).where(
+                    Game.id.in_(shared_game_ids),  # type: ignore[union-attr]
+                    Game.game_status == GameStatus.ENDED,
+                )
+            )
+        ).all()
+
+        user_wins = 0
+        opponent_wins = 0
+        draws = 0
+
+        for game in games:
+            state = game.live_state or {}
+            winner = state.get("winner")
+            u_won = self._did_user_win(game, user_id, winner)
+            o_won = self._did_user_win(game, opponent_id, winner)
+            if u_won and not o_won:
+                user_wins += 1
+            elif o_won and not u_won:
+                opponent_wins += 1
+            else:
+                draws += 1
+
+        return HeadToHeadStats(
+            user_id=user_id,
+            opponent_id=opponent_id,
+            user_wins=user_wins,
+            opponent_wins=opponent_wins,
+            draws=draws,
+            total_games=len(games),
+        )
+
+    @staticmethod
+    def _did_user_win(game: Game, user_id: UUID, winner: str | None) -> bool:
+        """Determine if the user won the given game."""
+        if not winner:
+            return False
+        state = game.live_state or {}
+        players = state.get("players", [])
+        str_uid = str(user_id)
+
+        if game.type == GameType.UNDERCOVER:
+            for p in players:
+                if p.get("user_id") == str_uid:
+                    role = p.get("role", "")
+                    if winner == "civilians" and role == "civilian":
+                        return True
+                    return winner == "undercovers" and role in ("undercover", "mr_white")
+        elif game.type == GameType.CODENAMES:
+            for p in players:
+                if p.get("user_id") == str_uid:
+                    return p.get("team") == winner
+        return False

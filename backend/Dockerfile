@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy pyproject.toml and create minimal package structure for dependency resolution
 COPY pyproject.toml ./
-RUN mkdir -p ibg && touch ibg/__init__.py
+RUN mkdir -p ipg && touch ipg/__init__.py
 
 # Install dependencies using uv (from pyproject.toml)
 # INSTALL_DEV=true installs dev extras (faker, etc.) needed for E2E data seeding

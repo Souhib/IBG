@@ -97,7 +97,6 @@ function serializeParams(params: object): URLSearchParams {
 
 const kyInstance = ky.create({
   prefixUrl: API_BASE_URL,
-  credentials: "include",
   headers: {
     "Content-Type": "application/json",
   },

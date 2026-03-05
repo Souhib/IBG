@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { motion } from "motion/react"
 import { Trophy } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -127,7 +127,15 @@ function LeaderboardPage() {
                   <td className="px-6 py-3 text-sm font-medium">
                     {index < 3 ? ["🥇", "🥈", "🥉"][index] : `#${index + 1}`}
                   </td>
-                  <td className="px-6 py-3 text-sm font-medium">{entry.username}</td>
+                  <td className="px-6 py-3 text-sm font-medium">
+                    <Link
+                      to="/players/$userId"
+                      params={{ userId: entry.user_id }}
+                      className="hover:text-primary hover:underline transition-colors"
+                    >
+                      {entry.username}
+                    </Link>
+                  </td>
                   <td className="px-6 py-3 text-sm text-right">{entry.total_games_won}</td>
                   <td className="px-6 py-3 text-sm text-right">{entry.total_games_played}</td>
                   <td className="px-6 py-3 text-sm text-right">{entry.win_rate}%</td>

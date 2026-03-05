@@ -9,9 +9,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ipg.api.controllers.achievement import AchievementController
 from ipg.api.controllers.auth import AuthController
+from ipg.api.controllers.challenge import ChallengeController
+from ipg.api.controllers.chat import ChatController
 from ipg.api.controllers.codenames import CodenamesController
 from ipg.api.controllers.codenames_game import CodenamesGameController
+from ipg.api.controllers.friend import FriendController
 from ipg.api.controllers.game import GameController
+from ipg.api.controllers.profile import ProfileController
 from ipg.api.controllers.room import RoomController
 from ipg.api.controllers.stats import StatsController
 from ipg.api.controllers.undercover import UndercoverController
@@ -19,6 +23,7 @@ from ipg.api.controllers.undercover_game import UndercoverGameController
 from ipg.api.controllers.user import UserController
 from ipg.api.models.table import User
 from ipg.api.schemas.error import InvalidTokenError
+from ipg.api.services.email import EmailService
 from ipg.database import get_engine as _get_engine
 from ipg.settings import Settings
 
@@ -147,3 +152,38 @@ async def get_codenames_game_controller(
 ) -> CodenamesGameController:
     """Get CodenamesGameController with injected session."""
     return CodenamesGameController(session)
+
+
+async def get_profile_controller(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ProfileController:
+    """Get ProfileController with injected session."""
+    return ProfileController(session)
+
+
+async def get_friend_controller(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> FriendController:
+    """Get FriendController with injected session."""
+    return FriendController(session)
+
+
+async def get_chat_controller(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ChatController:
+    """Get ChatController with injected session."""
+    return ChatController(session)
+
+
+async def get_challenge_controller(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ChallengeController:
+    """Get ChallengeController with injected session."""
+    return ChallengeController(session)
+
+
+def get_email_service(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> EmailService:
+    """Get EmailService with injected settings."""
+    return EmailService(settings)

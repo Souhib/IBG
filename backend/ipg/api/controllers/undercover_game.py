@@ -1,14 +1,18 @@
 import random
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ipg.api.constants import DEFAULT_DESCRIPTION_TIMER_SECONDS, DEFAULT_VOTING_TIMER_SECONDS
+from ipg.api.controllers.achievement import AchievementController
 from ipg.api.controllers.game import GameController
 from ipg.api.controllers.game_lock import cleanup_game_lock, get_game_lock
 from ipg.api.controllers.room import RoomController
+from ipg.api.controllers.stats import StatsController
 from ipg.api.controllers.undercover import UndercoverController
 from ipg.api.models.error import (
     CantVoteBecauseYouDeadError,
@@ -38,6 +42,8 @@ class UndercoverGameController:
         self._room_controller = RoomController(session)
         self._game_controller = GameController(session)
         self._undercover_controller = UndercoverController(session)
+        self._stats_controller = StatsController(session)
+        self._achievement_controller = AchievementController(session)
 
     async def _get_civilian_and_undercover_words(self) -> tuple:
         """Get the civilian and undercover words for the game."""
@@ -81,10 +87,14 @@ class UndercoverGameController:
                 status_code=400,
             )
 
-        # Get connected players from RoomUserLink
+        # Get connected non-spectator players from RoomUserLink
         links = (
             await self.session.exec(
-                select(RoomUserLink).where(RoomUserLink.room_id == db_room.id).where(RoomUserLink.connected == True)  # noqa: E712
+                select(RoomUserLink).where(
+                    RoomUserLink.room_id == db_room.id,
+                    RoomUserLink.connected == True,  # noqa: E712
+                    RoomUserLink.is_spectator == False,  # noqa: E712
+                )
             )
         ).all()
 
@@ -159,12 +169,22 @@ class UndercoverGameController:
             "phase": "describing",
         }
 
+        # Read timer settings from room settings if available
+        room_settings = getattr(db_room, "settings", None) or {}
+        desc_timer = room_settings.get("description_timer", DEFAULT_DESCRIPTION_TIMER_SECONDS)
+        vote_timer = room_settings.get("voting_timer", DEFAULT_VOTING_TIMER_SECONDS)
+
         live_state = {
             "civilian_word": civilian_word.word,
             "undercover_word": undercover_word.word,
             "players": players,
             "eliminated_players": [],
             "turns": [first_turn],
+            "timer_config": {
+                "description_seconds": desc_timer,
+                "voting_seconds": vote_timer,
+            },
+            "timer_started_at": datetime.now().isoformat(),
         }
 
         db_game.live_state = live_state
@@ -208,6 +228,7 @@ class UndercoverGameController:
                 "phase": "describing",
             }
             state["turns"].append(new_turn)
+            state["timer_started_at"] = datetime.now().isoformat()
             game.live_state = state
             flag_modified(game, "live_state")
             self.session.add(game)
@@ -279,6 +300,7 @@ class UndercoverGameController:
 
             if all_done:
                 current_turn["phase"] = "voting"
+                state["timer_started_at"] = datetime.now().isoformat()
 
             game.live_state = state
             flag_modified(game, "live_state")
@@ -291,7 +313,7 @@ class UndercoverGameController:
             "word": word,
         }
 
-    async def submit_vote(self, game_id: UUID, user_id: UUID, voted_for: UUID) -> dict:
+    async def submit_vote(self, game_id: UUID, user_id: UUID, voted_for: UUID) -> dict:  # noqa: C901
         """Submit a vote for a player."""
         async with get_game_lock(str(game_id)):
             game = await self._get_game(game_id)
@@ -347,6 +369,10 @@ class UndercoverGameController:
                         room.active_game_id = None
                         self.session.add(room)
                     cleanup_game_lock(str(game_id))
+                    # Process stats and achievements
+                    newly_unlocked = await self._process_game_end_stats(state, winner_label)
+                    if newly_unlocked:
+                        state["newly_unlocked_achievements"] = newly_unlocked
                 else:
                     result["winner"] = None
 
@@ -356,6 +382,91 @@ class UndercoverGameController:
             await self.session.commit()
 
         return result
+
+    @staticmethod
+    def _auto_fill_missing_votes(state: dict) -> None:
+        """Fill in random votes for alive players who haven't voted yet."""
+        current_turn = state["turns"][-1]
+        alive_players = [p for p in state["players"] if p["is_alive"]]
+        alive_ids = [p["user_id"] for p in alive_players]
+        for p in alive_players:
+            if p["user_id"] not in current_turn["votes"]:
+                candidates = [pid for pid in alive_ids if pid != p["user_id"]]
+                if candidates:
+                    current_turn["votes"][p["user_id"]] = random.choice(candidates)
+
+    def _is_timer_actually_expired(self, state: dict) -> bool:
+        """Check if the game timer has actually elapsed server-side."""
+        timer_config = state.get("timer_config", {})
+        timer_started_at = state.get("timer_started_at")
+        if not timer_started_at:
+            return True
+        started = datetime.fromisoformat(timer_started_at)
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=UTC)
+        elapsed = (datetime.now(UTC) - started).total_seconds()
+        current_phase = state["turns"][-1]["phase"]
+        if current_phase == "describing":
+            allowed = timer_config.get("description_seconds", DEFAULT_DESCRIPTION_TIMER_SECONDS)
+        else:
+            allowed = timer_config.get("voting_seconds", DEFAULT_VOTING_TIMER_SECONDS)
+        return elapsed >= allowed - 2  # 2s tolerance for network latency
+
+    async def handle_timer_expired(self, game_id: UUID, user_id: UUID) -> dict:
+        """Handle timer expiration — auto-skip description or auto-random-vote."""
+        async with get_game_lock(str(game_id)):
+            game = await self._get_game(game_id)
+            state = game.live_state
+
+            # Verify caller is host
+            is_host = await self._check_is_host(game.room_id, user_id)
+            if not is_host:
+                raise BaseError(
+                    message="Only the host can trigger timer expiration.",
+                    frontend_message="Only the host can trigger timer expiration.",
+                    status_code=403,
+                )
+
+            if not self._is_timer_actually_expired(state):
+                return {"game_id": str(game_id), "action": "timer_not_expired"}
+
+            current_turn = state["turns"][-1]
+            action = "none"
+
+            if current_turn["phase"] == "describing":
+                # Auto-skip remaining describers by setting index to end
+                current_turn["current_describer_index"] = len(current_turn["description_order"])
+                current_turn["phase"] = "voting"
+                state["timer_started_at"] = datetime.now().isoformat()
+                action = "skip_to_voting"
+
+            elif current_turn["phase"] == "voting":
+                self._auto_fill_missing_votes(state)
+                # Now eliminate
+                self._eliminate_player_based_on_votes(state)
+                winner = self._get_winning_team(state)
+                action = "auto_vote"
+
+                if winner:
+                    winner_label = "civilians" if winner == UndercoverRole.CIVILIAN.value else "undercovers"
+                    game.game_status = GameStatus.FINISHED
+                    game.end_time = datetime.now()
+                    room = (await self.session.exec(select(Room).where(Room.id == game.room_id))).first()
+                    if room:
+                        room.active_game_id = None
+                        self.session.add(room)
+                    cleanup_game_lock(str(game_id))
+                    # Process stats and achievements
+                    newly_unlocked = await self._process_game_end_stats(state, winner_label)
+                    if newly_unlocked:
+                        state["newly_unlocked_achievements"] = newly_unlocked
+
+            game.live_state = state
+            flag_modified(game, "live_state")
+            self.session.add(game)
+            await self.session.commit()
+
+        return {"game_id": str(game_id), "action": action}
 
     def _eliminate_player_based_on_votes(self, state: dict) -> tuple[dict, int]:
         """Eliminate the player with the most votes. Returns (eliminated_player, vote_count)."""
@@ -432,6 +543,7 @@ class UndercoverGameController:
         turn_state = self._build_turn_state(state, str(user_id))
         winner = self._get_winner_label(state)
         is_host = await self._check_is_host(game.room_id, user_id)
+        vote_history = self._build_vote_history(state)
 
         return {
             "game_id": str(game.id),
@@ -455,6 +567,9 @@ class UndercoverGameController:
             ],
             "turn_number": len(state["turns"]),
             "winner": winner,
+            "vote_history": vote_history,
+            "timer_config": state.get("timer_config"),
+            "timer_started_at": state.get("timer_started_at"),
             **turn_state,
         }
 
@@ -500,6 +615,36 @@ class UndercoverGameController:
             "descriptions": current_turn["words"],
         }
 
+    async def _process_game_end_stats(self, state: dict, winner_label: str) -> list[dict]:
+        """Update stats and check achievements for all players after game ends.
+
+        Returns a list of {user_id, achievements: [{code, name, icon, tier}]} for newly unlocked.
+        """
+        newly_unlocked_all: list[dict] = []
+        for player in state["players"]:
+            user_id = UUID(player["user_id"])
+            role = player.get("role", "civilian")
+            won = (winner_label == "civilians" and role == "civilian") or (
+                winner_label == "undercovers" and role in ("undercover", "mr_white")
+            )
+            try:
+                stats = await self._stats_controller.update_stats_after_game(
+                    user_id=user_id, game_type="undercover", won=won, role=role
+                )
+                unlocked = await self._achievement_controller.check_achievements(user_id, stats)
+                if unlocked:
+                    newly_unlocked_all.append(
+                        {
+                            "user_id": str(user_id),
+                            "achievements": [
+                                {"code": a.code, "name": a.name, "icon": a.icon, "tier": a.tier} for a in unlocked
+                            ],
+                        }
+                    )
+            except Exception:
+                logger.exception("Failed to update stats/achievements for user {user_id}", user_id=user_id)
+        return newly_unlocked_all
+
     def _get_winner_label(self, state: dict) -> str | None:
         """Get the winner label string, or None if game is still in progress."""
         winner = self._get_winning_team(state)
@@ -508,6 +653,47 @@ class UndercoverGameController:
         if winner == UndercoverRole.UNDERCOVER.value:
             return "undercovers"
         return None
+
+    def _build_vote_history(self, state: dict) -> list[dict]:
+        """Build vote history from completed turns (all turns except the current one if still in progress)."""
+        players_map = {p["user_id"]: p["username"] for p in state["players"]}
+        eliminated_list = state.get("eliminated_players", [])
+        history = []
+
+        for i, turn in enumerate(state["turns"]):
+            votes = turn.get("votes", {})
+            if not votes:
+                continue
+
+            vote_entries = []
+            for voter_id, target_id in votes.items():
+                vote_entries.append(
+                    {
+                        "voter": players_map.get(voter_id, "Unknown"),
+                        "voter_id": voter_id,
+                        "target": players_map.get(target_id, "Unknown"),
+                        "target_id": target_id,
+                    }
+                )
+
+            eliminated_info = None
+            if i < len(eliminated_list):
+                ep = eliminated_list[i]
+                eliminated_info = {
+                    "username": ep["username"],
+                    "role": ep["role"],
+                    "user_id": ep["user_id"],
+                }
+
+            history.append(
+                {
+                    "round": i + 1,
+                    "votes": vote_entries,
+                    "eliminated": eliminated_info,
+                }
+            )
+
+        return history
 
     async def _check_is_host(self, room_id: UUID, user_id: UUID) -> bool:
         """Check if the user is the host of the room."""

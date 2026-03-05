@@ -18,8 +18,12 @@ from starlette.responses import JSONResponse
 from ipg.api.middleware import LoggingMiddleware, RequestIDMiddleware, SecurityMiddleware
 from ipg.api.routes.auth import limiter
 from ipg.api.routes.auth import router as auth_router
+from ipg.api.routes.challenge import router as challenge_router
+from ipg.api.routes.chat import router as chat_router
 from ipg.api.routes.codenames import router as codenames_router
+from ipg.api.routes.friend import router as friend_router
 from ipg.api.routes.game import router as game_router
+from ipg.api.routes.profile import router as profile_router
 from ipg.api.routes.room import router as room_router
 from ipg.api.routes.stats import router as stats_router
 from ipg.api.routes.undercover import router as undercover_router
@@ -64,6 +68,10 @@ def create_app(lifespan) -> FastAPI:
     app.include_router(undercover_router, prefix="/api/v1")
     app.include_router(codenames_router, prefix="/api/v1")
     app.include_router(stats_router, prefix="/api/v1")
+    app.include_router(profile_router, prefix="/api/v1")
+    app.include_router(friend_router, prefix="/api/v1")
+    app.include_router(chat_router, prefix="/api/v1")
+    app.include_router(challenge_router, prefix="/api/v1")
 
     @app.get("/scalar", include_in_schema=False)
     async def scalar_html():

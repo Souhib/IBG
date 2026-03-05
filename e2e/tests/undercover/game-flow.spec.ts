@@ -88,11 +88,13 @@ test.describe("Undercover Game Flow", () => {
       activePlayers[0].page.locator("h1:has-text('Undercover')"),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Game should still be functional
+    // Game should still be functional — use .first() to avoid strict mode violation
+    // when multiple game elements are visible (e.g., "Round 1" + "Discuss and vote")
     await expect(
       activePlayers[0].page.locator('h2:has-text("Describe your word")')
         .or(activePlayers[0].page.locator('h2:has-text("Discuss and vote")'))
-        .or(activePlayers[0].page.locator("text=Round")),
+        .or(activePlayers[0].page.locator("text=Round"))
+        .first(),
     ).toBeVisible({ timeout: 15_000 });
 
     await setup.cleanup();

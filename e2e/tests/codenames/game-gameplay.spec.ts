@@ -4,9 +4,6 @@ import {
   setupRoomWithPlayers,
   startGameViaAPI,
   isPageAlive,
-  getCodenamesRoles,
-  findSpymaster,
-  findOperative,
   type PlayerContext,
 } from "../../helpers/ui-game-setup";
 import {
@@ -15,6 +12,23 @@ import {
   apiGuessCard,
   apiEndTurn,
 } from "../../helpers/api-client";
+
+/**
+ * Find spymaster/operative from a board response without extra API calls.
+ * This avoids race conditions caused by separate board fetches.
+ */
+function findPlayerByRole(
+  board: Awaited<ReturnType<typeof apiGetCodenamesBoard>>,
+  players: PlayerContext[],
+  team: "red" | "blue",
+  role: "spymaster" | "operative",
+): PlayerContext {
+  const bp = board.players.find((p) => p.team === team && p.role === role);
+  if (!bp) throw new Error(`No ${role} found for team ${team}`);
+  const pc = players.find((p) => p.login.user.id === bp.user_id);
+  if (!pc) throw new Error(`No PlayerContext for ${role} ${bp.user_id}`);
+  return pc;
+}
 
 test.describe("Codenames Game Gameplay", () => {
   test("spymaster gives clue and operatives see it", async ({ browser }) => {
@@ -25,25 +39,23 @@ test.describe("Codenames Game Gameplay", () => {
     const gameId = setup.players[0].page.url().match(/\/game\/codenames\/([a-f0-9-]+)/)?.[1];
     expect(gameId).toBeTruthy();
 
-    // Get board state to find the current team
+    // Single board fetch for current team + roles
     const board = await apiGetCodenamesBoard(gameId!, setup.players[0].login.access_token);
     const currentTeam = board.current_team;
-
-    // Find spymaster for current team
-    const spymaster = await findSpymaster(setup.players, gameId!, currentTeam);
+    const spymaster = findPlayerByRole(board, setup.players, currentTeam, "spymaster");
+    const operative = findPlayerByRole(board, setup.players, currentTeam, "operative");
 
     // Give clue via API
     await apiGiveClue(gameId!, "testclue", 1, spymaster.login.access_token);
 
-    // Wait a moment for polling to pick up the clue
+    // Wait for polling to pick up the clue
     await setup.players[0].page.waitForTimeout(3000);
 
-    // Verify operatives can see the clue on their page
-    const operative = await findOperative(setup.players, gameId!, currentTeam);
+    // Verify operative can see the clue on their page
     if (isPageAlive(operative.page)) {
       await expect(
-        operative.page.locator("text=testclue")
-          .or(operative.page.locator("text=TESTCLUE")),
+        operative.page.locator("text=testclue").first()
+          .or(operative.page.locator("text=TESTCLUE").first()),
       ).toBeVisible({ timeout: 15_000 });
     }
 
@@ -58,22 +70,23 @@ test.describe("Codenames Game Gameplay", () => {
     const gameId = setup.players[0].page.url().match(/\/game\/codenames\/([a-f0-9-]+)/)?.[1];
     expect(gameId).toBeTruthy();
 
-    // Get board and find a card of the current team's color
+    // Single board fetch for roles
     const board = await apiGetCodenamesBoard(gameId!, setup.players[0].login.access_token);
     const currentTeam = board.current_team;
+    const spymaster = findPlayerByRole(board, setup.players, currentTeam, "spymaster");
+    const operative = findPlayerByRole(board, setup.players, currentTeam, "operative");
 
     // Spymaster gives clue
-    const spymaster = await findSpymaster(setup.players, gameId!, currentTeam);
     await apiGiveClue(gameId!, "hint", 1, spymaster.login.access_token);
 
-    // Operative guesses a card (find a card of team color from spymaster's view)
+    // Get spymaster's board view to find team cards (spymaster can see card_type)
     const spymasterBoard = await apiGetCodenamesBoard(gameId!, spymaster.login.access_token);
     const teamCardIndex = spymasterBoard.board.findIndex(
       (c) => c.card_type === currentTeam && !c.revealed,
     );
     expect(teamCardIndex).toBeGreaterThanOrEqual(0);
 
-    const operative = await findOperative(setup.players, gameId!, currentTeam);
+    // Operative guesses
     await apiGuessCard(gameId!, teamCardIndex, operative.login.access_token);
 
     // Verify the card is now revealed
@@ -98,12 +111,14 @@ test.describe("Codenames Game Gameplay", () => {
     const gameId = setup.players[0].page.url().match(/\/game\/codenames\/([a-f0-9-]+)/)?.[1];
     expect(gameId).toBeTruthy();
 
+    // Single board fetch for roles
     const board = await apiGetCodenamesBoard(gameId!, setup.players[0].login.access_token);
     const currentTeam = board.current_team;
     const opponentTeam = currentTeam === "red" ? "blue" : "red";
+    const spymaster = findPlayerByRole(board, setup.players, currentTeam, "spymaster");
+    const operative = findPlayerByRole(board, setup.players, currentTeam, "operative");
 
     // Give clue
-    const spymaster = await findSpymaster(setup.players, gameId!, currentTeam);
     await apiGiveClue(gameId!, "danger", 1, spymaster.login.access_token);
 
     // Find assassin card from spymaster's view
@@ -112,7 +127,6 @@ test.describe("Codenames Game Gameplay", () => {
     expect(assassinIndex).toBeGreaterThanOrEqual(0);
 
     // Operative guesses the assassin
-    const operative = await findOperative(setup.players, gameId!, currentTeam);
     await apiGuessCard(gameId!, assassinIndex, operative.login.access_token);
 
     // Game should be over with opponent winning
@@ -143,16 +157,15 @@ test.describe("Codenames Game Gameplay", () => {
     const gameId = setup.players[0].page.url().match(/\/game\/codenames\/([a-f0-9-]+)/)?.[1];
     expect(gameId).toBeTruthy();
 
+    // Single board fetch to get current team AND player roles atomically
     const board = await apiGetCodenamesBoard(gameId!, setup.players[0].login.access_token);
     const initialTeam = board.current_team;
     const otherTeam = initialTeam === "red" ? "blue" : "red";
+    const spymaster = findPlayerByRole(board, setup.players, initialTeam, "spymaster");
+    const operative = findPlayerByRole(board, setup.players, initialTeam, "operative");
 
-    // Spymaster gives clue
-    const spymaster = await findSpymaster(setup.players, gameId!, initialTeam);
+    // Spymaster gives clue then operative ends turn — no extra API fetches between
     await apiGiveClue(gameId!, "pass", 1, spymaster.login.access_token);
-
-    // Operative ends turn
-    const operative = await findOperative(setup.players, gameId!, initialTeam);
     await apiEndTurn(gameId!, operative.login.access_token);
 
     // Team should have switched
@@ -170,38 +183,33 @@ test.describe("Codenames Game Gameplay", () => {
     const gameId = setup.players[0].page.url().match(/\/game\/codenames\/([a-f0-9-]+)/)?.[1];
     expect(gameId).toBeTruthy();
 
-    // Play the game: each turn, the spymaster gives a clue, operative guesses their team's cards
+    // Play the game: each turn, spymaster gives clue, operative guesses team cards
     for (let turn = 0; turn < 30; turn++) {
+      // Single board fetch per turn for roles + team + card info
       const board = await apiGetCodenamesBoard(gameId!, setup.players[0].login.access_token);
       if (board.status === "finished") break;
 
       const currentTeam = board.current_team;
 
-      // Find spymaster for current team
       let spymaster: PlayerContext;
+      let operative: PlayerContext;
       try {
-        spymaster = await findSpymaster(setup.players, gameId!, currentTeam);
+        spymaster = findPlayerByRole(board, setup.players, currentTeam, "spymaster");
+        operative = findPlayerByRole(board, setup.players, currentTeam, "operative");
       } catch {
-        break; // Team might be empty
+        break;
       }
 
       // Give clue
       await apiGiveClue(gameId!, `clue${turn}`, 1, spymaster.login.access_token);
 
-      // Get spymaster's board to find team cards
+      // Get spymaster's board view to find team cards
       const smBoard = await apiGetCodenamesBoard(gameId!, spymaster.login.access_token);
       if (smBoard.status === "finished") break;
 
       const teamCard = smBoard.board.findIndex(
         (c) => c.card_type === currentTeam && !c.revealed,
       );
-
-      let operative: PlayerContext;
-      try {
-        operative = await findOperative(setup.players, gameId!, currentTeam);
-      } catch {
-        break;
-      }
 
       if (teamCard >= 0) {
         await apiGuessCard(gameId!, teamCard, operative.login.access_token);

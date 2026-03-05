@@ -15,6 +15,16 @@ interface AchievementData {
   threshold: number
   progress: number
   unlocked: boolean
+  rarity_percentage: number | null
+}
+
+function getRarityLabel(rarity: number | null): { label: string; color: string } | null {
+  if (rarity === null) return null
+  if (rarity <= 1) return { label: "Mythic", color: "text-red-500 bg-red-500/10" }
+  if (rarity <= 5) return { label: "Legendary", color: "text-purple-500 bg-purple-500/10" }
+  if (rarity <= 15) return { label: "Epic", color: "text-yellow-500 bg-yellow-500/10" }
+  if (rarity <= 30) return { label: "Rare", color: "text-blue-500 bg-blue-500/10" }
+  return { label: "Common", color: "text-muted-foreground bg-muted" }
 }
 
 const TIER_COLORS: Record<number, string> = {
@@ -105,9 +115,20 @@ function AchievementsPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">{achievement.name}</h3>
-                  <span className="text-xs text-muted-foreground">
-                    {TIER_LABELS[achievement.tier] || `Tier ${achievement.tier}`}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      {TIER_LABELS[achievement.tier] || `Tier ${achievement.tier}`}
+                    </span>
+                    {(() => {
+                      const rarity = getRarityLabel(achievement.rarity_percentage)
+                      if (!rarity) return null
+                      return (
+                        <span className={`rounded px-1 py-0.5 text-[9px] font-bold ${rarity.color}`}>
+                          {rarity.label} ({achievement.rarity_percentage}%)
+                        </span>
+                      )
+                    })()}
+                  </div>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mb-3">{achievement.description}</p>

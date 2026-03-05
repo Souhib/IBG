@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Check, Copy, Crown, KeyRound, LogOut, Users } from "lucide-react"
+import { Check, Copy, Crown, Eye, KeyRound, LogOut, Users } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
+import { ChatPanel } from "@/components/rooms/ChatPanel"
+import { RoomSettings } from "@/components/rooms/RoomSettings"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
 
@@ -15,7 +17,8 @@ interface RoomData {
   password: string
   active_game_id?: string | null
   game_type?: string | null
-  users: { id: string; username: string; is_connected?: boolean; is_disconnected?: boolean }[]
+  settings?: Record<string, unknown> | null
+  users: { id: string; username: string; is_connected?: boolean; is_disconnected?: boolean; is_spectator?: boolean }[]
 }
 
 interface Player {
@@ -23,6 +26,7 @@ interface Player {
   username: string
   is_host: boolean
   is_disconnected?: boolean
+  is_spectator?: boolean
 }
 
 export const Route = createFileRoute("/_auth/rooms/$roomId")({
@@ -72,7 +76,8 @@ function RoomLobbyPage() {
         password: string
         active_game_id: string | null
         game_type: string | null
-        players: { user_id: string; username: string; is_connected: boolean; is_disconnected: boolean; is_host: boolean }[]
+        settings: Record<string, unknown> | null
+        players: { user_id: string; username: string; is_connected: boolean; is_disconnected: boolean; is_host: boolean; is_spectator: boolean }[]
         type: string
       }
       return {
@@ -82,11 +87,13 @@ function RoomLobbyPage() {
         password: state.password,
         active_game_id: state.active_game_id,
         game_type: state.game_type,
+        settings: state.settings,
         users: state.players.map((p) => ({
           id: p.user_id,
           username: p.username,
           is_connected: p.is_connected,
           is_disconnected: p.is_disconnected,
+          is_spectator: p.is_spectator,
         })),
       } as RoomData
     },
@@ -95,8 +102,8 @@ function RoomLobbyPage() {
     enabled: !!user,
   })
 
-  // Derive players from room data (filter out users who left: connected=false, disconnected=false)
-  const players: Player[] = roomData
+  // Derive players and spectators from room data
+  const allUsers: Player[] = roomData
     ? roomData.users
         .filter((u) => u.is_connected || u.is_disconnected)
         .map((u) => ({
@@ -104,10 +111,14 @@ function RoomLobbyPage() {
           username: u.username,
           is_host: u.id === roomData.owner_id,
           is_disconnected: u.is_disconnected,
+          is_spectator: u.is_spectator,
         }))
     : []
 
+  const players = allUsers.filter((u) => !u.is_spectator)
+  const spectators = allUsers.filter((u) => u.is_spectator)
   const isHost = roomData?.owner_id === user?.id
+  const isSpectator = allUsers.some((u) => u.id === user?.id && u.is_spectator)
 
   // Auto-navigate when game starts (active_game_id appears)
   useEffect(() => {
@@ -301,9 +312,38 @@ function RoomLobbyPage() {
         )}
       </div>
 
+      {/* Spectators */}
+      {spectators.length > 0 && (
+        <div className="rounded-xl border bg-card p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-semibold">
+              {t("room.spectators")} ({spectators.length})
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {spectators.map((spec) => (
+              <div key={spec.id} className="flex items-center rounded-lg bg-muted/30 px-4 py-2">
+                <Eye className="mr-2 h-3 w-3 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{spec.username}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Room Settings (host only) */}
+      {isHost && !isSpectator && roomData && (
+        <RoomSettings
+          roomId={roomData.id}
+          settings={roomData.settings ?? null}
+          gameType={gameType}
+        />
+      )}
+
       {/* Game Type Selector + Start Button (host only) */}
-      {isHost && (
-        <div className="space-y-4">
+      {isHost && !isSpectator && (
+        <div className="mt-4 space-y-4">
           <div className="rounded-xl border bg-card p-4">
             <h3 className="text-sm font-semibold mb-3">Game Type</h3>
             <div className="flex gap-2">
@@ -359,6 +399,9 @@ function RoomLobbyPage() {
         <LogOut className="h-4 w-4" />
         {t("room.leave")}
       </button>
+
+      {/* Chat Panel */}
+      {user && <ChatPanel roomId={roomId} currentUserId={user.id} />}
     </div>
   )
 }

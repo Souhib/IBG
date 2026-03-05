@@ -68,12 +68,43 @@ services:
       target: production
       args:
         VITE_API_URL: http://localhost:5051
+        VITE_UMAMI_URL: ${VITE_UMAMI_URL:-http://localhost:3100}
+        VITE_UMAMI_WEBSITE_ID: ${VITE_UMAMI_WEBSITE_ID:-}
     ports:
       - "3051:80"
     depends_on:
       - backend
     restart: unless-stopped
 
+  # ─── Umami Analytics ──────────────────────────────────────
+
+  umami-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-umami}
+      POSTGRES_DB: umami
+    volumes:
+      - umami_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-umami}@umami-db:5432/umami
+    ports:
+      - "3100:3000"
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   pgdata:
   redisdata:
+  umami_pgdata:

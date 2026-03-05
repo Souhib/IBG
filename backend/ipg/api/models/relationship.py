@@ -14,6 +14,7 @@ class RoomUserLink(DBModel, table=True):
     connected: bool = True
     last_seen_at: datetime | None = None
     disconnected_at: datetime | None = None
+    is_spectator: bool = False
 
 
 class RoomGameLink(DBModel, table=True):

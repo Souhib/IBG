@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -11,6 +12,7 @@ from ipg.api.models.stats import (
     UserAchievement,
     UserStats,
 )
+from ipg.api.models.table import User
 from ipg.api.schemas.stats import AchievementWithProgress
 
 # All achievement definitions to seed into the database
@@ -472,10 +474,10 @@ class AchievementController:
         self.session = session
 
     async def get_user_achievements(self, user_id: UUID) -> Sequence[AchievementWithProgress]:
-        """Get all achievements with definitions and user progress.
+        """Get all achievements with definitions, user progress, and rarity.
 
         Returns all achievement definitions. For each, includes the user's
-        current progress and unlock status.
+        current progress, unlock status, and rarity percentage.
 
         :param user_id: The id of the user.
         :return: A list of AchievementWithProgress records.
@@ -491,9 +493,25 @@ class AchievementController:
         # Map achievement_id -> UserAchievement for quick lookup
         ua_map: dict[UUID, UserAchievement] = {ua.achievement_id: ua for ua in user_achievements}
 
+        # Count total users and unlocks per achievement for rarity
+        total_users_result = await self.session.exec(select(func.count()).select_from(User))
+        total_users = total_users_result.one() or 1
+
+        unlock_counts: dict[UUID, int] = {}
+        for defn in all_definitions:
+            count_result = await self.session.exec(
+                select(func.count()).where(
+                    UserAchievement.achievement_id == defn.id,
+                    UserAchievement.unlocked_at.is_not(None),  # type: ignore[union-attr]
+                )
+            )
+            unlock_counts[defn.id] = count_result.one() or 0  # type: ignore[assignment]
+
         entries: list[AchievementWithProgress] = []
         for defn in all_definitions:
             ua = ua_map.get(defn.id)  # type: ignore[arg-type]
+            unlocked_count = unlock_counts.get(defn.id, 0)  # type: ignore[arg-type]
+            rarity = round((unlocked_count / total_users) * 100, 1) if total_users > 0 else 0.0
             entries.append(
                 AchievementWithProgress(
                     code=defn.code,
@@ -505,6 +523,7 @@ class AchievementController:
                     threshold=defn.threshold,
                     progress=ua.progress if ua else 0,
                     unlocked=ua.unlocked_at is not None if ua else False,
+                    rarity_percentage=rarity,
                 )
             )
         return entries

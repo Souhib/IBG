@@ -11,7 +11,9 @@ from ipg.api.models.user import UserCreate
 from ipg.api.models.view import UserView
 from ipg.api.schemas.auth import LoginRequest, LoginResponse, TokenPairResponse
 from ipg.api.schemas.error import InvalidTokenError
-from ipg.dependencies import get_auth_controller, get_current_user, get_settings
+from ipg.api.schemas.shared import BaseModel as PydanticBaseModel
+from ipg.api.services.email import EmailService
+from ipg.dependencies import get_auth_controller, get_current_user, get_email_service, get_settings
 from ipg.settings import Settings
 
 limiter = Limiter(
@@ -121,3 +123,78 @@ async def logout(response: Response) -> dict[str, str]:
     """Logout by clearing auth cookies."""
     _clear_auth_cookies(response)
     return {"status": "ok"}
+
+
+# --- Password Reset ---
+
+
+class ForgotPasswordRequest(PydanticBaseModel):
+    email: str
+
+
+class ResetPasswordRequest(PydanticBaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/forgot-password")
+@limiter.limit("3/minute")
+async def forgot_password(
+    request: Request,  # noqa: ARG001
+    *,
+    body: ForgotPasswordRequest,
+    auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
+    email_service: Annotated[EmailService, Depends(get_email_service)],
+) -> dict[str, str]:
+    """Request a password reset email."""
+    await auth_controller.request_password_reset(body.email, email_service)
+    return {"status": "ok", "message": "If the email exists, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+@limiter.limit("5/minute")
+async def reset_password(
+    request: Request,  # noqa: ARG001
+    *,
+    body: ResetPasswordRequest,
+    auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
+) -> dict[str, str]:
+    """Reset password using a valid token."""
+    await auth_controller.reset_password(body.token, body.new_password)
+    return {"status": "ok", "message": "Password has been reset successfully."}
+
+
+# --- Email Verification ---
+
+
+class VerifyEmailRequest(PydanticBaseModel):
+    token: str
+
+
+class ResendVerificationRequest(PydanticBaseModel):
+    email: str
+
+
+@router.post("/verify-email")
+async def verify_email(
+    *,
+    body: VerifyEmailRequest,
+    auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
+) -> dict[str, str]:
+    """Verify email address using a valid token."""
+    await auth_controller.verify_email(body.token)
+    return {"status": "ok", "message": "Email verified successfully."}
+
+
+@router.post("/resend-verification")
+@limiter.limit("3/minute")
+async def resend_verification(
+    request: Request,  # noqa: ARG001
+    *,
+    body: ResendVerificationRequest,
+    auth_controller: Annotated[AuthController, Depends(get_auth_controller)],
+    email_service: Annotated[EmailService, Depends(get_email_service)],
+) -> dict[str, str]:
+    """Resend email verification."""
+    await auth_controller.resend_verification(body.email, email_service)
+    return {"status": "ok", "message": "If the email exists and is unverified, a verification link has been sent."}

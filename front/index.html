@@ -34,5 +34,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function() {
+        var url = '%VITE_UMAMI_URL%';
+        var id = '%VITE_UMAMI_WEBSITE_ID%';
+        if (url && id && !url.includes('VITE_')) {
+          var s = document.createElement('script');
+          s.defer = true;
+          s.src = url + '/script.js';
+          s.setAttribute('data-website-id', id);
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
   </body>
 </html>

@@ -22,7 +22,9 @@
     "logout": "Logout",
     "leaderboard": "Leaderboard",
     "theme": "Theme",
-    "about": "About"
+    "about": "About",
+    "friends": "Friends",
+    "challenges": "Challenges"
   },
   "auth": {
     "login": "Login",
@@ -36,7 +38,23 @@
     "registerDescription": "Join IPG and play with your friends",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "forgotPassword": "Forgot password?"
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordDescription": "Enter your email and we'll send you a reset link",
+    "resetEmailSent": "If an account exists with that email, a reset link has been sent. Check your inbox.",
+    "backToLogin": "Back to login",
+    "sendResetLink": "Send Reset Link",
+    "resetPassword": "Reset Password",
+    "resetPasswordDescription": "Enter your new password below",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 5 characters",
+    "passwordResetSuccess": "Your password has been reset successfully. You can now log in.",
+    "invalidOrExpiredToken": "This link is invalid or has expired",
+    "verifyingEmail": "Verifying your email...",
+    "emailVerified": "Email Verified",
+    "emailVerifiedDescription": "Your email has been verified successfully. You can now log in.",
+    "verificationFailed": "Verification Failed"
   },
   "home": {
     "title": "Islamic Party Games",
@@ -85,7 +103,16 @@
     "joining": "Joining room...",
     "joinFailed": "Failed to join room",
     "invalidCode": "Please enter a valid room code",
-    "invalidPassword": "Please enter the 4-digit password"
+    "invalidPassword": "Please enter the 4-digit password",
+    "settings": "Game Settings",
+    "settingsSaved": "Settings saved!",
+    "descriptionTimer": "Description Timer (seconds)",
+    "votingTimer": "Voting Timer (seconds)",
+    "clueTimer": "Clue Timer (seconds)",
+    "guessTimer": "Guess Timer (seconds)",
+    "enableMrWhite": "Enable Mr. White role",
+    "spectators": "Spectators",
+    "watchGame": "Watch"
   },
   "toast": {
     "playerJoined": "{{username}} joined the room",
@@ -144,7 +171,11 @@
       "descriptionSubmitted": "Your hint was submitted!",
       "allDescriptionsIn": "All hints are in!",
       "timeToVote": "Get ready to vote and eliminate...",
-      "selected": "Selected"
+      "selected": "Selected",
+      "voteHistory": "Vote History",
+      "round": "Round {{number}}",
+      "votedForPlayer": "{{voter}} voted for {{target}}",
+      "wasEliminated": "{{username}} was eliminated ({{role}})"
     },
     "codenames": {
       "giveClue": "Give a Clue",
@@ -156,7 +187,12 @@
       "yourTurn": "It's your turn!",
       "waitingForClue": "Waiting for spymaster's clue...",
       "guessesRemaining": "Guesses: {{made}} / {{max}}",
-      "players": "Players"
+      "players": "Players",
+      "clueHistory": "Clue History",
+      "clue": "Clue",
+      "guesses": "Guesses",
+      "correct": "Correct",
+      "wrong": "Wrong"
     }
   },
   "stats": {
@@ -170,7 +206,19 @@
     "recentGames": "Recent Games",
     "noGames": "No games played yet",
     "won": "Won",
-    "lost": "Lost"
+    "lost": "Lost",
+    "winLossOverTime": "Win/Loss Over Time",
+    "roleDistribution": "Role Distribution",
+    "gameDuration": "Game Duration",
+    "avgDuration": "Average",
+    "fastestGame": "Fastest",
+    "longestGame": "Longest",
+    "gamesTracked": "Games Tracked",
+    "headToHead": "Head to Head",
+    "yourWins": "Your Wins",
+    "theirWins": "Their Wins",
+    "draws": "Draws",
+    "totalGames": "{{count}} games together"
   },
   "achievements": {
     "title": "Achievements",
@@ -200,7 +248,13 @@
     "passwordChanged": "Password changed!",
     "viewStats": "View your game statistics",
     "viewAchievements": "View your earned badges",
-    "joinOrCreate": "Join or create a game room"
+    "joinOrCreate": "Join or create a game room",
+    "deleteAccount": "Delete Account",
+    "deleteAccountDescription": "Permanently delete your account and all associated data. This action cannot be undone.",
+    "deleteAccountWarning": "This will permanently delete your account. Enter your password to confirm.",
+    "enterPasswordToDelete": "Enter your password",
+    "deleteAccountConfirm": "Delete permanently",
+    "accountDeleted": "Your account has been deleted"
   },
   "about": {
     "title": "About the Creator",
@@ -220,6 +274,42 @@
     "mentoringTitle": "Free Mentoring",
     "mentoringText": "With my experience I can help CS engineers, developers, or anyone who wants to learn more about computer science — freely. Contact me via email or phone. If I don't answer, leave a message and I'll call you back.",
     "contactMe": "Get in Touch"
+  },
+  "friends": {
+    "title": "Friends",
+    "myFriends": "My Friends",
+    "pendingRequests": "Pending",
+    "addFriend": "Add Friend",
+    "removeFriend": "Remove",
+    "accept": "Accept",
+    "reject": "Reject",
+    "requestSent": "Friend request sent!",
+    "requestAccepted": "Friend request accepted!",
+    "requestRejected": "Friend request rejected",
+    "friendRemoved": "Friend removed",
+    "noFriends": "No friends yet. Add friends from player profiles!",
+    "noPending": "No pending requests",
+    "noResults": "No friends match your search",
+    "searchPlaceholder": "Search friends..."
+  },
+  "chat": {
+    "title": "Chat",
+    "placeholder": "Type a message...",
+    "noMessages": "No messages yet. Start the conversation!"
+  },
+  "challenges": {
+    "title": "Challenges",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "completed": "Completed",
+    "progress": "{{current}} / {{target}}",
+    "expiresIn": "Expires in {{time}}",
+    "noChallenges": "No challenges available. Play a game to get started!",
+    "play": "Play",
+    "win": "Win",
+    "playAsRole": "Play as {{role}}",
+    "anyGame": "any game",
+    "challengeCompleted": "Challenge completed!"
   },
   "errors": {
     "api": {

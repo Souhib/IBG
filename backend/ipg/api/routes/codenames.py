@@ -84,6 +84,15 @@ async def guess_card(
     return await controller.guess_card(game_id, current_user.id, body.card_index)
 
 
+@router.post("/games/{game_id}/timer-expired")
+async def timer_expired(
+    game_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+) -> dict:
+    return await controller.handle_timer_expired(game_id, current_user.id)
+
+
 @router.post("/games/{game_id}/end-turn")
 async def end_turn(
     game_id: UUID,

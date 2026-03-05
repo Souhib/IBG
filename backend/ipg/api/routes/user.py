@@ -9,6 +9,7 @@ from ipg.api.models.table import User
 from ipg.api.models.user import UserCreate, UserUpdate, UserUpdatePassword
 from ipg.api.models.view import UserView
 from ipg.api.schemas.error import ForbiddenError
+from ipg.api.schemas.shared import BaseModel as PydanticBaseModel
 from ipg.dependencies import get_current_user, get_user_controller
 
 router = APIRouter(
@@ -82,3 +83,18 @@ async def delete_user(
     if current_user.id != user_id:
         raise ForbiddenError("You can only delete your own account")
     await user_controller.delete_user(user_id)
+
+
+class DeleteAccountRequest(PydanticBaseModel):
+    password: str
+
+
+@router.delete("/me/account", status_code=204)
+async def delete_account(
+    *,
+    body: DeleteAccountRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_controller: Annotated[UserController, Depends(get_user_controller)],
+) -> None:
+    """Delete current user's account. Requires password confirmation."""
+    await user_controller.delete_user_account(current_user.id, body.password)

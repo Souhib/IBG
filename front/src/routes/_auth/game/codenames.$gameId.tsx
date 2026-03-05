@@ -5,6 +5,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
+import { useAchievementNotifications } from "@/components/achievements/AchievementToast"
+import { PhaseTimer } from "@/components/games/shared/PhaseTimer"
+import { ClueHistory } from "@/components/games/codenames/ClueHistory"
 import { CluePanel } from "@/components/games/codenames/CluePanel"
 import { GameBoard } from "@/components/games/codenames/GameBoard"
 import { GameOverScreen } from "@/components/games/codenames/GameOverScreen"
@@ -84,6 +87,15 @@ function CodenamesGamePage() {
         current_turn: CodenamesTurn | null
         winner: "red" | "blue" | null
         players?: CodenamesPlayer[]
+        clue_history?: {
+          team: "red" | "blue"
+          clue_word: string
+          clue_number: number
+          guesses: { word: string; card_type: string; correct: boolean }[]
+        }[]
+        timer_config?: { clue_seconds: number; guess_seconds: number }
+        timer_started_at?: string | null
+        newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
       }
     },
     refetchInterval: 2000,
@@ -192,6 +204,26 @@ function CodenamesGamePage() {
     }
   }, [navigate])
 
+  // Achievement notifications
+  useAchievementNotifications(serverState?.newly_unlocked_achievements, user?.id)
+
+  const timerExpiredRef = useRef(false)
+  const handleTimerExpired = useCallback(async () => {
+    if (timerExpiredRef.current) return
+    timerExpiredRef.current = true
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/codenames/games/${gameId}/timer-expired`,
+      })
+      queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
+    } catch {
+      // Ignore — another client may have already triggered it
+    } finally {
+      timerExpiredRef.current = false
+    }
+  }, [gameId, queryClient])
+
   if (cancelMessage) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
@@ -248,6 +280,21 @@ function CodenamesGamePage() {
         isMyTurn={isMyTurn}
         isFinished={gameState.status === "finished"}
       />
+
+      {/* Phase Timer */}
+      {serverState?.timer_config && serverState?.timer_started_at && gameState.status === "in_progress" && (
+        <div className="mb-4">
+          <PhaseTimer
+            timerStartedAt={serverState.timer_started_at}
+            durationSeconds={
+              gameState.current_turn?.clue_word
+                ? serverState.timer_config.guess_seconds
+                : serverState.timer_config.clue_seconds
+            }
+            onExpired={handleTimerExpired}
+          />
+        </div>
+      )}
 
       {/* Board */}
       <GameBoard
@@ -333,6 +380,11 @@ function CodenamesGamePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Clue History */}
+      {serverState?.clue_history && serverState.clue_history.length > 0 && (
+        <ClueHistory history={serverState.clue_history} />
       )}
 
       {/* My Info */}

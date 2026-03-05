@@ -16,9 +16,15 @@ COPY . .
 
 # Build arguments for environment variables
 ARG VITE_API_URL
+ARG VITE_SENTRY_DSN
+ARG VITE_UMAMI_URL
+ARG VITE_UMAMI_WEBSITE_ID
 
 # Set environment variables for build
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+ENV VITE_UMAMI_URL=${VITE_UMAMI_URL}
+ENV VITE_UMAMI_WEBSITE_ID=${VITE_UMAMI_WEBSITE_ID}
 
 # Build the application (increase memory for ARM64 VPS builds)
 ENV NODE_OPTIONS="--max-old-space-size=4096"

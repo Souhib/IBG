@@ -89,6 +89,8 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:-http://<SERVER_IP>:33648}
         VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        VITE_UMAMI_URL: ${VITE_UMAMI_URL:-}
+        VITE_UMAMI_WEBSITE_ID: ${VITE_UMAMI_WEBSITE_ID:-}
     depends_on:
       - backend
     ports:
@@ -104,9 +106,43 @@ services:
       - dokploy-network
     restart: always
 
+  # ─── Umami Analytics ─────────────────────────────────────────
+
+  umami-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+      POSTGRES_DB: umami
+    volumes:
+      - umami_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+    restart: always
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    ports:
+      - "3100:3000"
+    networks:
+      - internal
+      - dokploy-network
+    restart: always
+
 volumes:
   postgres_data:
   redis_data:
+  umami_postgres_data:
 
 networks:
   internal:

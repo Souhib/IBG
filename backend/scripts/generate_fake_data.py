@@ -46,8 +46,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ipg.api.controllers.achievement import AchievementController
+from ipg.api.controllers.challenge import ChallengeController
 from ipg.api.controllers.shared import get_password_hash
+from ipg.api.models.chat import ChatMessage
 from ipg.api.models.codenames import CodenamesWord, CodenamesWordPack
+from ipg.api.models.friendship import Friendship, FriendshipStatus
 from ipg.api.models.game import GameType
 from ipg.api.models.room import RoomStatus, RoomType
 from ipg.api.models.stats import UserStats
@@ -626,6 +629,106 @@ async def create_user_stats(session: AsyncSession, users: list[User]) -> None:
     print(f"  Created UserStats for {len(users)} users")
 
 
+async def seed_challenges(session: AsyncSession) -> None:
+    """Seed challenge definitions using the ChallengeController.
+
+    Args:
+        session: The database session.
+    """
+    controller = ChallengeController(session)
+    await controller.seed_challenges()
+    print("  Seeded challenge definitions")
+
+
+async def create_friendships(session: AsyncSession, users: list[User]) -> None:
+    """Create sample friendship records between test users.
+
+    Args:
+        session: The database session.
+        users: List of users to create friendships between.
+    """
+    if len(users) < 4:
+        return
+
+    count = 0
+    # Create accepted friendships between first few users
+    pairs_accepted = [(0, 1), (0, 2), (1, 3), (2, 4), (3, 5)]
+    for i, j in pairs_accepted:
+        if i < len(users) and j < len(users):
+            friendship = Friendship(
+                id=uuid4(),
+                requester_id=users[i].id,
+                addressee_id=users[j].id,
+                status=FriendshipStatus.ACCEPTED,
+            )
+            session.add(friendship)
+            count += 1
+
+    # Create some pending requests
+    pairs_pending = [(4, 0), (5, 1), (6, 2)]
+    for i, j in pairs_pending:
+        if i < len(users) and j < len(users):
+            friendship = Friendship(
+                id=uuid4(),
+                requester_id=users[i].id,
+                addressee_id=users[j].id,
+                status=FriendshipStatus.PENDING,
+            )
+            session.add(friendship)
+            count += 1
+
+    await session.commit()
+    print(f"  Created {count} friendships")
+
+
+async def create_chat_messages(session: AsyncSession, users: list[User], rooms: list[Room]) -> None:
+    """Create sample chat messages in rooms.
+
+    Args:
+        session: The database session.
+        users: List of users who can send messages.
+        rooms: List of rooms to add messages to.
+    """
+    if not rooms or not users:
+        return
+
+    count = 0
+    messages_pool = [
+        "Assalamu Alaikum!",
+        "Who's ready to play?",
+        "Let's go!",
+        "Good game everyone",
+        "That was close!",
+        "MashaAllah, well played!",
+        "Ready for another round?",
+        "SubhanAllah, what a game!",
+        "Who's the undercover?",
+        "I think I know the word...",
+        "Great clue!",
+        "Let's vote!",
+        "Bismillah, here we go",
+        "AlhamduliLlah, good win",
+        "JazakAllah khair for playing",
+    ]
+
+    for room in rooms[:5]:  # Only first 5 rooms
+        num_messages = random.randint(3, 10)
+        for _ in range(num_messages):
+            user = random.choice(users[:10])  # Use first 10 test users
+            msg = ChatMessage(
+                id=uuid4(),
+                room_id=room.id,
+                user_id=user.id,
+                username=user.username,
+                message=random.choice(messages_pool),
+            )
+            session.add(msg)
+            count += 1
+
+    await session.commit()
+    print(f"  Created {count} chat messages")
+
+
 # ── Main operations ─────────────────────────────────────────────────────────
 
 
@@ -657,35 +760,47 @@ async def generate_all_data(
 
     async with AsyncSession(engine, expire_on_commit=False) as session:
         # 1. Create test users
-        print("\n[1/7] Creating test users...")
+        print("\n[1/10] Creating test users...")
         test_users = await create_test_users(session)
 
         # 2. Create random users
-        print(f"\n[2/7] Creating {num_users} random users...")
+        print(f"\n[2/10] Creating {num_users} random users...")
         random_users = await create_random_users(session, num_users)
         all_users = test_users + random_users
 
         # 3. Create rooms
-        print("\n[3/7] Creating rooms...")
-        await create_rooms(session, all_users, count=max(5, len(all_users) // 3))
+        print("\n[3/10] Creating rooms...")
+        rooms = await create_rooms(session, all_users, count=max(5, len(all_users) // 3))
 
         # 4. Seed Undercover words and pairs
-        print("\n[4/7] Seeding Undercover words and pairs...")
+        print("\n[4/10] Seeding Undercover words and pairs...")
         word_map = await seed_undercover_words(session)
         await seed_undercover_pairs(session, word_map)
 
         # 5. Seed Codenames words
-        print("\n[5/7] Seeding Codenames word packs...")
+        print("\n[5/10] Seeding Codenames word packs...")
         await seed_codenames_words(session)
 
         # 6. Seed achievements
-        print("\n[6/7] Seeding achievement definitions...")
+        print("\n[6/10] Seeding achievement definitions...")
         await seed_achievements(session)
 
-        # 7. Create games and stats
-        print(f"\n[7/7] Creating {num_games} games and user stats...")
+        # 7. Seed challenges
+        print("\n[7/10] Seeding challenge definitions...")
+        await seed_challenges(session)
+
+        # 8. Create games and stats
+        print(f"\n[8/10] Creating {num_games} games and user stats...")
         await create_games(session, all_users, count=num_games)
         await create_user_stats(session, test_users)
+
+        # 9. Create friendships
+        print("\n[9/10] Creating friendships...")
+        await create_friendships(session, test_users)
+
+        # 10. Create chat messages
+        print("\n[10/10] Creating chat messages...")
+        await create_chat_messages(session, test_users, rooms)
 
     print("\nFake data generation complete!")
 

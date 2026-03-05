@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router"
-import { BookOpen, Globe, LogOut, Menu, Moon, Sun, Trophy, User, UserCircle, X } from "lucide-react"
+import { BookOpen, Flame, Globe, LogOut, Menu, Moon, Sun, Trophy, User, UserCircle, Users, X } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/providers/AuthProvider"
@@ -37,27 +37,36 @@ function ThemeToggle() {
   )
 }
 
+const LANGUAGES = [
+  { code: "en", label: "EN", dir: "ltr" },
+  { code: "fr", label: "FR", dir: "ltr" },
+  { code: "ar", label: "ع", dir: "rtl" },
+] as const
+
 function LanguageSwitcher() {
   const { i18n } = useTranslation()
-  const currentLang = i18n.language?.startsWith("ar") ? "ar" : "en"
+  const currentLang = i18n.language?.startsWith("ar") ? "ar" : i18n.language?.startsWith("fr") ? "fr" : "en"
 
-  const toggle = () => {
-    const newLang = currentLang === "en" ? "ar" : "en"
-    i18n.changeLanguage(newLang)
-    localStorage.setItem("ipg-language", newLang)
-    document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr"
-    document.documentElement.lang = newLang
+  const cycle = () => {
+    const currentIndex = LANGUAGES.findIndex((l) => l.code === currentLang)
+    const next = LANGUAGES[(currentIndex + 1) % LANGUAGES.length]
+    i18n.changeLanguage(next.code)
+    localStorage.setItem("ipg-language", next.code)
+    document.documentElement.dir = next.dir
+    document.documentElement.lang = next.code
   }
+
+  const currentLabel = LANGUAGES.find((l) => l.code === currentLang)?.label ?? "EN"
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={cycle}
       className="flex items-center gap-1 rounded-md p-2 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
-      aria-label={`Switch to ${currentLang === "en" ? "Arabic" : "English"}`}
+      aria-label="Switch language"
     >
       <Globe className="h-4 w-4" />
-      <span className="text-xs font-medium">{currentLang === "en" ? "ع" : "EN"}</span>
+      <span className="text-xs font-medium">{currentLabel}</span>
     </button>
   )
 }
@@ -73,6 +82,8 @@ export function MainNav() {
     ...(isAuthenticated
       ? [
           { to: "/rooms" as const, label: t("nav.rooms"), icon: BookOpen },
+          { to: "/friends" as const, label: t("nav.friends"), icon: Users },
+          { to: "/challenges" as const, label: t("nav.challenges"), icon: Flame },
           { to: "/leaderboard" as const, label: t("nav.leaderboard"), icon: Trophy },
           { to: "/profile" as const, label: t("nav.profile"), icon: User },
         ]

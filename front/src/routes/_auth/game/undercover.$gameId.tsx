@@ -6,8 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
+import { useAchievementNotifications } from "@/components/achievements/AchievementToast"
+import { PhaseTimer } from "@/components/games/shared/PhaseTimer"
 import { DescriptionPhase } from "@/components/games/undercover/DescriptionPhase"
 import { EliminationOverlay } from "@/components/games/undercover/EliminationOverlay"
+import { VoteHistory } from "@/components/games/undercover/VoteHistory"
 import { GameOverScreen } from "@/components/games/undercover/GameOverScreen"
 import { RoleRevealPhase } from "@/components/games/undercover/RoleRevealPhase"
 import { VotingPhase } from "@/components/games/undercover/VotingPhase"
@@ -82,6 +85,14 @@ function UndercoverGamePage() {
         description_order?: DescriptionOrderEntry[]
         current_describer_index?: number
         descriptions?: Record<string, string>
+        vote_history?: {
+          round: number
+          votes: { voter: string; voter_id: string; target: string; target_id: string }[]
+          eliminated: { username: string; role: string; user_id: string } | null
+        }[]
+        timer_config?: { description_seconds: number; voting_seconds: number }
+        timer_started_at?: string | null
+        newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
       }
     },
     refetchInterval: 2000,
@@ -277,6 +288,26 @@ function UndercoverGamePage() {
     setRoleRevealed(true)
   }, [])
 
+  // Achievement notifications
+  useAchievementNotifications(serverState?.newly_unlocked_achievements, user?.id)
+
+  const timerExpiredRef = useRef(false)
+  const handleTimerExpired = useCallback(async () => {
+    if (!gameState.isHost || timerExpiredRef.current) return
+    timerExpiredRef.current = true
+    try {
+      await apiClient({
+        method: "POST",
+        url: `/api/v1/undercover/games/${gameId}/timer-expired`,
+      })
+      queryClient.invalidateQueries({ queryKey: ["undercover", gameId] })
+    } catch {
+      // Ignore — another client may have already triggered it
+    } finally {
+      timerExpiredRef.current = false
+    }
+  }, [gameId, gameState.isHost, queryClient])
+
   const handleLeaveRoom = useCallback(async () => {
     if (!user || !roomIdRef.current) {
       navigate({ to: "/rooms" })
@@ -390,6 +421,21 @@ function UndercoverGamePage() {
         />
       )}
 
+      {/* Phase Timer */}
+      {serverState?.timer_config && serverState?.timer_started_at && (gameState.phase === "describing" || gameState.phase === "playing") && (
+        <div className="mb-4">
+          <PhaseTimer
+            timerStartedAt={serverState.timer_started_at}
+            durationSeconds={
+              gameState.phase === "describing"
+                ? serverState.timer_config.description_seconds
+                : serverState.timer_config.voting_seconds
+            }
+            onExpired={handleTimerExpired}
+          />
+        </div>
+      )}
+
       {/* Describing Phase */}
       {gameState.phase === "describing" && (
         <DescriptionPhase
@@ -444,6 +490,11 @@ function UndercoverGamePage() {
           onBackToRoom={handleBackToRoom}
           onLeaveRoom={handleLeaveRoom}
         />
+      )}
+
+      {/* Vote History */}
+      {serverState?.vote_history && serverState.vote_history.length > 0 && (
+        <VoteHistory history={serverState.vote_history} />
       )}
 
       {/* Player List */}

@@ -7,7 +7,13 @@ from fastapi import APIRouter, Depends, Query
 from ipg.api.controllers.achievement import AchievementController
 from ipg.api.controllers.stats import StatsController
 from ipg.api.models.stats import UserStats
-from ipg.api.schemas.stats import AchievementWithProgress, LeaderboardEntry
+from ipg.api.schemas.stats import (
+    AchievementWithProgress,
+    DailyGameRecord,
+    GameDurationStats,
+    HeadToHeadStats,
+    LeaderboardEntry,
+)
 from ipg.dependencies import get_achievement_controller, get_stats_controller
 
 router = APIRouter(
@@ -35,6 +41,38 @@ async def get_user_achievements(
 ) -> Sequence[AchievementWithProgress]:
     """Get all achievements with definitions and user progress."""
     return await achievement_controller.get_user_achievements(user_id)
+
+
+@router.get("/users/{user_id}/history", response_model=list[DailyGameRecord])
+async def get_game_history(
+    *,
+    user_id: UUID,
+    stats_controller: Annotated[StatsController, Depends(get_stats_controller)],
+    days: int = Query(default=30, ge=1, le=365, description="Number of days to look back"),
+) -> list[DailyGameRecord]:
+    """Get daily win/loss history for charts."""
+    return await stats_controller.get_game_history_for_charts(user_id, days=days)
+
+
+@router.get("/users/{user_id}/duration", response_model=GameDurationStats)
+async def get_duration_stats(
+    *,
+    user_id: UUID,
+    stats_controller: Annotated[StatsController, Depends(get_stats_controller)],
+) -> GameDurationStats:
+    """Get game duration analytics for a user."""
+    return await stats_controller.get_game_duration_stats(user_id)
+
+
+@router.get("/users/{user_id}/vs/{opponent_id}", response_model=HeadToHeadStats)
+async def get_head_to_head(
+    *,
+    user_id: UUID,
+    opponent_id: UUID,
+    stats_controller: Annotated[StatsController, Depends(get_stats_controller)],
+) -> HeadToHeadStats:
+    """Get head-to-head stats between two players."""
+    return await stats_controller.get_head_to_head(user_id, opponent_id)
 
 
 @router.get("/leaderboard", response_model=Sequence[LeaderboardEntry])

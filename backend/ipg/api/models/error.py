@@ -9,6 +9,7 @@ from ipg.api.schemas.error import (  # noqa: F401
     GameNotFoundError,
     GameNotInProgressError,
     InvalidCardIndexError,
+    InvalidOrExpiredTokenError,
     NoClueGivenError,
     NotEnoughPlayersError,
     NotOperativeError,

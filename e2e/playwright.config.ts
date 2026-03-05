@@ -34,11 +34,17 @@ export default defineConfig({
   projects: [
     {
       name: "non-game",
-      testMatch: ["**/auth/**", "**/smoke/**", "**/profile/**"],
+      testMatch: [
+        "**/auth/**",
+        "**/smoke/**",
+        "**/profile/**",
+        "**/challenges/**",
+        "**/friends/**",
+      ],
     },
     {
       name: "rooms",
-      testMatch: ["**/rooms/**"],
+      testMatch: ["**/rooms/**", "**/chat/**"],
     },
     {
       name: "undercover",

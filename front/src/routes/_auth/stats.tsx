@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/providers/AuthProvider"
 import apiClient from "@/api/client"
+import { DurationStats } from "@/components/stats/DurationStats"
+
+const WinLossChart = lazy(() => import("@/components/stats/WinLossChart").then((m) => ({ default: m.WinLossChart })))
+const RoleDistributionChart = lazy(() =>
+  import("@/components/stats/RoleDistributionChart").then((m) => ({ default: m.RoleDistributionChart })),
+)
 
 interface UserStatsData {
   total_games_played: number
@@ -95,6 +101,33 @@ function StatsPage() {
         <StatCard label={t("stats.winRate")} value={winRate} />
         <StatCard label={t("stats.currentStreak")} value={stats?.current_win_streak ?? 0} />
       </div>
+
+      {/* Charts */}
+      {user?.id && (
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <Suspense fallback={null}>
+            <WinLossChart userId={user.id} />
+          </Suspense>
+          <Suspense fallback={null}>
+            {stats && (
+              <RoleDistributionChart
+                timesCivilian={stats.times_civilian}
+                timesUndercover={stats.times_undercover}
+                timesMrWhite={stats.times_mr_white}
+                timesSpymaster={stats.times_spymaster}
+                timesOperative={stats.times_operative}
+              />
+            )}
+          </Suspense>
+        </div>
+      )}
+
+      {/* Duration Stats */}
+      {user?.id && (
+        <div className="mb-8">
+          <DurationStats userId={user.id} />
+        </div>
+      )}
 
       {/* Undercover */}
       <h2 className="text-xl font-semibold mb-4">{t("games.undercover.name")}</h2>

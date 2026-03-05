@@ -38,4 +38,6 @@ export const ROUTES = {
   codenamesGame: (id: string) => `/game/codenames/${id}`,
   profile: "/profile",
   leaderboard: "/leaderboard",
+  challenges: "/challenges",
+  friends: "/friends",
 } as const;

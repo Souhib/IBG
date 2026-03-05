@@ -8,6 +8,7 @@ import {
   apiGetUndercoverState,
   apiGetCodenamesBoard,
   apiSubmitDescription,
+  apiUpdateRoomSettings,
   type LoginResponse,
   type RoomResponse,
   type CodenamesBoardState,
@@ -69,6 +70,18 @@ export async function setupRoomWithPlayers(
   // Host creates room via API
   const room = await apiCreateRoom(logins[0].access_token, gameType);
   const roomDetails = await apiGetRoom(room.id, logins[0].access_token);
+
+  // Set very long timers so they never expire during tests
+  await apiUpdateRoomSettings(
+    room.id,
+    {
+      description_timer: 600,
+      voting_timer: 600,
+      codenames_clue_timer: 600,
+      codenames_guess_timer: 600,
+    },
+    logins[0].access_token,
+  );
 
   // All other players join via API
   for (let i = 1; i < logins.length; i++) {
@@ -150,6 +163,18 @@ export async function setupRoomWithPlayersViaUI(
   // Host creates room via API
   const room = await apiCreateRoom(logins[0].access_token, gameType);
   const roomDetails = await apiGetRoom(room.id, logins[0].access_token);
+
+  // Set very long timers so they never expire during tests
+  await apiUpdateRoomSettings(
+    room.id,
+    {
+      description_timer: 600,
+      voting_timer: 600,
+      codenames_clue_timer: 600,
+      codenames_guess_timer: 600,
+    },
+    logins[0].access_token,
+  );
 
   // Host navigates directly to room lobby
   const hostPage = await createPlayerPage(

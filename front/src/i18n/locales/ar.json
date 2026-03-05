@@ -22,7 +22,9 @@
     "logout": "تسجيل الخروج",
     "leaderboard": "لوحة المتصدرين",
     "theme": "المظهر",
-    "about": "حولي"
+    "about": "حولي",
+    "friends": "الأصدقاء",
+    "challenges": "التحديات"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -36,7 +38,23 @@
     "registerDescription": "انضم إلى IPG والعب مع أصدقائك",
     "noAccount": "ليس لديك حساب؟",
     "hasAccount": "لديك حساب بالفعل؟",
-    "forgotPassword": "نسيت كلمة المرور؟"
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "forgotPasswordDescription": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
+    "resetEmailSent": "إذا كان هناك حساب مرتبط بهذا البريد، فقد تم إرسال رابط إعادة التعيين. تحقق من صندوق الوارد.",
+    "backToLogin": "العودة لتسجيل الدخول",
+    "sendResetLink": "إرسال رابط إعادة التعيين",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "resetPasswordDescription": "أدخل كلمة المرور الجديدة أدناه",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
+    "passwordTooShort": "يجب أن تكون كلمة المرور 5 أحرف على الأقل",
+    "passwordResetSuccess": "تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.",
+    "invalidOrExpiredToken": "هذا الرابط غير صالح أو منتهي الصلاحية",
+    "verifyingEmail": "جاري التحقق من بريدك الإلكتروني...",
+    "emailVerified": "تم التحقق من البريد الإلكتروني",
+    "emailVerifiedDescription": "تم التحقق من بريدك الإلكتروني بنجاح. يمكنك الآن تسجيل الدخول.",
+    "verificationFailed": "فشل التحقق"
   },
   "home": {
     "title": "ألعاب حفلات إسلامية",
@@ -85,7 +103,16 @@
     "joining": "جاري الانضمام...",
     "joinFailed": "فشل الانضمام للغرفة",
     "invalidCode": "الرجاء إدخال رمز غرفة صحيح",
-    "invalidPassword": "الرجاء إدخال كلمة المرور المكونة من 4 أرقام"
+    "invalidPassword": "الرجاء إدخال كلمة المرور المكونة من 4 أرقام",
+    "settings": "إعدادات اللعبة",
+    "settingsSaved": "تم حفظ الإعدادات!",
+    "descriptionTimer": "مؤقت الوصف (ثواني)",
+    "votingTimer": "مؤقت التصويت (ثواني)",
+    "clueTimer": "مؤقت التلميح (ثواني)",
+    "guessTimer": "مؤقت التخمين (ثواني)",
+    "enableMrWhite": "تفعيل دور السيد وايت",
+    "spectators": "المشاهدون",
+    "watchGame": "مشاهدة"
   },
   "toast": {
     "playerJoined": "{{username}} انضم للغرفة",
@@ -144,7 +171,11 @@
       "descriptionSubmitted": "!تم إرسال وصفك",
       "allDescriptionsIn": "!تم جمع كل الأوصاف",
       "timeToVote": "...استعدوا للتصويت والإقصاء",
-      "selected": "تم الاختيار"
+      "selected": "تم الاختيار",
+      "voteHistory": "سجل التصويت",
+      "round": "الجولة {{number}}",
+      "votedForPlayer": "{{voter}} صوّت ضد {{target}}",
+      "wasEliminated": "{{username}} تم إقصاؤه ({{role}})"
     },
     "codenames": {
       "giveClue": "أعطِ تلميحاً",
@@ -156,7 +187,12 @@
       "yourTurn": "دورك الآن!",
       "waitingForClue": "في انتظار تلميح رئيس الجواسيس...",
       "guessesRemaining": "التخمينات: {{made}} / {{max}}",
-      "players": "اللاعبون"
+      "players": "اللاعبون",
+      "clueHistory": "سجل التلميحات",
+      "clue": "تلميح",
+      "guesses": "التخمينات",
+      "correct": "صحيح",
+      "wrong": "خطأ"
     }
   },
   "stats": {
@@ -170,7 +206,19 @@
     "recentGames": "الألعاب الأخيرة",
     "noGames": "لم تلعب أي لعبة بعد",
     "won": "فوز",
-    "lost": "خسارة"
+    "lost": "خسارة",
+    "winLossOverTime": "الانتصارات والخسائر عبر الزمن",
+    "roleDistribution": "توزيع الأدوار",
+    "gameDuration": "مدة اللعب",
+    "avgDuration": "المتوسط",
+    "fastestGame": "الأسرع",
+    "longestGame": "الأطول",
+    "gamesTracked": "الألعاب المسجلة",
+    "headToHead": "وجهاً لوجه",
+    "yourWins": "انتصاراتك",
+    "theirWins": "انتصاراتهم",
+    "draws": "تعادل",
+    "totalGames": "{{count}} لعبة معاً"
   },
   "achievements": {
     "title": "الإنجازات",
@@ -200,7 +248,13 @@
     "passwordChanged": "تم تغيير كلمة المرور!",
     "viewStats": "عرض إحصائيات اللعب",
     "viewAchievements": "عرض شاراتك المكتسبة",
-    "joinOrCreate": "انضم أو أنشئ غرفة لعب"
+    "joinOrCreate": "انضم أو أنشئ غرفة لعب",
+    "deleteAccount": "حذف الحساب",
+    "deleteAccountDescription": "حذف حسابك نهائياً وجميع البيانات المرتبطة. لا يمكن التراجع عن هذا الإجراء.",
+    "deleteAccountWarning": "سيتم حذف حسابك نهائياً. أدخل كلمة المرور للتأكيد.",
+    "enterPasswordToDelete": "أدخل كلمة المرور",
+    "deleteAccountConfirm": "حذف نهائياً",
+    "accountDeleted": "تم حذف حسابك"
   },
   "about": {
     "title": "عن المبرمج",
@@ -220,6 +274,42 @@
     "mentoringTitle": "إرشاد مجاني",
     "mentoringText": "بخبرتي أستطيع مساعدة مهندسي علوم الحاسوب والمطورين أو أي شخص يريد تعلم المزيد عن علوم الحاسوب — مجاناً. تواصل معي عبر البريد الإلكتروني أو الهاتف. إذا لم أرد، اترك رسالة وسأتصل بك.",
     "contactMe": "تواصل معي"
+  },
+  "friends": {
+    "title": "الأصدقاء",
+    "myFriends": "أصدقائي",
+    "pendingRequests": "قيد الانتظار",
+    "addFriend": "إضافة صديق",
+    "removeFriend": "إزالة",
+    "accept": "قبول",
+    "reject": "رفض",
+    "requestSent": "تم إرسال طلب الصداقة!",
+    "requestAccepted": "تم قبول طلب الصداقة!",
+    "requestRejected": "تم رفض طلب الصداقة",
+    "friendRemoved": "تمت إزالة الصديق",
+    "noFriends": "لا أصدقاء بعد. أضف أصدقاء من صفحات اللاعبين!",
+    "noPending": "لا طلبات معلقة",
+    "noResults": "لا أصدقاء يطابقون بحثك",
+    "searchPlaceholder": "ابحث عن أصدقاء..."
+  },
+  "chat": {
+    "title": "الدردشة",
+    "placeholder": "اكتب رسالة...",
+    "noMessages": "لا رسائل بعد. ابدأ المحادثة!"
+  },
+  "challenges": {
+    "title": "التحديات",
+    "daily": "يومي",
+    "weekly": "أسبوعي",
+    "completed": "مكتمل",
+    "progress": "{{current}} / {{target}}",
+    "expiresIn": "ينتهي في {{time}}",
+    "noChallenges": "لا تحديات متاحة. العب لعبة للبدء!",
+    "play": "العب",
+    "win": "اربح",
+    "playAsRole": "العب كـ {{role}}",
+    "anyGame": "أي لعبة",
+    "challengeCompleted": "تم إكمال التحدي!"
   },
   "errors": {
     "api": {

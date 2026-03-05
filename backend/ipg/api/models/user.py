@@ -10,6 +10,8 @@ class UserBase(DBModel):
     username: str = Field(default=None, index=True, min_length=3)
     email_address: EmailStr = Field(unique=True, index=True, sa_type=AutoString)
     country: str | None = None
+    email_verified: bool = Field(default=False)
+    bio: str | None = Field(default=None, max_length=200)
 
     @pydantic.field_validator("country")
     @classmethod

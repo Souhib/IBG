@@ -7,15 +7,14 @@ test.describe("Profile — Authenticated Navigation", () => {
     await authenticatedPage.goto(ROUTES.profile);
     await authenticatedPage.waitForLoadState("domcontentloaded");
 
-    // Should see the user's avatar (initial letter circle)
-    const avatar = authenticatedPage.locator(
-      ".rounded-full.bg-primary\\/10",
-    );
-    await expect(avatar).toBeVisible({ timeout: 10_000 });
-
-    // Should see the user's email
+    // Should see the user's username heading
     await expect(
-      authenticatedPage.getByText("user@test.com"),
+      authenticatedPage.getByRole("heading", { level: 1 }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Should see the "Delete Account" section (confirms profile loaded)
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "Delete Account" }),
     ).toBeVisible();
   });
 

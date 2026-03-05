@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     # Sentry
     sentry_dsn: str = ""
 
+    # Email (Resend)
+    resend_api_key: str = ""
+    from_email: str = "IPG <noreply@ipg.app>"
+
     # CORS
     cors_origins: str = ""
 

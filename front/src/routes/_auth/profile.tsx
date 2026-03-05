@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
-import { Award, BarChart3, Check, Gamepad2, KeyRound, Pencil, X } from "lucide-react"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { Award, BarChart3, Check, Gamepad2, KeyRound, Pencil, Trash2, X } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -12,7 +12,8 @@ export const Route = createFileRoute("/_auth/profile")({
 
 function ProfilePage() {
   const { t } = useTranslation()
-  const { user, setUser } = useAuth()
+  const { user, setUser, logout } = useAuth()
+  const navigate = useNavigate()
 
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [newUsername, setNewUsername] = useState(user?.username ?? "")
@@ -21,6 +22,10 @@ function ProfilePage() {
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [newPassword, setNewPassword] = useState("")
   const [isSavingPassword, setIsSavingPassword] = useState(false)
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletePassword, setDeletePassword] = useState("")
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
   const handleSaveUsername = async () => {
     if (!user || !newUsername.trim() || newUsername === user.username) {
@@ -58,6 +63,25 @@ function ProfilePage() {
       toast.error(getApiErrorMessage(err))
     } finally {
       setIsSavingUsername(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword || isDeletingAccount) return
+    setIsDeletingAccount(true)
+    try {
+      await apiClient({
+        method: "DELETE",
+        url: "/api/v1/users/me/account",
+        data: { password: deletePassword },
+      })
+      logout()
+      navigate({ to: "/" })
+      toast.success(t("profile.accountDeleted"))
+    } catch (err) {
+      toast.error(getApiErrorMessage(err))
+    } finally {
+      setIsDeletingAccount(false)
     }
   }
 
@@ -193,6 +217,63 @@ function ProfilePage() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="rounded-xl border border-destructive/30 bg-card p-8 mb-8">
+        <h2 className="text-lg font-semibold text-destructive flex items-center gap-2">
+          <Trash2 className="h-5 w-5" />
+          {t("profile.deleteAccount")}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t("profile.deleteAccountDescription")}</p>
+
+        {showDeleteConfirm ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm font-medium text-destructive">{t("profile.deleteAccountWarning")}</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder={t("profile.enterPasswordToDelete")}
+                className="rounded-md border border-destructive/30 bg-background px-3 py-2 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-destructive"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleDeleteAccount()
+                  if (e.key === "Escape") {
+                    setShowDeleteConfirm(false)
+                    setDeletePassword("")
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeletingAccount || !deletePassword}
+                className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+              >
+                {isDeletingAccount ? t("common.loading") : t("profile.deleteAccountConfirm")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(false)
+                  setDeletePassword("")
+                }}
+                className="rounded-md px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="mt-4 rounded-md border border-destructive/30 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            {t("profile.deleteAccount")}
+          </button>
+        )}
       </div>
 
       {/* Quick Links */}

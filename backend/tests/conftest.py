@@ -13,9 +13,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ipg.api.controllers.achievement import AchievementController
 from ipg.api.controllers.auth import AuthController
+from ipg.api.controllers.challenge import ChallengeController
+from ipg.api.controllers.chat import ChatController
 from ipg.api.controllers.codenames import CodenamesController
 from ipg.api.controllers.codenames_game import CodenamesGameController
+from ipg.api.controllers.friend import FriendController
 from ipg.api.controllers.game import GameController
+from ipg.api.controllers.profile import ProfileController
 from ipg.api.controllers.room import RoomController
 from ipg.api.controllers.shared import get_password_hash
 from ipg.api.controllers.stats import StatsController
@@ -161,6 +165,30 @@ async def get_undercover_game_controller(session: AsyncSession) -> UndercoverGam
 async def get_codenames_game_controller(session: AsyncSession) -> CodenamesGameController:
     """Create a CodenamesGameController instance for testing."""
     return CodenamesGameController(session)
+
+
+@pytest_asyncio.fixture(name="challenge_controller")
+async def get_challenge_controller(session: AsyncSession) -> ChallengeController:
+    """Create a ChallengeController instance for testing."""
+    return ChallengeController(session)
+
+
+@pytest_asyncio.fixture(name="friend_controller")
+async def get_friend_controller(session: AsyncSession) -> FriendController:
+    """Create a FriendController instance for testing."""
+    return FriendController(session)
+
+
+@pytest_asyncio.fixture(name="chat_controller")
+async def get_chat_controller(session: AsyncSession) -> ChatController:
+    """Create a ChatController instance for testing."""
+    return ChatController(session)
+
+
+@pytest_asyncio.fixture(name="profile_controller")
+async def get_profile_controller(session: AsyncSession) -> ProfileController:
+    """Create a ProfileController instance for testing."""
+    return ProfileController(session)
 
 
 # ========== Factory Fixtures ==========

@@ -1,0 +1,26 @@
+from datetime import datetime
+from uuid import UUID, uuid4
+
+from sqlmodel import Field
+
+from ipg.api.schemas.shared import BaseTable
+
+
+class PasswordResetToken(BaseTable, table=True):
+    """Token for password reset requests."""
+
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True, unique=True)
+    user_id: UUID = Field(foreign_key="user.id", index=True)
+    token: str = Field(unique=True, index=True)
+    expires_at: datetime
+    used: bool = Field(default=False)
+
+
+class EmailVerificationToken(BaseTable, table=True):
+    """Token for email verification."""
+
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True, unique=True)
+    user_id: UUID = Field(foreign_key="user.id", index=True)
+    token: str = Field(unique=True, index=True)
+    expires_at: datetime
+    used: bool = Field(default=False)

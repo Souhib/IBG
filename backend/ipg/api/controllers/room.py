@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -19,6 +20,7 @@ from ipg.api.models.event import EventCreate
 from ipg.api.models.relationship import RoomActivityLink, RoomUserLink
 from ipg.api.models.room import RoomCreate, RoomJoin, RoomLeave, RoomType
 from ipg.api.models.table import Activity, Game, Room, User
+from ipg.api.schemas.error import BaseError
 
 
 class RoomController:
@@ -222,6 +224,49 @@ class RoomController:
         ).one()
         return room
 
+    async def join_room_as_spectator(self, room_id: UUID, user_id: UUID) -> Room:
+        """Add a user to a room as a spectator."""
+        try:
+            db_user = (await self.session.exec(select(User).where(User.id == user_id))).one()
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id) from None
+        try:
+            db_room = (await self.session.exec(select(Room).where(Room.id == room_id))).one()
+        except NoResultFound:
+            raise RoomNotFoundError(room_id=room_id) from None
+
+        # Check for existing link
+        existing_link = (
+            await self.session.exec(
+                select(RoomUserLink).where(
+                    RoomUserLink.room_id == db_room.id,
+                    RoomUserLink.user_id == db_user.id,
+                )
+            )
+        ).first()
+        if existing_link:
+            existing_link.connected = True
+            existing_link.is_spectator = True
+            existing_link.last_seen_at = datetime.now()
+            existing_link.disconnected_at = None
+            self.session.add(existing_link)
+        else:
+            link = RoomUserLink(
+                room_id=db_room.id,
+                user_id=db_user.id,
+                last_seen_at=datetime.now(),
+                is_spectator=True,
+            )
+            self.session.add(link)
+        await self.session.commit()
+
+        room = (
+            await self.session.exec(
+                select(Room).where(Room.id == db_room.id).options(selectinload(Room.users), selectinload(Room.games))
+            )
+        ).one()
+        return room
+
     async def get_room_state(self, room_id: UUID, user_id: UUID) -> dict:
         """Get room state with connection status for all players. Updates heartbeat."""
         room = await self.get_room_by_id(room_id)
@@ -258,6 +303,7 @@ class RoomController:
                         "is_connected": rul.connected,
                         "is_disconnected": not rul.connected and rul.disconnected_at is not None,
                         "is_host": room.owner_id == u.id,
+                        "is_spectator": rul.is_spectator,
                     }
                 )
 
@@ -277,7 +323,31 @@ class RoomController:
             "game_type": game_type,
             "players": players,
             "type": room.type.value,
+            "settings": room.settings,
         }
+
+    async def update_room_settings(self, room_id: UUID, user_id: UUID, settings: dict) -> dict:
+        """Update room settings. Only the host can update."""
+        room = await self.get_room_by_id(room_id)
+        if room.owner_id != user_id:
+            raise BaseError(
+                message="Only the host can update room settings.",
+                frontend_message="Only the host can update room settings.",
+                status_code=403,
+            )
+        room.settings = settings
+        flag_modified(room, "settings")
+        self.session.add(room)
+        await self.session.commit()
+        return {"room_id": str(room_id), "settings": settings}
+
+    async def rematch(self, room_id: UUID, user_id: UUID) -> dict:
+        """Clear active game and return to lobby. Preserves room settings and connected players."""
+        room = await self.get_room_by_id(room_id)
+        room.active_game_id = None
+        self.session.add(room)
+        await self.session.commit()
+        return {"room_id": str(room_id), "status": "lobby"}
 
     async def create_room_activity(self, room_id: UUID, activity_create: EventCreate) -> Activity:
         """Create an activity."""

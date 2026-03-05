@@ -7,7 +7,7 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: ipg-e2e-db
+    container_name: ibg-e2e-db
     environment:
       POSTGRES_USER: ipg
       POSTGRES_PASSWORD: ipg
@@ -20,7 +20,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ipg-e2e-network
+      - ibg-e2e-network
 
   # ─── Backend API ──────────────────────────────────────────
 
@@ -31,7 +31,7 @@ services:
       target: production
       args:
         INSTALL_DEV: "true"
-    container_name: ipg-e2e-backend
+    container_name: ibg-e2e-backend
     ports:
       - "5049:5000"
     environment:
@@ -39,7 +39,7 @@ services:
       ENVIRONMENT: development
       IPG_ENV: development
       JWT_SECRET_KEY: e2e-secret-key
-      CORS_ORIGINS: "*"
+      CORS_ORIGINS: "http://localhost:3049"
       LOG_LEVEL: WARNING
       DISCONNECT_GRACE_PERIOD_SECONDS: "30"
       HEARTBEAT_STALE_SECONDS: "10"
@@ -54,7 +54,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - ipg-e2e-network
+      - ibg-e2e-network
 
   # ─── Frontend SPA ─────────────────────────────────────────
 
@@ -65,7 +65,7 @@ services:
       target: production
       args:
         VITE_API_URL: http://localhost:5049
-    container_name: ipg-e2e-frontend
+    container_name: ibg-e2e-frontend
     ports:
       - "3049:80"
     depends_on:
@@ -78,8 +78,8 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - ipg-e2e-network
+      - ibg-e2e-network
 
 networks:
-  ipg-e2e-network:
+  ibg-e2e-network:
     driver: bridge
