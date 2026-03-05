@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from sqlalchemy import UniqueConstraint
@@ -8,7 +8,7 @@ from sqlmodel import Field
 from ibg.api.schemas.shared import BaseTable
 
 
-class AchievementCategory(str, Enum):
+class AchievementCategory(StrEnum):
     BEGINNER = "beginner"
     UNDERCOVER_MASTER = "undercover_master"
     CODENAMES_MASTER = "codenames_master"

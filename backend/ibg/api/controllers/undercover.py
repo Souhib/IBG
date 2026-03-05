@@ -1,17 +1,17 @@
 import random
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.models.error import (
     TermPairAlreadyExistsError,
     TermPairNotFoundError,
     WordAlreadyExistsError,
-    WordNotFoundErrorId,
-    WordNotFoundErrorName,
+    WordNotFoundByIdError,
+    WordNotFoundByNameError,
 )
 from ibg.api.models.undercover import TermPair, Word, WordCreate, WordUpdate
 
@@ -28,7 +28,7 @@ class UndercoverController:
             await self.session.refresh(new_word)
             return new_word
         except IntegrityError:
-            raise WordAlreadyExistsError(word=word_create.word)
+            raise WordAlreadyExistsError(word=word_create.word) from None
 
     async def get_words(self) -> Sequence[Word]:
         return (await self.session.exec(select(Word))).all()
@@ -45,13 +45,13 @@ class UndercoverController:
         try:
             return (await self.session.exec(select(Word).where(Word.id == word_id))).one()
         except NoResultFound:
-            raise WordNotFoundErrorId(word_id=word_id)
+            raise WordNotFoundByIdError(word_id=word_id) from None
 
     async def get_word_by_word(self, word: str) -> Word:
         try:
             return (await self.session.exec(select(Word).where(Word.word == word))).one()
         except NoResultFound:
-            raise WordNotFoundErrorName(word=word)
+            raise WordNotFoundByNameError(word=word) from None
 
     async def delete_word(self, word_id: UUID) -> None:
         db_word = (await self.session.exec(select(Word).where(Word.id == word_id))).one()
@@ -62,7 +62,7 @@ class UndercoverController:
         try:
             db_word = (await self.session.exec(select(Word).where(Word.id == word_id))).one()
         except NoResultFound:
-            raise WordNotFoundErrorId(word_id=word_id)
+            raise WordNotFoundByIdError(word_id=word_id) from None
         db_word_data = word_update.model_dump(exclude_unset=True)
         db_word.sqlmodel_update(db_word_data)
         self.session.add(db_word)
@@ -81,7 +81,7 @@ class UndercoverController:
             await self.session.refresh(new_term_pair)
             return new_term_pair
         except IntegrityError:
-            raise TermPairAlreadyExistsError(term1=str(word1_id), term2=str(word2_id))
+            raise TermPairAlreadyExistsError(term1=str(word1_id), term2=str(word2_id)) from None
 
     async def get_term_pairs(self) -> Sequence[TermPair]:
         return (await self.session.exec(select(TermPair))).all()
@@ -90,13 +90,13 @@ class UndercoverController:
         try:
             return (await self.session.exec(select(TermPair).where(TermPair.id == term_pair_id))).one()
         except NoResultFound:
-            raise TermPairNotFoundError(term_pair_id=term_pair_id)
+            raise TermPairNotFoundError(term_pair_id=term_pair_id) from None
 
     async def get_random_term_pair(self) -> TermPair:
         try:
             return random.choice((await self.session.exec(select(TermPair))).all())
         except IndexError:
-            raise NoResultFound
+            raise NoResultFound from None
 
     async def delete_term_pair(self, term_pair_id: UUID) -> None:
         try:
@@ -104,4 +104,4 @@ class UndercoverController:
             await self.session.delete(db_term_pair)
             await self.session.commit()
         except NoResultFound:
-            raise TermPairNotFoundError(term_pair_id=term_pair_id)
+            raise TermPairNotFoundError(term_pair_id=term_pair_id) from None

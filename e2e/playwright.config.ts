@@ -10,8 +10,8 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1,
-  workers: 2,
+  retries: process.env.CI ? 2 : 0,
+  workers: 4,
   globalTimeout: 3_600_000, // 60 minutes for full suite
   reporter: process.env.CI
     ? [["html", { open: "never" }], ["github"]]
@@ -25,8 +25,8 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    actionTimeout: 20_000,
-    navigationTimeout: 30_000,
+    actionTimeout: 15_000,
+    navigationTimeout: 15_000,
     ...devices["Desktop Chrome"],
   },
   globalSetup: "./global-setup.ts",
@@ -43,10 +43,12 @@ export default defineConfig({
     {
       name: "undercover",
       testMatch: ["**/undercover/**"],
+      timeout: 120_000,
     },
     {
       name: "codenames",
       testMatch: ["**/codenames/**"],
+      timeout: 120_000,
     },
   ],
 });

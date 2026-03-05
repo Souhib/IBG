@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID
 
 from sqlmodel import select
@@ -464,9 +464,7 @@ ACHIEVEMENT_DEFINITIONS: list[dict] = [
 ]
 
 # Mapping from achievement code to the stat field it checks
-_ACHIEVEMENT_STAT_MAP: dict[str, str | None] = {
-    defn["code"]: defn["stat_field"] for defn in ACHIEVEMENT_DEFINITIONS
-}
+_ACHIEVEMENT_STAT_MAP: dict[str, str | None] = {defn["code"]: defn["stat_field"] for defn in ACHIEVEMENT_DEFINITIONS}
 
 
 class AchievementController:
@@ -483,21 +481,15 @@ class AchievementController:
         :return: A list of AchievementWithProgress records.
         """
         # Load all definitions
-        all_definitions = (
-            await self.session.exec(select(AchievementDefinition))
-        ).all()
+        all_definitions = (await self.session.exec(select(AchievementDefinition))).all()
 
         # Load user's achievement progress
         user_achievements = (
-            await self.session.exec(
-                select(UserAchievement).where(UserAchievement.user_id == user_id)
-            )
+            await self.session.exec(select(UserAchievement).where(UserAchievement.user_id == user_id))
         ).all()
 
         # Map achievement_id -> UserAchievement for quick lookup
-        ua_map: dict[UUID, UserAchievement] = {
-            ua.achievement_id: ua for ua in user_achievements
-        }
+        ua_map: dict[UUID, UserAchievement] = {ua.achievement_id: ua for ua in user_achievements}
 
         entries: list[AchievementWithProgress] = []
         for defn in all_definitions:
@@ -517,9 +509,7 @@ class AchievementController:
             )
         return entries
 
-    async def check_achievements(
-        self, user_id: UUID, stats: UserStats
-    ) -> list[AchievementDefinition]:
+    async def check_achievements(self, user_id: UUID, stats: UserStats) -> list[AchievementDefinition]:
         """Check which achievements the user has newly unlocked based on their stats.
 
         For each AchievementDefinition that has a stat_field mapping, this compares
@@ -531,9 +521,7 @@ class AchievementController:
         :return: A list of newly unlocked AchievementDefinition records.
         """
         # Load all definitions
-        all_definitions = (
-            await self.session.exec(select(AchievementDefinition))
-        ).all()
+        all_definitions = (await self.session.exec(select(AchievementDefinition))).all()
 
         # Load already-unlocked achievement IDs for this user
         existing = await self.session.exec(
@@ -562,9 +550,7 @@ class AchievementController:
 
         return newly_unlocked
 
-    async def unlock_achievement(
-        self, user_id: UUID, achievement_id: UUID
-    ) -> UserAchievement:
+    async def unlock_achievement(self, user_id: UUID, achievement_id: UUID) -> UserAchievement:
         """Unlock an achievement for a user. Creates or updates the UserAchievement record.
 
         :param user_id: The id of the user.
@@ -581,7 +567,7 @@ class AchievementController:
             )
         ).first()
 
-        now = datetime.now(UTC)
+        now = datetime.now()
 
         if existing is not None:
             if existing.unlocked_at is None:
@@ -609,9 +595,7 @@ class AchievementController:
         This is idempotent -- it skips any definition whose code already exists
         in the database.
         """
-        existing_codes_result = await self.session.exec(
-            select(AchievementDefinition.code)
-        )
+        existing_codes_result = await self.session.exec(select(AchievementDefinition.code))
         existing_codes: set[str] = set(existing_codes_result.all())
 
         for defn_data in ACHIEVEMENT_DEFINITIONS:
@@ -619,9 +603,7 @@ class AchievementController:
                 continue
 
             # Build the definition without the stat_field key (not a DB column)
-            record_data = {
-                k: v for k, v in defn_data.items() if k != "stat_field"
-            }
+            record_data = {k: v for k, v in defn_data.items() if k != "stat_field"}
             definition = AchievementDefinition(**record_data)
             self.session.add(definition)
 

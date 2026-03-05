@@ -1,10 +1,10 @@
 import random
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.models.codenames import (
     CodenamesWord,
@@ -71,7 +71,7 @@ class CodenamesController:
             return new_pack
         except IntegrityError:
             await self.session.rollback()
-            raise CodenamesWordPackAlreadyExistsError(name=word_pack_create.name)
+            raise CodenamesWordPackAlreadyExistsError(name=word_pack_create.name) from None
 
     async def get_word_packs(self) -> Sequence[CodenamesWordPack]:
         """Get all word packs.
@@ -88,13 +88,9 @@ class CodenamesController:
         :raises CodenamesWordPackNotFoundError: If the pack is not found.
         """
         try:
-            return (
-                await self.session.exec(
-                    select(CodenamesWordPack).where(CodenamesWordPack.id == pack_id)
-                )
-            ).one()
+            return (await self.session.exec(select(CodenamesWordPack).where(CodenamesWordPack.id == pack_id))).one()
         except NoResultFound:
-            raise CodenamesWordPackNotFoundError(pack_id=pack_id)
+            raise CodenamesWordPackNotFoundError(pack_id=pack_id) from None
 
     async def delete_word_pack(self, pack_id: UUID) -> None:
         """Delete a word pack by ID.
@@ -103,15 +99,11 @@ class CodenamesController:
         :raises CodenamesWordPackNotFoundError: If the pack is not found.
         """
         try:
-            db_pack = (
-                await self.session.exec(
-                    select(CodenamesWordPack).where(CodenamesWordPack.id == pack_id)
-                )
-            ).one()
+            db_pack = (await self.session.exec(select(CodenamesWordPack).where(CodenamesWordPack.id == pack_id))).one()
             await self.session.delete(db_pack)
             await self.session.commit()
         except NoResultFound:
-            raise CodenamesWordPackNotFoundError(pack_id=pack_id)
+            raise CodenamesWordPackNotFoundError(pack_id=pack_id) from None
 
     # --- Word CRUD ---
 
@@ -145,11 +137,7 @@ class CodenamesController:
         # Verify the word pack exists
         await self.get_word_pack(word_pack_id)
 
-        return (
-            await self.session.exec(
-                select(CodenamesWord).where(CodenamesWord.word_pack_id == word_pack_id)
-            )
-        ).all()
+        return (await self.session.exec(select(CodenamesWord).where(CodenamesWord.word_pack_id == word_pack_id))).all()
 
     async def delete_word(self, word_id: UUID) -> None:
         """Delete a word by ID.
@@ -158,15 +146,11 @@ class CodenamesController:
         :raises CodenamesWordNotFoundError: If the word is not found.
         """
         try:
-            db_word = (
-                await self.session.exec(
-                    select(CodenamesWord).where(CodenamesWord.id == word_id)
-                )
-            ).one()
+            db_word = (await self.session.exec(select(CodenamesWord).where(CodenamesWord.id == word_id))).one()
             await self.session.delete(db_word)
             await self.session.commit()
         except NoResultFound:
-            raise CodenamesWordNotFoundError(word_id=word_id)
+            raise CodenamesWordNotFoundError(word_id=word_id) from None
 
     async def get_random_words(self, count: int = 25, pack_ids: list[UUID] | None = None) -> list[CodenamesWord]:
         """Get random words for building a Codenames board.

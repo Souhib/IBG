@@ -2,7 +2,7 @@
 
 ## Overview
 
-React 19 SPA for the IBG (Islamic Board Games) platform. Uses TanStack Router for file-based routing, TanStack Query for server state, Tailwind CSS v4 with shadcn/ui components, and Socket.IO for real-time multiplayer games.
+React 19 SPA for the IBG (Islamic Board Games) platform. Uses TanStack Router for file-based routing, TanStack Query for server state management and real-time polling, Tailwind CSS v4 with shadcn/ui components.
 
 ## Development Commands
 
@@ -34,11 +34,11 @@ bun run test:ui             # Vitest UI
 - **Runtime**: Bun
 - **Framework**: React 19 + TypeScript
 - **Routing**: TanStack Router (file-based)
-- **State**: TanStack Query (React Query) for server state
+- **State**: TanStack Query (React Query) for server state + polling
 - **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Forms**: React Hook Form + Zod validation
 - **API**: Kubb-generated hooks from OpenAPI spec + ky HTTP client
-- **Real-time**: Socket.IO client for multiplayer games
+- **Real-time**: TanStack Query polling (2s `refetchInterval`)
 - **i18n**: i18next (English + Arabic with RTL support)
 - **Testing**: Vitest + Testing Library + MSW
 
@@ -55,14 +55,12 @@ src/
 │   ├── ErrorBoundary.tsx
 │   └── NotFound.tsx
 ├── hooks/
-│   ├── use-socket.ts        # Socket.IO connection hook
-│   └── index.ts
+│   └── use-prayer-times.ts  # Prayer times hook
 ├── i18n/
 │   ├── index.ts             # i18next config
 │   └── locales/             # en.json, ar.json
 ├── lib/
 │   ├── utils.ts             # cn() utility
-│   ├── socket.ts            # Socket.IO client singleton
 │   └── auth.ts              # Token storage helpers
 ├── providers/
 │   ├── AuthProvider.tsx     # JWT auth state + token refresh
@@ -76,12 +74,12 @@ src/
 │   ├── _auth.tsx            # Protected route layout
 │   ├── _auth/
 │   │   ├── rooms/
-│   │   │   ├── index.tsx    # Room list
+│   │   │   ├── index.tsx    # Room list + join form
 │   │   │   ├── create.tsx   # Create room
-│   │   │   └── $roomId.tsx  # Room lobby (Socket.IO)
+│   │   │   └── $roomId.tsx  # Room lobby (REST polling)
 │   │   ├── game/
-│   │   │   ├── undercover.$gameId.tsx  # Undercover game UI
-│   │   │   └── codenames.$gameId.tsx   # Codenames game UI
+│   │   │   ├── undercover.$gameId.tsx  # Undercover game UI (polling)
+│   │   │   └── codenames.$gameId.tsx   # Codenames game UI (polling)
 │   │   ├── profile.tsx      # User profile + stats
 │   │   └── achievements.tsx # Achievement badges
 │   └── auth/
@@ -105,21 +103,33 @@ function MyComponent() {
 
 **Never edit files in `src/api/generated/`.** Regenerate with `bun run generate`.
 
-### Socket.IO (Real-time Games)
+### Real-time Polling (Game & Room Pages)
+Game state is fetched via `useQuery` with 2s polling. All UI state is derived from the server response via `useMemo`, not accumulated from events.
+
 ```typescript
-import { useSocket } from "@/hooks/use-socket"
+const { data: gameState } = useQuery({
+  queryKey: ["undercover", gameId],
+  queryFn: () => apiClient({ method: "GET", url: `/api/v1/undercover/games/${gameId}/state` })
+    .then(r => r.data),
+  refetchInterval: 2000,
+  refetchOnWindowFocus: true,
+})
 
-function GameComponent() {
-  const { emit, on, isConnected } = useSocket()
-
-  useEffect(() => {
-    const off = on("game_state", (data) => { ... })
-    return () => off()
-  }, [on])
-
-  emit("vote", { game_id: "...", voted_for: "..." })
-}
+const voteMutation = useMutation({
+  mutationFn: (votedFor: string) =>
+    apiClient({ method: "POST", url: `/api/v1/undercover/games/${gameId}/vote`,
+      data: { voted_for: votedFor } }),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["undercover", gameId] }),
+})
 ```
+
+Phase transitions detected by comparing refs to previous state (`previousPhaseRef`, `previousRoundRef`).
+
+### Room Lobby (REST Polling)
+- Join room via REST `PATCH /api/v1/rooms/join` on mount
+- Poll room state every 2s (`useQuery` with `refetchInterval: 2000`)
+- Auto-navigate when `active_game_id` appears in polled data
+- Leave room via REST `PATCH /api/v1/rooms/leave`
 
 ### File-Based Routing
 - `__root.tsx` - Root layout (double underscore)
@@ -131,7 +141,6 @@ function GameComponent() {
 - JWT stored in localStorage (`ibg-token`, `ibg-refresh-token`, `ibg-token-expiry`)
 - Auto-refresh 1 minute before expiry
 - 401 responses clear auth state and redirect to login
-- Socket.IO sends token in connection handshake
 
 ### Styling
 ```typescript
@@ -173,7 +182,6 @@ Single theme with light/dark mode support via CSS variables. Uses emerald green 
 
 ```env
 VITE_API_URL=http://localhost:5000    # Backend API URL
-VITE_WS_URL=http://localhost:5000     # Socket.IO WebSocket URL
 ```
 
-Vite dev server proxies `/api` and `/socket.io` to the backend.
+Vite dev server proxies `/api` to the backend.

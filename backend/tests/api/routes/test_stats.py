@@ -9,7 +9,7 @@ from starlette.testclient import TestClient
 
 from ibg.api.controllers.achievement import AchievementController
 from ibg.api.controllers.stats import StatsController
-from ibg.api.models.stats import UserAchievement, UserStats
+from ibg.api.models.stats import UserStats
 from ibg.api.schemas.stats import AchievementWithProgress, LeaderboardEntry
 from ibg.dependencies import get_achievement_controller, get_stats_controller
 

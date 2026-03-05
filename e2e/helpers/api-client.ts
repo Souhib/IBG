@@ -204,6 +204,193 @@ export async function apiLeaveAllRooms(
   }
 }
 
+// ─── Game Start API ─────────────────────────────────────────
+
+export async function apiStartGame(
+  roomId: string,
+  gameType: "undercover" | "codenames",
+  token: string,
+): Promise<{ game_id: string; room_id: string }> {
+  const path = gameType === "undercover"
+    ? `/api/v1/undercover/games/${roomId}/start`
+    : `/api/v1/codenames/games/${roomId}/start`;
+  return postJSON(path, {}, token);
+}
+
+// ─── Undercover Game API ────────────────────────────────────
+
+export interface UndercoverGameState {
+  my_role: string;
+  my_word: string;
+  is_alive: boolean;
+  players: {
+    user_id: string;
+    username: string;
+    is_alive: boolean;
+    is_mayor?: boolean;
+  }[];
+  eliminated_players: { user_id: string; username: string; role: string }[];
+  turn_number: number;
+  has_voted: boolean;
+  room_id?: string;
+  is_host?: boolean;
+  votes?: Record<string, string>;
+  winner?: string | null;
+  turn_phase?: string;
+  description_order?: { user_id: string; username: string }[];
+  current_describer_index?: number;
+  descriptions?: Record<string, string>;
+}
+
+export async function apiGetUndercoverState(
+  gameId: string,
+  token: string,
+): Promise<UndercoverGameState> {
+  return getJSON<UndercoverGameState>(
+    `/api/v1/undercover/games/${gameId}/state`,
+    token,
+  );
+}
+
+export async function apiSubmitDescription(
+  gameId: string,
+  word: string,
+  token: string,
+): Promise<void> {
+  await postJSON(
+    `/api/v1/undercover/games/${gameId}/describe`,
+    { word },
+    token,
+  );
+}
+
+// ─── Undercover Vote & Next Round API ──────────────────────
+
+export async function apiSubmitVote(
+  gameId: string,
+  votedFor: string,
+  token: string,
+): Promise<Record<string, unknown>> {
+  return postJSON(
+    `/api/v1/undercover/games/${gameId}/vote`,
+    { voted_for: votedFor },
+    token,
+  );
+}
+
+export async function apiNextRound(
+  gameId: string,
+  roomId: string,
+  token: string,
+): Promise<Record<string, unknown>> {
+  return postJSON(
+    `/api/v1/undercover/games/${gameId}/next-round`,
+    { room_id: roomId },
+    token,
+  );
+}
+
+// ─── Codenames Game API ────────────────────────────────────
+
+export interface CodenamesBoardState {
+  board: {
+    word: string;
+    card_type: string | null;
+    revealed: boolean;
+  }[];
+  players: {
+    user_id: string;
+    username: string;
+    team: "red" | "blue";
+    role: "spymaster" | "operative";
+  }[];
+  current_team: "red" | "blue";
+  current_turn: {
+    team: "red" | "blue";
+    clue_word: string | null;
+    clue_number: number;
+    guesses_made: number;
+    max_guesses: number;
+  };
+  red_remaining: number;
+  blue_remaining: number;
+  status: string;
+  winner: string | null;
+  room_id?: string;
+  is_host?: boolean;
+}
+
+export async function apiGetCodenamesBoard(
+  gameId: string,
+  token: string,
+): Promise<CodenamesBoardState> {
+  return getJSON<CodenamesBoardState>(
+    `/api/v1/codenames/games/${gameId}/board`,
+    token,
+  );
+}
+
+export async function apiGiveClue(
+  gameId: string,
+  clueWord: string,
+  clueNumber: number,
+  token: string,
+): Promise<Record<string, unknown>> {
+  return postJSON(
+    `/api/v1/codenames/games/${gameId}/clue`,
+    { clue_word: clueWord, clue_number: clueNumber },
+    token,
+  );
+}
+
+export async function apiGuessCard(
+  gameId: string,
+  cardIndex: number,
+  token: string,
+): Promise<Record<string, unknown>> {
+  return postJSON(
+    `/api/v1/codenames/games/${gameId}/guess`,
+    { card_index: cardIndex },
+    token,
+  );
+}
+
+export async function apiEndTurn(
+  gameId: string,
+  token: string,
+): Promise<Record<string, unknown>> {
+  return postJSON(
+    `/api/v1/codenames/games/${gameId}/end-turn`,
+    {},
+    token,
+  );
+}
+
+// ─── Raw HTTP helpers (for error testing) ──────────────────
+
+/**
+ * POST that returns the raw Response (does NOT throw on non-2xx).
+ * Use this in error tests to check status codes.
+ */
+export async function rawPost(
+  path: string,
+  body: Record<string, unknown>,
+  token?: string,
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 // ─── Health Checks ──────────────────────────────────────────
 
 export async function waitForBackend(

@@ -8,7 +8,7 @@ from sqlalchemy.exc import NoResultFound
 from starlette.testclient import TestClient
 
 from ibg.api.controllers.game import GameController
-from ibg.api.models.error import ErrorRoomIsNotActive
+from ibg.api.models.error import RoomIsNotActiveError
 from ibg.api.models.game import GameType
 from ibg.api.models.table import Game
 from ibg.api.schemas.game import GameHistoryEntry
@@ -73,7 +73,7 @@ async def test_create_game_inactive_room(test_app: FastAPI, client: TestClient):
     room_id = uuid4()
 
     mock_controller = Mock(spec=GameController)
-    mock_controller.create_game = AsyncMock(side_effect=ErrorRoomIsNotActive(room_id=room_id))
+    mock_controller.create_game = AsyncMock(side_effect=RoomIsNotActiveError(room_id=room_id))
     test_app.dependency_overrides[get_game_controller] = lambda: mock_controller
 
     # Act
@@ -90,8 +90,8 @@ async def test_create_game_inactive_room(test_app: FastAPI, client: TestClient):
     # Assert
     assert response.status_code == 403
     data = response.json()
-    assert data["error"] == "ErrorRoomIsNotActive"
-    assert data["error_key"] == "errors.api.errorRoomIsNotActive"
+    assert data["error"] == "RoomIsNotActiveError"
+    assert data["error_key"] == "errors.api.roomIsNotActive"
     assert data["message"] == "This room is no longer active."
     assert data["details"] == {}
     mock_controller.create_game.assert_called_once()

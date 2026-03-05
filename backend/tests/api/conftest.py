@@ -11,13 +11,11 @@ from fastapi.testclient import TestClient
 def get_test_app_fixture() -> FastAPI:
     """Create a test FastAPI application instance without lifespan."""
     os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-    os.environ["REDIS_OM_URL"] = "redis://localhost:6379"
     os.environ["LOGFIRE_TOKEN"] = "fake"
 
     from ibg.app import create_app  # noqa: PLC0415
 
-    sio_app = create_app(lifespan=None)
-    return sio_app.other_asgi_app
+    return create_app(lifespan=None)
 
 
 @pytest.fixture(name="client")

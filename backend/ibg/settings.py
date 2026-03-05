@@ -8,14 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _get_env_file() -> tuple[str, ...]:
-    """Determine which .env files to load based on IBG_ENV.
-
-    Reads IBG_ENV from OS environment first, then from .env file.
-    Returns the selector .env and the environment-specific .env.{env} file.
-
-    Also populates os.environ via load_dotenv so third-party libraries
-    (e.g. aredis_om) that read env vars at import time see the right values.
-    """
+    """Determine which .env files to load based on IBG_ENV."""
     env = os.getenv("IBG_ENV")
     if not env:
         selector_path = Path(".env")
@@ -42,9 +35,6 @@ class Settings(BaseSettings):
     # Database
     database_url: str
 
-    # Redis
-    redis_om_url: str = "redis://localhost:6379"
-
     # JWT Authentication
     jwt_secret_key: str = "dev-secret-key-change-in-production"
     jwt_encryption_algorithm: str = "HS256"
@@ -63,10 +53,6 @@ class Settings(BaseSettings):
 
     # CORS
     cors_origins: str = ""
-
-    # Socket.IO
-    sio_ping_interval: int = 25
-    sio_ping_timeout: int = 60
 
     @field_validator("cors_origins")
     @classmethod

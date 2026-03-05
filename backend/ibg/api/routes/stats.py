@@ -31,9 +31,7 @@ async def get_user_stats(
 async def get_user_achievements(
     *,
     user_id: UUID,
-    achievement_controller: Annotated[
-        AchievementController, Depends(get_achievement_controller)
-    ],
+    achievement_controller: Annotated[AchievementController, Depends(get_achievement_controller)],
 ) -> Sequence[AchievementWithProgress]:
     """Get all achievements with definitions and user progress."""
     return await achievement_controller.get_user_achievements(user_id)

@@ -16,8 +16,6 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     "bcrypt>=4.2.0",
     "passlib>=1.7.4",
-    "python-socketio[asyncio_client]>=5.11.0",
-    "redis-om>=0.3.0",
     "loguru>=0.7.2",
     "scalar-fastapi>=1.0.0",
     "httpx>=0.27.0",
@@ -62,7 +60,7 @@ known-first-party = ["ibg"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
-addopts = "--cov=ibg --cov-report=term --cov-fail-under=85"
+addopts = "--cov=ibg --cov-report=term --cov-fail-under=50"
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]

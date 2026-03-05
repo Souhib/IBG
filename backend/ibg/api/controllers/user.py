@@ -1,10 +1,10 @@
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import selectinload
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ibg.api.models.error import UserAlreadyExistsError, UserNotFoundError
 from ibg.api.models.table import User
@@ -29,7 +29,7 @@ class UserController:
             await self.session.refresh(new_user)
             return new_user
         except IntegrityError:
-            raise UserAlreadyExistsError(email_address=user_create.email_address)
+            raise UserAlreadyExistsError(email_address=user_create.email_address) from None
 
     async def get_users(self) -> Sequence[User]:
         """
@@ -45,11 +45,13 @@ class UserController:
         :return: The user with the given id.
         """
         try:
-            return (await self.session.exec(
-                select(User).where(User.id == user_id).options(selectinload(User.rooms), selectinload(User.games))
-            )).one()
+            return (
+                await self.session.exec(
+                    select(User).where(User.id == user_id).options(selectinload(User.rooms), selectinload(User.games))
+                )
+            ).one()
         except NoResultFound:
-            raise UserNotFoundError(user_id=user_id)
+            raise UserNotFoundError(user_id=user_id) from None
 
     async def update_user_by_id(self, user_id: UUID, user_update: UserUpdate) -> User:
         """
@@ -67,7 +69,7 @@ class UserController:
             await self.session.refresh(db_user)
             return db_user
         except NoResultFound:
-            raise UserNotFoundError(user_id=user_id)
+            raise UserNotFoundError(user_id=user_id) from None
 
     async def delete_user(self, user_id: UUID) -> None:
         """
@@ -80,7 +82,7 @@ class UserController:
             await self.session.delete(db_user)
             await self.session.commit()
         except NoResultFound:
-            raise UserNotFoundError(user_id=user_id)
+            raise UserNotFoundError(user_id=user_id) from None
 
     async def update_user_password(self, user_id: UUID, password: str) -> User:
         """
@@ -97,4 +99,4 @@ class UserController:
             await self.session.refresh(db_user)
             return db_user
         except NoResultFound:
-            raise UserNotFoundError(user_id=user_id)
+            raise UserNotFoundError(user_id=user_id) from None

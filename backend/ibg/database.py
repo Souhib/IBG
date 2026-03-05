@@ -1,5 +1,3 @@
-from urllib.parse import urlparse
-
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import AsyncAdaptedQueuePool
@@ -11,14 +9,7 @@ _engine: AsyncEngine | None = None
 
 
 async def create_app_engine(settings: Settings) -> AsyncEngine:
-    """Create an async database engine with connection pooling.
-
-    Args:
-        settings: The application settings.
-
-    Returns:
-        AsyncEngine: The created database engine.
-    """
+    """Create an async database engine with connection pooling."""
     engine = create_async_engine(
         settings.database_url,
         poolclass=AsyncAdaptedQueuePool,
@@ -33,11 +24,7 @@ async def create_app_engine(settings: Settings) -> AsyncEngine:
 
 
 async def get_engine() -> AsyncEngine:
-    """Get or create the database engine singleton.
-
-    Returns:
-        AsyncEngine: The database engine instance.
-    """
+    """Get or create the database engine singleton."""
     global _engine  # noqa: PLW0603
     if _engine is None:
         settings = Settings()  # type: ignore
@@ -46,40 +33,10 @@ async def get_engine() -> AsyncEngine:
 
 
 async def create_db_and_tables(engine: AsyncEngine, drop_all: bool = False) -> None:
-    """Create all database tables.
-
-    Args:
-        engine: The database engine.
-        drop_all: Whether to drop all tables before creating them.
-    """
+    """Create all database tables."""
     async with engine.begin() as conn:
         if drop_all:
             await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
         if "sqlite" in str(engine.url):
             await conn.execute(text("PRAGMA foreign_keys=ON"))
-
-
-def get_redis_om_connection():
-    """Get Redis OM connection with connection pooling.
-
-    Returns:
-        Redis connection configured for Redis OM with a connection pool.
-    """
-    import redis.asyncio as aioredis
-
-    from ibg.settings import Settings
-
-    settings = Settings()  # type: ignore
-    parsed = urlparse(settings.redis_om_url)
-    host = parsed.hostname or "localhost"
-    port = parsed.port or 6379
-    password = parsed.password or None
-    return aioredis.Redis(
-        host=host,
-        port=port,
-        password=password,
-        decode_responses=True,
-        encoding="utf-8",
-        max_connections=50,
-    )

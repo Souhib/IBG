@@ -2,7 +2,6 @@ import traceback
 from datetime import UTC, datetime
 from uuid import UUID
 
-import socketio
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,54 +23,16 @@ from ibg.api.routes.undercover import router as undercover_router
 from ibg.api.routes.user import router as user_router
 from ibg.api.schemas.error import BaseError
 from ibg.settings import Settings
-from ibg.socketio.models.shared import IBGSocket
-from ibg.socketio.routes import room
-from ibg.socketio.routes.room import router as socket_router
-
-# Module-level sio instance for DI access
-_sio: IBGSocket | None = None
 
 
-def get_sio() -> IBGSocket:
-    """Get the global Socket.IO server instance for use in DI."""
-    if _sio is None:
-        raise RuntimeError("Socket.IO server not initialized yet")
-    return _sio
-
-
-def _create_sio(settings: Settings) -> IBGSocket:
-    """Create and configure the Socket.IO server with event handlers.
-
-    Game event handlers have been migrated to REST controllers.
-    Only room lifecycle events (connect, disconnect, join, leave) remain on Socket.IO.
-    """
-    global _sio
-    mgr = socketio.AsyncRedisManager(settings.redis_om_url)
-    sio = IBGSocket(
-        cors_origins=settings.cors_origins,
-        ping_interval=settings.sio_ping_interval,
-        ping_timeout=settings.sio_ping_timeout,
-        client_manager=mgr,
-    )
-    room.room_events(sio)
-    _sio = sio
-    return sio
-
-
-def create_app(lifespan) -> socketio.ASGIApp:
-    """
-    It creates a FastAPI app, adds CORS middleware, includes routers with /api/v1 prefix,
-    adds security/logging middleware, and configures exception handlers.
-
-    :return: A FastAPI object
-    """
+def create_app(lifespan) -> FastAPI:
+    """Create a FastAPI app with all routers, middleware, and exception handlers."""
     settings = Settings()  # type: ignore
     app = FastAPI(title="IBG", lifespan=lifespan)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # Middleware stack (order matters: first added = outermost)
-    # Pure ASGI middleware — no BaseHTTPMiddleware overhead
     app.add_middleware(SecurityMiddleware, is_production=settings.environment == "production")
     app.add_middleware(RequestIDMiddleware)
     app.add_middleware(LoggingMiddleware)
@@ -91,7 +52,6 @@ def create_app(lifespan) -> socketio.ASGIApp:
     app.include_router(undercover_router, prefix="/api/v1")
     app.include_router(codenames_router, prefix="/api/v1")
     app.include_router(stats_router, prefix="/api/v1")
-    app.include_router(socket_router)
 
     @app.get("/scalar", include_in_schema=False)
     async def scalar_html():
@@ -106,7 +66,7 @@ def create_app(lifespan) -> socketio.ASGIApp:
         return {"status": "healthy", "timestamp": datetime.now(UTC).isoformat()}
 
     @app.exception_handler(NoResultFound)
-    async def no_result_found_exception_handler(request: Request, exc: NoResultFound):
+    async def no_result_found_exception_handler(_request: Request, _exc: NoResultFound):
         return JSONResponse(
             status_code=404,
             content={
@@ -117,7 +77,7 @@ def create_app(lifespan) -> socketio.ASGIApp:
         )
 
     @app.exception_handler(BaseError)
-    async def base_error_exception_handler(request: Request, exc: BaseError):
+    async def base_error_exception_handler(_request: Request, exc: BaseError):
         details_status_codes = {400, 409, 422, 429}
         should_include_details = exc.status_code in details_status_codes
 
@@ -179,5 +139,4 @@ def create_app(lifespan) -> socketio.ASGIApp:
             },
         )
 
-    sio = _create_sio(settings)
-    return socketio.ASGIApp(sio, other_asgi_app=app)
+    return app

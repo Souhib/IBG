@@ -3,6 +3,7 @@ from ibg.api.schemas.shared import BaseModel
 
 class TokenPayload(BaseModel):
     """JWT token payload."""
+
     sub: str  # user_id
     email: str
     exp: int
@@ -10,6 +11,7 @@ class TokenPayload(BaseModel):
 
 class TokenPairResponse(BaseModel):
     """Response with access and refresh tokens."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -17,6 +19,7 @@ class TokenPairResponse(BaseModel):
 
 class LoginUserData(BaseModel):
     """User data included in login response."""
+
     id: str
     username: str
     email: str
@@ -24,6 +27,7 @@ class LoginUserData(BaseModel):
 
 class LoginResponse(BaseModel):
     """Login response with tokens and user data."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -32,5 +36,6 @@ class LoginResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     """Login request body."""
+
     email: str
     password: str
