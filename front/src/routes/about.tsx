@@ -50,12 +50,21 @@ const skills = [
   'React',
   'TypeScript',
   'PostgreSQL',
-  'Redis',
+  'MySQL',
   'AWS',
+  'GCP',
   'Docker',
-  'Socket.IO',
-  'SQLAlchemy',
+  'Terraform',
+  'Ansible',
+  'Gitlab CI/CD',
+  'Traefik',
+  'Prefect',
+  'SQLModel',
   'Tailwind CSS',
+  'OpenCV',
+  'Pandas',
+  'NumPy',
+  'Scikit-learn',
 ]
 
 function AboutPage() {
@@ -139,7 +148,13 @@ function AboutPage() {
           <h2 className="text-xl font-semibold">{t('about.experience')}</h2>
         </div>
         <div className="space-y-3">
-          {(['experienceSnap', 'experienceEnedis', 'experienceMadura'] as const).map(
+          {([
+            'experienceMadura',
+            'experienceSnap',
+            'experienceEnedis',
+            'experienceBnp',
+            'experienceCloudeasier',
+          ] as const).map(
             (key, i) => (
               <motion.div
                 key={key}
@@ -149,7 +164,9 @@ function AboutPage() {
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className="rounded-lg border bg-card p-4"
               >
-                <p className="font-medium">{t(`about.${key}`)}</p>
+                <p className="font-medium">{t(`about.${key}Title`)}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t(`about.${key}Period`)}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t(`about.${key}Desc`)}</p>
               </motion.div>
             ),
           )}

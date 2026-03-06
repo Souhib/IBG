@@ -506,3 +506,306 @@ def test_delete_room_success(test_app: FastAPI, client: TestClient) -> None:
         assert response.content == b""
     finally:
         test_app.dependency_overrides.clear()
+
+
+# ========== GET /rooms/{room_id}/state ==========
+
+
+def test_get_room_state_success(test_app: FastAPI, client: TestClient) -> None:
+    """GET /rooms/{room_id}/state returns 200 and a dict with players, owner_id, etc."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    owner_id = uuid4()
+    mock_user = User(
+        id=owner_id,
+        username="owner",
+        email_address="owner@test.com",
+        country="FRA",
+        password="securepassword",
+    )
+
+    mock_state = {
+        "id": str(room_id),
+        "public_id": "STA11",
+        "password": "1234",
+        "owner_id": str(owner_id),
+        "active_game_id": None,
+        "game_type": None,
+        "players": [
+            {
+                "user_id": str(owner_id),
+                "username": "owner",
+                "is_connected": True,
+                "is_disconnected": False,
+                "is_host": True,
+                "is_spectator": False,
+            }
+        ],
+        "type": RoomType.ACTIVE.value,
+        "settings": None,
+    }
+
+    mock_controller.get_room_state = AsyncMock(return_value=mock_state)
+    test_app.dependency_overrides[get_current_user] = lambda: mock_user
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.get(f"{BASE_URL}/{room_id}/state")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == str(room_id)
+        assert data["owner_id"] == str(owner_id)
+        assert len(data["players"]) == 1
+        assert data["players"][0]["is_host"] is True
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+def test_get_room_state_unauthenticated(test_app: FastAPI, client: TestClient) -> None:
+    """GET /rooms/{room_id}/state without auth returns 401."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.get(f"{BASE_URL}/{room_id}/state")
+
+        # Assert
+        assert response.status_code == 401
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+# ========== PATCH /rooms/join-spectator ==========
+
+
+def test_join_room_as_spectator_success(test_app: FastAPI, client: TestClient) -> None:
+    """PATCH /rooms/join-spectator returns 200 and a RoomView."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    owner_id = uuid4()
+    user_id = uuid4()
+    created_at = datetime.now()
+
+    mock_user = User(
+        id=user_id,
+        username="spectator",
+        email_address="spectator@test.com",
+        country="FRA",
+        password="securepassword",
+    )
+
+    mock_room = Room(
+        id=room_id,
+        public_id="SPC22",
+        owner_id=owner_id,
+        password="1234",
+        status=RoomStatus.ONLINE,
+        type=RoomType.ACTIVE,
+        created_at=created_at,
+    )
+    mock_room.users = [mock_user]
+    mock_room.games = []
+
+    mock_controller.join_room_as_spectator = AsyncMock(return_value=mock_room)
+    test_app.dependency_overrides[get_current_user] = lambda: mock_user
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.patch(
+            f"{BASE_URL}/join-spectator",
+            json={"room_id": str(room_id)},
+        )
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == str(room_id)
+        assert data["public_id"] == "SPC22"
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+def test_join_room_as_spectator_unauthenticated(test_app: FastAPI, client: TestClient) -> None:
+    """PATCH /rooms/join-spectator without auth returns 401."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.patch(
+            f"{BASE_URL}/join-spectator",
+            json={"room_id": str(room_id)},
+        )
+
+        # Assert
+        assert response.status_code == 401
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+# ========== PATCH /rooms/{room_id}/settings ==========
+
+
+def test_update_room_settings_success(test_app: FastAPI, client: TestClient) -> None:
+    """PATCH /rooms/{room_id}/settings returns 200 with updated settings."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    owner_id = uuid4()
+    mock_user = User(
+        id=owner_id,
+        username="owner",
+        email_address="owner@test.com",
+        country="FRA",
+        password="securepassword",
+    )
+
+    mock_result = {"room_id": str(room_id), "settings": {"description_timer": 120}}
+    mock_controller.update_room_settings = AsyncMock(return_value=mock_result)
+    test_app.dependency_overrides[get_current_user] = lambda: mock_user
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.patch(
+            f"{BASE_URL}/{room_id}/settings",
+            json={"description_timer": 120},
+        )
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["room_id"] == str(room_id)
+        assert data["settings"]["description_timer"] == 120
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+def test_update_room_settings_unauthenticated(test_app: FastAPI, client: TestClient) -> None:
+    """PATCH /rooms/{room_id}/settings without auth returns 401."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.patch(
+            f"{BASE_URL}/{room_id}/settings",
+            json={"description_timer": 120},
+        )
+
+        # Assert
+        assert response.status_code == 401
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+# ========== POST /rooms/{room_id}/rematch ==========
+
+
+def test_rematch_success(test_app: FastAPI, client: TestClient) -> None:
+    """POST /rooms/{room_id}/rematch returns 200 with room_id and status."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    owner_id = uuid4()
+    mock_user = User(
+        id=owner_id,
+        username="owner",
+        email_address="owner@test.com",
+        country="FRA",
+        password="securepassword",
+    )
+
+    mock_result = {"room_id": str(room_id), "status": "lobby"}
+    mock_controller.rematch = AsyncMock(return_value=mock_result)
+    test_app.dependency_overrides[get_current_user] = lambda: mock_user
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.post(f"{BASE_URL}/{room_id}/rematch")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["room_id"] == str(room_id)
+        assert data["status"] == "lobby"
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+def test_rematch_unauthenticated(test_app: FastAPI, client: TestClient) -> None:
+    """POST /rooms/{room_id}/rematch without auth returns 401."""
+    # Arrange
+    mock_controller = Mock(spec=RoomController)
+    room_id = uuid4()
+    test_app.dependency_overrides[get_room_controller] = lambda: mock_controller
+
+    try:
+        # Act
+        response = client.post(f"{BASE_URL}/{room_id}/rematch")
+
+        # Assert
+        assert response.status_code == 401
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+# ========== Contract-style validation tests ==========
+
+
+def test_join_room_wrong_field_name_returns_422(test_app: FastAPI, client: TestClient) -> None:
+    """PATCH /rooms/join with room_id (UUID) instead of public_room_id returns 422."""
+    # Arrange — no mocked controller; let Pydantic reject the payload
+    room_id = uuid4()
+    user_id = uuid4()
+
+    try:
+        # Act
+        response = client.patch(
+            f"{BASE_URL}/join",
+            json={
+                "room_id": str(room_id),
+                "user_id": str(user_id),
+                "password": "1234",
+            },
+        )
+
+        # Assert
+        assert response.status_code == 422
+    finally:
+        test_app.dependency_overrides.clear()
+
+
+def test_leave_room_wrong_field_name_returns_422(test_app: FastAPI, client: TestClient) -> None:
+    """PATCH /rooms/leave with public_room_id (str) instead of room_id (UUID) returns 422."""
+    # Arrange — no mocked controller; let Pydantic reject the payload
+    user_id = uuid4()
+
+    try:
+        # Act
+        response = client.patch(
+            f"{BASE_URL}/leave",
+            json={
+                "public_room_id": "ABCDE",
+                "user_id": str(user_id),
+            },
+        )
+
+        # Assert
+        assert response.status_code == 422
+    finally:
+        test_app.dependency_overrides.clear()

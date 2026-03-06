@@ -86,7 +86,7 @@ export async function setupRoomWithPlayers(
   // All other players join via API
   for (let i = 1; i < logins.length; i++) {
     await apiJoinRoom(
-      room.id,
+      roomDetails.public_id,
       logins[i].user.id,
       roomDetails.password,
       logins[i].access_token,
@@ -217,23 +217,6 @@ export async function setupRoomWithPlayersViaUI(
     await joinBtn.click();
 
     // Wait for navigation to room page
-    let joined = await page
-      .waitForURL(/\/rooms\/[a-f0-9-]+/, { timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false);
-
-    // API fallback if UI join fails
-    if (!joined) {
-      await apiJoinRoom(
-        room.id,
-        logins[i].user.id,
-        roomDetails.password,
-        logins[i].access_token,
-      ).catch(() => {});
-      await page.goto(ROUTES.room(room.id));
-      await page.waitForLoadState("domcontentloaded");
-    }
-
     await expect(page).toHaveURL(/\/rooms\/[a-f0-9-]+/, { timeout: 15_000 });
     players.push({ page, login: logins[i], account: accounts[i] });
   }

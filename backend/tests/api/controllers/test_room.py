@@ -9,6 +9,7 @@ from ipg.api.models.relationship import RoomUserLink
 from ipg.api.models.room import RoomCreate, RoomJoin, RoomLeave, RoomStatus, RoomType
 from ipg.api.models.table import Room, User
 from ipg.api.schemas.error import (
+    BaseError,
     RoomNotFoundError,
     UserAlreadyInRoomError,
     UserNotFoundError,
@@ -110,7 +111,9 @@ async def test_join_room_success(create_user, create_room, room_controller: Room
     room = await create_room(owner=owner, password="5678")
 
     # Act
-    updated = await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="5678"))
+    updated = await room_controller.join_room(
+        RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="5678")
+    )
 
     # Assert — verify via RoomUserLink table directly (identity map may cache stale relationships)
     assert updated.id == room.id
@@ -153,7 +156,9 @@ async def test_join_room_user_not_found(sample_owner: User, sample_room: Room, r
 
     # Act / Assert
     with pytest.raises(UserNotFoundError):
-        await room_controller.join_room(RoomJoin(user_id=fake_user_id, public_room_id=sample_room.public_id, password="1234"))
+        await room_controller.join_room(
+            RoomJoin(user_id=fake_user_id, public_room_id=sample_room.public_id, password="1234")
+        )
 
 
 async def test_join_room_already_in_room_rejoins(create_user, create_room, room_controller: RoomController):
@@ -166,7 +171,9 @@ async def test_join_room_already_in_room_rejoins(create_user, create_room, room_
     await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="5678"))
 
     # Act — join again (should succeed as a re-join)
-    updated = await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="5678"))
+    updated = await room_controller.join_room(
+        RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="5678")
+    )
 
     # Assert — still only 2 links (no duplicate)
     links = (await room_controller.session.exec(select(RoomUserLink).where(RoomUserLink.room_id == room.id))).all()
@@ -210,6 +217,29 @@ async def test_leave_room_owner_deactivates(sample_owner: User, sample_room: Roo
 
     # Assert
     assert updated.type == RoomType.INACTIVE
+
+
+async def test_leave_room_owner_transfers_to_remaining_player(
+    create_user, create_room, room_controller: RoomController
+):
+    """When the owner leaves but other players remain, ownership transfers to the next connected player."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    player2 = await create_user(username="player2", email="player2@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=player2.id, public_room_id=room.public_id, password="1234"))
+    room_id = room.id
+    owner_id = owner.id
+    player2_id = player2.id
+    room_controller.session.expire_all()
+
+    # Act
+    updated = await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=owner_id))
+
+    # Assert — room stays ACTIVE and ownership transferred to player2
+    assert updated.type == RoomType.ACTIVE
+    assert updated.owner_id == player2_id
 
 
 async def test_leave_room_not_found(room_controller: RoomController, create_user):
@@ -371,3 +401,115 @@ async def test_check_if_user_is_in_room_false(
 
     # Assert
     assert result is False
+
+
+async def test_join_room_as_spectator_success(create_user, create_room, room_controller: RoomController):
+    """Joining as spectator creates a RoomUserLink with is_spectator=True."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    spectator = await create_user(username="spectator", email="spectator@test.com")
+    room = await create_room(owner=owner)
+
+    # Act
+    updated = await room_controller.join_room_as_spectator(room.id, spectator.id)
+
+    # Assert
+    assert updated.id == room.id
+    link = (
+        await room_controller.session.exec(
+            select(RoomUserLink).where(RoomUserLink.room_id == room.id).where(RoomUserLink.user_id == spectator.id)
+        )
+    ).one()
+    assert link.is_spectator is True
+    assert link.connected is True
+
+
+async def test_join_room_as_spectator_user_not_found(
+    sample_owner: User,  # noqa: ARG001
+    sample_room: Room,
+    room_controller: RoomController,
+):
+    """Joining as spectator with a non-existent user raises UserNotFoundError."""
+
+    # Arrange
+    fake_user_id = uuid4()
+
+    # Act / Assert
+    with pytest.raises(UserNotFoundError):
+        await room_controller.join_room_as_spectator(sample_room.id, fake_user_id)
+
+
+async def test_join_room_as_spectator_room_not_found(create_user, room_controller: RoomController):
+    """Joining as spectator to a non-existent room raises RoomNotFoundError."""
+
+    # Arrange
+    user = await create_user(username="spectator", email="spectator@test.com")
+    fake_room_id = uuid4()
+
+    # Act / Assert
+    with pytest.raises(RoomNotFoundError):
+        await room_controller.join_room_as_spectator(fake_room_id, user.id)
+
+
+async def test_update_room_settings_success(
+    sample_owner: User,
+    sample_room: Room,
+    room_controller: RoomController,
+):
+    """Updating room settings persists the settings dict."""
+
+    # Arrange
+    settings = {"description_timer": 120, "voting_timer": 90}
+
+    # Act
+    result = await room_controller.update_room_settings(sample_room.id, sample_owner.id, settings)
+
+    # Assert
+    assert result["room_id"] == str(sample_room.id)
+    assert result["settings"] == settings
+
+
+async def test_update_room_settings_not_host(create_user, create_room, room_controller: RoomController):
+    """Updating room settings as non-host raises BaseError(403)."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    non_host = await create_user(username="nonhost", email="nonhost@test.com")
+    room = await create_room(owner=owner)
+
+    # Act / Assert
+    with pytest.raises(BaseError) as exc_info:
+        await room_controller.update_room_settings(room.id, non_host.id, {"description_timer": 120})
+    assert exc_info.value.status_code == 403
+
+
+async def test_rematch_success(sample_owner: User, sample_room: Room, room_controller: RoomController):  # noqa: ARG001
+    """Rematch clears active_game_id and returns lobby status."""
+
+    # Arrange — provided by fixtures
+
+    # Act
+    result = await room_controller.rematch(sample_room.id, sample_owner.id)
+
+    # Assert
+    assert result["room_id"] == str(sample_room.id)
+    assert result["status"] == "lobby"
+
+
+async def test_get_room_state_success(sample_owner: User, sample_room: Room, room_controller: RoomController):
+    """Getting room state returns a dict with players array and correct structure."""
+
+    # Arrange — provided by fixtures
+
+    # Act
+    state = await room_controller.get_room_state(sample_room.id, sample_owner.id)
+
+    # Assert
+    assert state["id"] == str(sample_room.id)
+    assert state["owner_id"] == str(sample_owner.id)
+    assert isinstance(state["players"], list)
+    assert len(state["players"]) >= 1
+    owner_player = next(p for p in state["players"] if p["user_id"] == str(sample_owner.id))
+    assert owner_player["is_host"] is True
+    assert owner_player["is_connected"] is True

@@ -297,7 +297,7 @@ function RoomLobbyPage() {
                 <span className="text-sm font-medium">{player.username}</span>
                 <div className="flex items-center gap-2">
                   {player.is_disconnected && (
-                    <span className="text-xs text-destructive animate-pulse">Reconnecting...</span>
+                    <span className="text-xs text-destructive">{t("room.disconnected")}</span>
                   )}
                   {player.is_host && (
                     <span className="flex items-center gap-1 text-xs text-accent">
@@ -338,6 +338,7 @@ function RoomLobbyPage() {
           roomId={roomData.id}
           settings={roomData.settings ?? null}
           gameType={gameType}
+          playerCount={players.length}
         />
       )}
 

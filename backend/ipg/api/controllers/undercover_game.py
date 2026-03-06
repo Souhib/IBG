@@ -45,6 +45,36 @@ class UndercoverGameController:
         self._stats_controller = StatsController(session)
         self._achievement_controller = AchievementController(session)
 
+    @staticmethod
+    def _compute_roles(num_players: int, mr_white_enabled: bool) -> list[str]:
+        """Compute role distribution for the given number of players."""
+        if num_players == 3:
+            num_mr_white = 0
+            num_undercover = 1
+            num_civilians = 2
+        elif not mr_white_enabled:
+            num_mr_white = 0
+            num_undercover = max(1, num_players // 4)
+            num_civilians = num_players - num_undercover
+        else:
+            num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
+            num_undercover = max(2, num_players // 4)
+            num_civilians = num_players - num_mr_white - num_undercover
+            while num_civilians < 1 and num_undercover > 1:
+                num_undercover -= 1
+                num_civilians += 1
+            while num_civilians < 1 and num_mr_white > 0:
+                num_mr_white -= 1
+                num_civilians += 1
+
+        roles = (
+            [UndercoverRole.UNDERCOVER.value] * num_undercover
+            + [UndercoverRole.CIVILIAN.value] * num_civilians
+            + [UndercoverRole.MR_WHITE.value] * num_mr_white
+        )
+        random.shuffle(roles)
+        return roles
+
     async def _get_civilian_and_undercover_words(self) -> tuple:
         """Get the civilian and undercover words for the game."""
         term_pair = await self._undercover_controller.get_random_term_pair()
@@ -109,27 +139,9 @@ class UndercoverGameController:
                 player_users.append(u)
 
         num_players = len(player_users)
-        if num_players == 3:
-            num_mr_white = 0
-            num_undercover = 1
-            num_civilians = 2
-        else:
-            num_mr_white = 1 if num_players < 10 else (2 if num_players <= 15 else 3)
-            num_undercover = max(2, num_players // 4)
-            num_civilians = num_players - num_mr_white - num_undercover
-            while num_civilians < 1 and num_undercover > 1:
-                num_undercover -= 1
-                num_civilians += 1
-            while num_civilians < 1 and num_mr_white > 0:
-                num_mr_white -= 1
-                num_civilians += 1
-
-        roles = (
-            [UndercoverRole.UNDERCOVER.value] * num_undercover
-            + [UndercoverRole.CIVILIAN.value] * num_civilians
-            + [UndercoverRole.MR_WHITE.value] * num_mr_white
-        )
-        random.shuffle(roles)
+        room_settings = getattr(db_room, "settings", None) or {}
+        mr_white_enabled = room_settings.get("enable_mr_white", True) and num_players >= 4
+        roles = self._compute_roles(num_players, mr_white_enabled)
 
         players = [
             {

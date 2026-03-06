@@ -8,6 +8,7 @@ interface RoomSettingsProps {
   roomId: string
   settings: Record<string, unknown> | null
   gameType: "undercover" | "codenames"
+  playerCount: number
 }
 
 const TIMER_OPTIONS = [15, 30, 45, 60, 90, 120]
@@ -16,6 +17,7 @@ export const RoomSettings = memo(function RoomSettings({
   roomId,
   settings,
   gameType,
+  playerCount,
 }: RoomSettingsProps) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
@@ -125,23 +127,31 @@ export const RoomSettings = memo(function RoomSettings({
               </div>
 
               {/* Mr. White Toggle */}
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">
-                  {t("room.enableMrWhite")}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setEnableMrWhite(!enableMrWhite)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    enableMrWhite ? "bg-primary" : "bg-muted"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      enableMrWhite ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {t("room.enableMrWhite")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => playerCount >= 4 && setEnableMrWhite(!enableMrWhite)}
+                    disabled={playerCount < 4}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      enableMrWhite && playerCount >= 4 ? "bg-primary" : "bg-muted"
+                    } ${playerCount < 4 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        enableMrWhite && playerCount >= 4 ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+                {playerCount < 4 && (
+                  <p className="text-xs text-muted-foreground/70 mt-1">
+                    {t("room.mrWhiteMinPlayers")}
+                  </p>
+                )}
               </div>
             </>
           ) : (

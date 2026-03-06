@@ -136,12 +136,18 @@ test.describe("Friends Page", () => {
     await authenticatedPage.goto(ROUTES.home);
     await authenticatedPage.waitForLoadState("domcontentloaded");
 
-    const navLink = authenticatedPage
-      .locator('nav a[href="/friends"]')
-      .or(authenticatedPage.locator('a[href="/friends"]').first());
+    // Friends link is inside the user dropdown menu
+    // Open the user menu button (rounded-full avatar button with username)
+    const userMenuBtn = authenticatedPage.locator(
+      'button.rounded-full',
+    );
+    await expect(userMenuBtn).toBeVisible({ timeout: 10_000 });
+    await userMenuBtn.click();
 
-    await expect(navLink).toBeVisible({ timeout: 10_000 });
-    await navLink.click();
+    // Click the friends link in the dropdown
+    const friendsLink = authenticatedPage.locator('a[href="/friends"]').first();
+    await expect(friendsLink).toBeVisible({ timeout: 5_000 });
+    await friendsLink.click();
 
     await expect(authenticatedPage).toHaveURL(/\/friends/, {
       timeout: 10_000,

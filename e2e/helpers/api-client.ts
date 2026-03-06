@@ -129,14 +129,14 @@ export async function apiGetRoom(
 }
 
 export async function apiJoinRoom(
-  roomId: string,
+  publicRoomId: string,
   userId: string,
   password: string,
   token: string,
 ): Promise<RoomResponse> {
   return patchJSON<RoomResponse>(
     "/api/v1/rooms/join",
-    { room_id: roomId, user_id: userId, password },
+    { public_room_id: publicRoomId, user_id: userId, password },
     token,
   );
 }
@@ -386,6 +386,29 @@ export async function rawPost(
 
   return fetch(`${API_URL}${path}`, {
     method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * PATCH that returns the raw Response (does NOT throw on non-2xx).
+ * Use this in error tests to check status codes.
+ */
+export async function rawPatch(
+  path: string,
+  body: Record<string, unknown>,
+  token?: string,
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return fetch(`${API_URL}${path}`, {
+    method: "PATCH",
     headers,
     body: JSON.stringify(body),
   });

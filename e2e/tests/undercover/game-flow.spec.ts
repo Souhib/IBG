@@ -21,8 +21,11 @@ test.describe("Undercover Game Flow", () => {
     for (const player of setup.players) {
       await expect(player.page.locator("text=Your Role")).toBeVisible({ timeout: 15_000 });
       // Should show either Civilian, Undercover, or Mr. White
-      const roleText = await player.page.locator(".rounded-full.bg-primary\\/10").textContent();
-      expect(roleText).toBeTruthy();
+      const roleLabel = player.page
+        .locator("text=Civilian")
+        .or(player.page.locator("text=Undercover"))
+        .or(player.page.locator("text=Mr. White"));
+      await expect(roleLabel.first()).toBeVisible({ timeout: 5_000 });
     }
 
     await setup.cleanup();

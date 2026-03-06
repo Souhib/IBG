@@ -28,6 +28,18 @@ export default defineConfig({
     actionTimeout: 15_000,
     navigationTimeout: 15_000,
     ...devices["Desktop Chrome"],
+    // Dismiss the first-visit language picker modal for all tests
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: FRONTEND_URL,
+          localStorage: [
+            { name: "ipg-first-visit-complete", value: "true" },
+          ],
+        },
+      ],
+    },
   },
   globalSetup: "./global-setup.ts",
   globalTeardown: "./global-teardown.ts",

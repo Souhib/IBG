@@ -52,6 +52,15 @@ async def get_room(
     return RoomView.model_validate(await room_controller.get_room_by_id(room_id))
 
 
+@router.get("/active")
+async def get_active_room(
+    current_user: Annotated[User, Depends(get_current_user)],
+    room_controller: RoomController = Depends(get_room_controller),
+) -> dict | None:
+    """Get the user's active room, if any."""
+    return await room_controller.get_active_room_for_user(current_user.id)
+
+
 @router.get("/{room_id}/state")
 async def get_room_state(
     room_id: UUID,

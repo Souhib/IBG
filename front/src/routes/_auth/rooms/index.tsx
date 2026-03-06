@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { Loader2, LogIn, Plus } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { ArrowRight, Loader2, LogIn, Plus } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { motion } from "motion/react"
@@ -105,11 +106,44 @@ function RoomsPage() {
 
   const isFormValid = roomCode.length === 5 && password.every((d) => d !== "")
 
+  const { data: activeRoom } = useQuery({
+    queryKey: ["active-room"],
+    queryFn: () =>
+      apiClient({ method: "GET", url: "/api/v1/rooms/active" }).then(
+        (r) => r.data as { room_id: string; public_id: string; is_connected: boolean } | null,
+      ),
+    staleTime: 10_000,
+  })
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold">{t("nav.rooms")}</h1>
       </div>
+
+      {/* Rejoin Room Banner */}
+      {activeRoom && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-5 py-3.5"
+        >
+          <div>
+            <p className="text-sm font-medium">{t("room.rejoinRoom")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("room.roomCode")}: {activeRoom.public_id}
+            </p>
+          </div>
+          <Link
+            to="/rooms/$roomId"
+            params={{ roomId: activeRoom.room_id }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {t("room.rejoinButton")}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </motion.div>
+      )}
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Create Room Card */}

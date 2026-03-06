@@ -200,10 +200,6 @@ class RoomController:
 
         if not any(user_room_link.id == db_user.id for user_room_link in db_room.users):
             raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
-        if db_room.owner_id == db_user.id:
-            db_room.type = RoomType.INACTIVE
-            self.session.add(db_room)
-
         user_room_link = (
             await self.session.exec(
                 select(RoomUserLink)
@@ -216,6 +212,22 @@ class RoomController:
             raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
         user_room_link.connected = False
         self.session.add(user_room_link)
+
+        if db_room.owner_id == db_user.id:
+            # Check for other connected players to transfer ownership
+            remaining = (
+                await self.session.exec(
+                    select(RoomUserLink)
+                    .where(RoomUserLink.room_id == room_leave.room_id)
+                    .where(RoomUserLink.user_id != db_user.id)
+                    .where(RoomUserLink.connected == True)  # noqa: E712
+                )
+            ).all()
+            if remaining:
+                db_room.owner_id = remaining[0].user_id
+            else:
+                db_room.type = RoomType.INACTIVE
+            self.session.add(db_room)
         await self.session.commit()
         room = (
             await self.session.exec(
@@ -348,6 +360,30 @@ class RoomController:
         self.session.add(room)
         await self.session.commit()
         return {"room_id": str(room_id), "status": "lobby"}
+
+    async def get_active_room_for_user(self, user_id: UUID) -> dict | None:
+        """Return the user's active room (connected or recently disconnected) if any."""
+        link = (
+            await self.session.exec(
+                select(RoomUserLink)
+                .join(Room, Room.id == RoomUserLink.room_id)
+                .where(
+                    RoomUserLink.user_id == user_id,
+                    Room.type == RoomType.ACTIVE,
+                )
+                .order_by(RoomUserLink.joined_at.desc())  # type: ignore
+            )
+        ).first()
+        if not link:
+            return None
+        room = (await self.session.exec(select(Room).where(Room.id == link.room_id))).first()
+        if not room:
+            return None
+        return {
+            "room_id": str(room.id),
+            "public_id": room.public_id,
+            "is_connected": link.connected,
+        }
 
     async def create_room_activity(self, room_id: UUID, activity_create: EventCreate) -> Activity:
         """Create an activity."""
