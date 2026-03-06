@@ -120,9 +120,9 @@ class RoomController:
         except NoResultFound:
             raise UserNotFoundError(user_id=room_join.user_id) from None
         try:
-            db_room = (await self.session.exec(select(Room).where(Room.id == room_join.room_id))).one()
+            db_room = (await self.session.exec(select(Room).where(Room.public_id == room_join.public_room_id))).one()
         except NoResultFound:
-            raise RoomNotFoundError(room_id=room_join.room_id) from None
+            raise RoomNotFoundError(room_id=room_join.public_room_id) from None
         if db_room.password != room_join.password:
             raise WrongRoomPasswordError(room_id=db_room.id)
 

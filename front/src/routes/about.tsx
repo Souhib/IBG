@@ -244,12 +244,12 @@ function AboutPage() {
               label: 'Phone',
             },
             {
-              href: 'https://www.linkedin.com/in/souhib/',
+              href: 'https://www.linkedin.com/in/souhib-trabelsi/',
               icon: Linkedin,
               label: 'LinkedIn',
             },
             {
-              href: 'https://github.com/souhib',
+              href: 'https://github.com/Souhib',
               icon: Github,
               label: 'GitHub',
             },

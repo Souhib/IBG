@@ -322,7 +322,7 @@ def test_join_room_success(test_app: FastAPI, client: TestClient) -> None:
             f"{BASE_URL}/join",
             json={
                 "user_id": str(user_id),
-                "room_id": str(room_id),
+                "public_room_id": "JON55",
                 "password": "1234",
             },
         )
@@ -359,7 +359,7 @@ def test_join_room_wrong_password(test_app: FastAPI, client: TestClient) -> None
             f"{BASE_URL}/join",
             json={
                 "user_id": str(user_id),
-                "room_id": str(room_id),
+                "public_room_id": "ABCDE",
                 "password": "9999",
             },
         )
@@ -389,7 +389,7 @@ def test_join_room_not_found(test_app: FastAPI, client: TestClient) -> None:
             f"{BASE_URL}/join",
             json={
                 "user_id": str(user_id),
-                "room_id": str(room_id),
+                "public_room_id": "ZZZZZ",
                 "password": "1234",
             },
         )

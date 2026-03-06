@@ -46,7 +46,7 @@ class RoomCreateRequest(DBModel):
 
 class RoomJoin(DBModel):
     user_id: UUID
-    room_id: UUID
+    public_room_id: str
     password: str
 
 

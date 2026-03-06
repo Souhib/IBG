@@ -57,7 +57,7 @@
     "verificationFailed": "Échec de la vérification"
   },
   "home": {
-    "title": "Jeux de Soirée Islamiques",
+    "title": "Islamic Party Games",
     "subtitle": "Jouez à des versions islamiques de vos jeux de soirée préférés avec vos amis",
     "playNow": "Jouer",
     "createRoom": "Créer un salon",
@@ -65,7 +65,7 @@
   },
   "games": {
     "undercover": {
-      "name": "Infiltré",
+      "name": "Undercover",
       "description": "Trouvez l'agent infiltré parmi vos amis ! Chaque joueur reçoit un mot, mais l'infiltré en reçoit un différent.",
       "roles": {
         "civilian": "Civil",
@@ -74,7 +74,7 @@
       }
     },
     "codenames": {
-      "name": "Noms de Code",
+      "name": "Codenames",
       "description": "Deux équipes s'affrontent pour trouver leurs agents grâce à des indices d'un seul mot. Le maître-espion donne des indices et les agents devinent !",
       "roles": {
         "spymaster": "Maître-espion",
