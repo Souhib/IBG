@@ -18,12 +18,17 @@ Usage:
     PYTHONPATH=. uv run python scripts/generate_fake_data.py --delete
     PYTHONPATH=. uv run python scripts/generate_fake_data.py -d
 
+    # Seed game content only (safe for production)
+    PYTHONPATH=. uv run python scripts/generate_fake_data.py --seed
+    PYTHONPATH=. uv run python scripts/generate_fake_data.py -s
+
     # Custom data volumes
     PYTHONPATH=. uv run python scripts/generate_fake_data.py -c --users 50 --games 100
 
 Options:
     --delete, -d         Delete all data by dropping and recreating tables
     --create-db, -c      Create tables and generate fake data
+    --seed, -s           Seed game content only (safe for production)
     --users N            Number of additional random users to generate (default: 15)
     --games N            Number of games to generate (default: 30)
 
@@ -805,6 +810,34 @@ async def generate_all_data(
     print("\nFake data generation complete!")
 
 
+async def seed_game_content(engine: AsyncEngine) -> None:
+    """Seed only game content (words, term pairs, codenames, achievements, challenges).
+
+    Safe for production — does not create fake users, rooms, or games.
+
+    Args:
+        engine: The database engine.
+    """
+    print("Creating database tables (if not exist)...")
+    await create_db_and_tables(engine)
+
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        print("\n[1/4] Seeding Undercover words and pairs...")
+        word_map = await seed_undercover_words(session)
+        await seed_undercover_pairs(session, word_map)
+
+        print("\n[2/4] Seeding Codenames word packs...")
+        await seed_codenames_words(session)
+
+        print("\n[3/4] Seeding achievement definitions...")
+        await seed_achievements(session)
+
+        print("\n[4/4] Seeding challenge definitions...")
+        await seed_challenges(session)
+
+    print("\nGame content seeding complete!")
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -821,6 +854,11 @@ def parse_args() -> argparse.Namespace:
         "--delete", "-d",
         action="store_true",
         help="Delete all data by dropping and recreating tables",
+    )
+    group.add_argument(
+        "--seed", "-s",
+        action="store_true",
+        help="Seed game content only (words, term pairs, codenames, achievements, challenges). Safe for production.",
     )
 
     parser.add_argument(
@@ -849,6 +887,8 @@ async def main() -> None:
     try:
         if args.delete:
             await delete_all_data(engine)
+        elif args.seed:
+            await seed_game_content(engine)
         elif args.create_db:
             await generate_all_data(
                 engine,
