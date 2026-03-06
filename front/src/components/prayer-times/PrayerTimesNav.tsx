@@ -1,7 +1,7 @@
 import { Clock, MapPin, Moon, ChevronDown } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { usePrayerTimes } from "@/hooks/use-prayer-times"
-import { CitySelector, loadStoredCity, refreshTimezoneIfMissing, type CityCoordinates } from "./CitySelector"
+import { CitySelector, autoDetectLocationByIP, loadStoredCity, refreshTimezoneIfMissing, type CityCoordinates } from "./CitySelector"
 
 const PRAYER_ICONS: Record<string, string> = {
   fajr: "\u{1F305}",
@@ -22,6 +22,15 @@ export function PrayerTimesNav() {
   const [coordinates, setCoordinates] = useState<CityCoordinates | null>(() => loadStoredCity())
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Auto-detect location by IP if no stored city
+  useEffect(() => {
+    if (!coordinates) {
+      autoDetectLocationByIP().then((coords) => {
+        if (coords) setCoordinates(coords)
+      })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-fetch timezone if stored city is missing it (e.g. saved before timezone fix)
   useEffect(() => {

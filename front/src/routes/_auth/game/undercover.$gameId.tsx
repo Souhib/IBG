@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Crown, Loader2, LogOut, MessageCircle } from "lucide-react"
+import { Crown, Loader2, LogOut, MessageCircle, Trophy } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -57,6 +57,9 @@ function UndercoverGamePage() {
   const [isSubmittingDescription, setIsSubmittingDescription] = useState(false)
   const [showVotingTransition, setShowVotingTransition] = useState(false)
   const votingTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showGameOverTransition, setShowGameOverTransition] = useState(false)
+  const gameOverTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previousWinnerRef = useRef<string | null>(null)
   const previousPhaseRef = useRef<string | null>(null)
   const previousRoundRef = useRef<number>(0)
   const [cancelMessage, setCancelMessage] = useState<string | null>(null)
@@ -191,6 +194,17 @@ function UndercoverGamePage() {
         votingTransitionTimerRef.current = null
       }, 2500)
     }
+
+    // Detect game over transition (winner goes null → value)
+    const currentWinner = serverState.winner || null
+    if (currentWinner && !previousWinnerRef.current && !showGameOverTransition) {
+      setShowGameOverTransition(true)
+      gameOverTransitionTimerRef.current = setTimeout(() => {
+        setShowGameOverTransition(false)
+        gameOverTransitionTimerRef.current = null
+      }, 3000)
+    }
+    previousWinnerRef.current = currentWinner
 
     previousPhaseRef.current = currentPhase || null
     previousRoundRef.current = currentRound
@@ -328,9 +342,10 @@ function UndercoverGamePage() {
 
   const handleBackToRoom = useCallback(() => {
     if (roomIdRef.current) {
+      queryClient.removeQueries({ queryKey: ["room", roomIdRef.current] })
       navigate({ to: "/rooms/$roomId", params: { roomId: roomIdRef.current } })
     }
-  }, [navigate])
+  }, [navigate, queryClient])
 
   const handleDescriptionInputChange = useCallback((value: string) => {
     setDescriptionInput(value)
@@ -360,6 +375,44 @@ function UndercoverGamePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
+      {/* Game Over Transition Overlay */}
+      <AnimatePresence>
+        {showGameOverTransition && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
+          >
+            <motion.div className="text-center space-y-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+              >
+                <Trophy className="h-16 w-16 mx-auto text-yellow-500" />
+              </motion.div>
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-2xl font-bold"
+              >
+                {t("game.gameOver")}
+              </motion.h2>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="text-lg text-muted-foreground"
+              >
+                {t("game.gameOverTransition")}
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Voting Transition Overlay */}
       <AnimatePresence>
         {showVotingTransition && (
@@ -483,7 +536,7 @@ function UndercoverGamePage() {
       )}
 
       {/* Game Over */}
-      {gameState.phase === "game_over" && (
+      {gameState.phase === "game_over" && !showGameOverTransition && (
         <GameOverScreen
           winner={gameState.winner}
           roomId={roomIdRef.current}

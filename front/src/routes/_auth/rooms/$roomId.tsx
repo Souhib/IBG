@@ -45,6 +45,7 @@ function RoomLobbyPage() {
   const [isStartingGame, setIsStartingGame] = useState(false)
   const joinedRef = useRef(false)
   const navigatingToGameRef = useRef(false)
+  const previousPlayerIdsRef = useRef<Map<string, string>>(new Map())
 
   // Join room via REST on mount
   useEffect(() => {
@@ -119,6 +120,29 @@ function RoomLobbyPage() {
   const spectators = allUsers.filter((u) => u.is_spectator)
   const isHost = roomData?.owner_id === user?.id
   const isSpectator = allUsers.some((u) => u.id === user?.id && u.is_spectator)
+
+  // Toast notifications when players join or leave
+  useEffect(() => {
+    if (!allUsers.length || !user) return
+    const currentMap = new Map(allUsers.map((u) => [u.id, u.username]))
+    const previousMap = previousPlayerIdsRef.current
+
+    // Skip first render (ref is empty) to avoid toasting every existing player
+    if (previousMap.size > 0) {
+      for (const [id, username] of currentMap) {
+        if (!previousMap.has(id) && id !== user.id) {
+          toast.info(t("toast.playerJoined", { username }))
+        }
+      }
+      for (const [id, username] of previousMap) {
+        if (!currentMap.has(id) && id !== user.id) {
+          toast.info(t("toast.playerLeft", { username }))
+        }
+      }
+    }
+
+    previousPlayerIdsRef.current = currentMap
+  }, [allUsers, user, t])
 
   // Auto-navigate when game starts (active_game_id appears)
   useEffect(() => {
