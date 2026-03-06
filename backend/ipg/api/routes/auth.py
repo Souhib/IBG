@@ -29,12 +29,12 @@ router = APIRouter(
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str, settings: Settings) -> None:
     """Set httpOnly auth cookies on the response."""
-    is_prod = settings.environment == "production"
+    use_secure = settings.frontend_url.startswith("https://")
     response.set_cookie(
         key="ipg-access-token",
         value=access_token,
         httponly=True,
-        secure=is_prod,
+        secure=use_secure,
         samesite="lax",
         max_age=settings.access_token_expire_minutes * 60,
         path="/",
@@ -43,7 +43,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str,
         key="ipg-refresh-token",
         value=refresh_token,
         httponly=True,
-        secure=is_prod,
+        secure=use_secure,
         samesite="lax",
         max_age=settings.refresh_token_expire_days * 86400,
         path="/api/v1/auth",
