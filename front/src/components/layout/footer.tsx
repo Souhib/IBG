@@ -128,8 +128,8 @@ export function Footer() {
             {/* Social links */}
             <div className="mt-4 flex items-center gap-3">
               {[
-                { href: "https://github.com/souhib", icon: Github, label: "GitHub" },
-                { href: "https://www.linkedin.com/in/souhib/", icon: Linkedin, label: "LinkedIn" },
+                { href: "https://github.com/Souhib", icon: Github, label: "GitHub" },
+                { href: "https://www.linkedin.com/in/souhib-trabelsi/", icon: Linkedin, label: "LinkedIn" },
                 { href: "mailto:souhib.t@icloud.com", icon: Mail, label: "Email" },
               ].map((link) => (
                 <a
