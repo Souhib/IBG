@@ -29,7 +29,7 @@ export function loadStoredCity(): CityCoordinates | null {
   return null
 }
 
-function storeCity(data: CityCoordinates) {
+export function storeCity(data: CityCoordinates) {
   localStorage.setItem(STORAGE_CITY_KEY, data.city)
   localStorage.setItem(STORAGE_COORDS_KEY, JSON.stringify({ lat: data.lat, lng: data.lng, timezone: data.timezone }))
 }
@@ -106,6 +106,26 @@ async function reverseGeocodeFree(lat: number, lng: number): Promise<string> {
   } catch {
     return "My Location"
   }
+}
+
+export async function autoDetectLocationByIP(): Promise<CityCoordinates | null> {
+  try {
+    const res = await fetch("http://ip-api.com/json/?fields=status,city,lat,lon,timezone")
+    const data = await res.json()
+    if (data.status === "success" && data.city && data.lat && data.lon) {
+      const coords: CityCoordinates = {
+        city: data.city,
+        lat: data.lat,
+        lng: data.lon,
+        timezone: data.timezone,
+      }
+      storeCity(coords)
+      return coords
+    }
+  } catch {
+    // IP geolocation unavailable
+  }
+  return null
 }
 
 export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {

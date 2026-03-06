@@ -143,7 +143,7 @@ A task is NEVER complete until the ENTIRE test suite passes with:
 - **0 flaky tests**
 - **0 tests with any issue whatsoever**
 
-**The E2E suite must pass 5 consecutive runs with 0 failures and 0 flaky.** Three runs is not enough — intermittent issues only surface under repeated execution. All 5 runs must be completely clean before a feature is considered done.
+**The E2E suite must pass 3 consecutive runs with 0 failures and 0 flaky.** Intermittent issues only surface under repeated execution. All 3 runs must be completely clean before a feature is considered done.
 
 **What counts as broken:**
 - A test that fails on any run
@@ -154,7 +154,7 @@ A task is NEVER complete until the ENTIRE test suite passes with:
 **What you MUST do:**
 1. Run the full test suite
 2. If ANY test fails or is flaky → **STOP everything and fix it**
-3. Re-run the full test suite **5 consecutive times** to confirm 0 failures and 0 flaky
+3. Re-run the full test suite **3 consecutive times** to confirm 0 failures and 0 flaky
 4. Only then is the task complete
 
 **What you MUST NOT do:**

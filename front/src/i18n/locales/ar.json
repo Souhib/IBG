@@ -150,6 +150,7 @@
     "yourRole": "دورك",
     "yourWord": "كلمتك",
     "gameOver": "انتهت اللعبة",
+    "gameOverTransition": "!انتهت اللعبة",
     "winner": "الفائز",
     "playAgain": "العب مرة أخرى",
     "backToRoom": "العودة للغرفة",

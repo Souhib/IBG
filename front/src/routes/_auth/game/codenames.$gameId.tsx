@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Users } from "lucide-react"
+import { Trophy, Users } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -65,6 +66,9 @@ function CodenamesGamePage() {
   const [clueNumber, setClueNumber] = useState(1)
   const [isSubmittingClue, setIsSubmittingClue] = useState(false)
   const [cancelMessage, setCancelMessage] = useState<string | null>(null)
+  const [showGameOverTransition, setShowGameOverTransition] = useState(false)
+  const gameOverTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previousStatusRef = useRef<string | null>(null)
 
   // Poll game state via REST every 2 seconds
   const { data: serverState, isLoading, error: queryError } = useQuery({
@@ -120,6 +124,20 @@ function CodenamesGamePage() {
       players: serverState.players || [],
       room_id: serverState.room_id,
     }
+  }, [serverState])
+
+  // Detect game over transition (status goes to "finished")
+  useEffect(() => {
+    if (!serverState) return
+    const currentStatus = serverState.status
+    if (currentStatus === "finished" && previousStatusRef.current && previousStatusRef.current !== "finished" && !showGameOverTransition) {
+      setShowGameOverTransition(true)
+      gameOverTransitionTimerRef.current = setTimeout(() => {
+        setShowGameOverTransition(false)
+        gameOverTransitionTimerRef.current = null
+      }, 3000)
+    }
+    previousStatusRef.current = currentStatus
   }, [serverState])
 
   // Handle query error (game not found / cancelled)
@@ -200,9 +218,10 @@ function CodenamesGamePage() {
 
   const handleBackToRoom = useCallback(() => {
     if (roomIdRef.current) {
+      queryClient.removeQueries({ queryKey: ["room", roomIdRef.current] })
       navigate({ to: "/rooms/$roomId", params: { roomId: roomIdRef.current } })
     }
-  }, [navigate])
+  }, [navigate, queryClient])
 
   // Achievement notifications
   useAchievementNotifications(serverState?.newly_unlocked_achievements, user?.id)
@@ -271,6 +290,44 @@ function CodenamesGamePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
+      {/* Game Over Transition Overlay */}
+      <AnimatePresence>
+        {showGameOverTransition && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
+          >
+            <motion.div className="text-center space-y-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+              >
+                <Trophy className="h-16 w-16 mx-auto text-yellow-500" />
+              </motion.div>
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-2xl font-bold"
+              >
+                {t("game.gameOver")}
+              </motion.h2>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="text-lg text-muted-foreground"
+              >
+                {t("game.gameOverTransition")}
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header + Score + Turn Info */}
       <ScorePanel
         redRemaining={gameState.red_remaining}
@@ -329,7 +386,7 @@ function CodenamesGamePage() {
       )}
 
       {/* Game Over */}
-      {gameState.status === "finished" && gameState.winner && (
+      {gameState.status === "finished" && gameState.winner && !showGameOverTransition && (
         <GameOverScreen
           winner={gameState.winner}
           roomId={roomIdRef.current}
