@@ -6,4 +6,3 @@ black
 ruff
 mypy
 types-passlib
-fakeredis[json]

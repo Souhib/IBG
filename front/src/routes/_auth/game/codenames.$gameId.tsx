@@ -20,6 +20,7 @@ interface CodenamesCard {
   word: string
   card_type: "red" | "blue" | "neutral" | "assassin" | null
   revealed: boolean
+  hint?: string | null
 }
 
 interface CodenamesTurn {
@@ -28,6 +29,7 @@ interface CodenamesTurn {
   clue_number: number
   guesses_made: number
   max_guesses: number | null
+  card_votes?: Record<string, number>
 }
 
 interface CodenamesPlayer {
@@ -57,7 +59,7 @@ export const Route = createFileRoute("/_auth/game/codenames/$gameId")({
 
 function CodenamesGamePage() {
   const { gameId } = Route.useParams()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -77,12 +79,14 @@ function CodenamesGamePage() {
       const res = await apiClient({
         method: "GET",
         url: `/api/v1/codenames/games/${gameId}/board`,
+        params: { lang: i18n.language },
       })
       return res.data as {
         game_id: string
         room_id?: string
         team: "red" | "blue"
         role: "spymaster" | "operative"
+        is_host?: boolean
         board: CodenamesCard[]
         current_team: "red" | "blue"
         red_remaining: number
@@ -152,6 +156,21 @@ function CodenamesGamePage() {
     }
   }, [queryError, navigate])
 
+  const handleHintViewed = useCallback(
+    async (word: string) => {
+      try {
+        await apiClient({
+          method: "POST",
+          url: `/api/v1/codenames/games/${gameId}/hint-viewed`,
+          data: { word },
+        })
+      } catch {
+        // Silent — hint tracking is best-effort
+      }
+    },
+    [gameId],
+  )
+
   const handleGiveClue = useCallback(async () => {
     if (!clueWord.trim() || isSubmittingClue) return
     setIsSubmittingClue(true)
@@ -174,17 +193,23 @@ function CodenamesGamePage() {
   const handleGuessCard = useCallback(
     async (index: number) => {
       try {
-        await apiClient({
+        const res = await apiClient({
           method: "POST",
           url: `/api/v1/codenames/games/${gameId}/guess`,
           data: { card_index: index },
         })
+        const data = res.data as { all_voted?: boolean; vote_changed?: boolean; tied?: boolean }
+        if (data.all_voted === false) {
+          toast.info(data.vote_changed ? t("game.codenames.voteChanged") : t("game.codenames.voteSubmitted"))
+        } else if (data.tied) {
+          toast.warning(t("game.codenames.tieWarning"))
+        }
         queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
       } catch (err) {
         toast.error(getApiErrorMessage(err, "Failed to guess card"))
       }
     },
-    [gameId, queryClient],
+    [gameId, queryClient, t],
   )
 
   const handleEndTurn = useCallback(async () => {
@@ -229,7 +254,7 @@ function CodenamesGamePage() {
 
   const timerExpiredRef = useRef(false)
   const handleTimerExpired = useCallback(async () => {
-    if (timerExpiredRef.current) return
+    if (!serverState?.is_host || timerExpiredRef.current) return
     timerExpiredRef.current = true
     try {
       await apiClient({
@@ -242,7 +267,7 @@ function CodenamesGamePage() {
     } finally {
       timerExpiredRef.current = false
     }
-  }, [gameId, queryClient])
+  }, [gameId, queryClient, serverState?.is_host])
 
   if (cancelMessage) {
     return (
@@ -288,6 +313,14 @@ function CodenamesGamePage() {
 
   const redPlayers = gameState.players.filter((p) => p.team === "red")
   const bluePlayers = gameState.players.filter((p) => p.team === "blue")
+
+  // Vote state
+  const cardVotes = gameState.current_turn?.card_votes ?? {}
+  const votedCount = Object.keys(cardVotes).length
+  const totalOperatives = gameState.players.filter(
+    (p) => p.team === gameState.current_team && p.role === "operative",
+  ).length
+  const isVotingActive = !!gameState.current_turn?.clue_word && totalOperatives > 1 && votedCount > 0 && gameState.status === "in_progress"
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -355,6 +388,13 @@ function CodenamesGamePage() {
         </div>
       )}
 
+      {/* Vote Progress */}
+      {isVotingActive && (
+        <div className="mb-4 rounded-lg bg-muted/50 p-2 text-center text-sm text-muted-foreground">
+          {t("game.codenames.votesProgress", { current: votedCount, total: totalOperatives })}
+        </div>
+      )}
+
       {/* Board */}
       <GameBoard
         board={gameState.board}
@@ -362,6 +402,9 @@ function CodenamesGamePage() {
         canGuess={canGuess}
         isFinished={gameState.status === "finished"}
         onGuessCard={handleGuessCard}
+        cardVotes={cardVotes}
+        currentUserId={user?.id}
+        onHintViewed={handleHintViewed}
       />
 
       {/* Spymaster Clue Input */}
@@ -392,6 +435,7 @@ function CodenamesGamePage() {
         <GameOverScreen
           winner={gameState.winner}
           roomId={roomIdRef.current}
+          board={gameState.board}
           onBackToRoom={handleBackToRoom}
           onLeaveRoom={handleLeaveRoom}
         />

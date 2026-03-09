@@ -41,7 +41,6 @@ services:
       JWT_SECRET_KEY: e2e-secret-key
       CORS_ORIGINS: "http://localhost:3049"
       LOG_LEVEL: WARNING
-      DISCONNECT_GRACE_PERIOD_SECONDS: "30"
       HEARTBEAT_STALE_SECONDS: "10"
       RATE_LIMIT_ENABLED: "false"
     depends_on:

@@ -4,11 +4,11 @@ A real-time multiplayer platform for Islamized versions of popular party games. 
 
 ## Overview
 
-IPG brings together classic social deduction and word games, reimagined with Islamic terminology and themes. Players join rooms, get assigned roles, and compete in real-time using Socket.IO for instant communication.
+IPG brings together classic social deduction and word games, reimagined with Islamic terminology and themes. Players join rooms, get assigned roles, and compete in real-time.
 
 ### Key Features
 
-- **Real-time Multiplayer**: Socket.IO-powered gameplay with instant state synchronization across all players
+- **Real-time Multiplayer**: REST polling with instant state synchronization across all players
 - **Two Games**: Undercover (social deduction, 3-12 players) and Codenames (team word game, 4-10 players)
 - **Islamic Terminology**: All game words drawn from Islamic concepts, prophets, places, and terms
 - **Room System**: Create/join password-protected rooms, invite friends, manage game settings
@@ -21,12 +21,11 @@ IPG brings together classic social deduction and word games, reimagined with Isl
 
 | Component | Technology |
 |-----------|------------|
-| **Backend** | Python 3.12, FastAPI, SQLModel, SQLAlchemy (async), python-socketio |
+| **Backend** | Python 3.12, FastAPI, SQLModel, SQLAlchemy (async) |
 | **Database** | PostgreSQL (prod), SQLite (dev) |
-| **Cache/State** | Redis (aredis_om for real-time game state) |
 | **Auth** | JWT (python-jose, bcrypt) |
 | **Frontend** | React 19, TypeScript, TanStack Router/Query, Tailwind v4, shadcn/ui |
-| **Real-time** | Socket.IO (server + client) |
+| **Real-time** | TanStack Query polling (2s interval) |
 | **API Codegen** | Kubb (OpenAPI -> React Query hooks) |
 | **i18n** | i18next (English + Arabic with RTL) |
 | **Testing** | pytest (backend), Vitest (frontend), Playwright (E2E) |
@@ -40,7 +39,6 @@ IPG brings together classic social deduction and word games, reimagined with Isl
 - Python 3.12+ with [uv](https://docs.astral.sh/uv/)
 - [Bun](https://bun.sh/) runtime
 - PostgreSQL (or SQLite for local development)
-- Redis
 
 ### Backend
 
@@ -71,13 +69,12 @@ Frontend available at `http://localhost:3000`
 docker compose up -d
 ```
 
-This starts PostgreSQL, Redis (with RedisInsight), backend, and frontend.
+This starts PostgreSQL, backend, and frontend.
 
 | Service | URL |
 |---------|-----|
 | Backend API | `http://localhost:5051` |
 | Frontend | `http://localhost:3051` |
-| RedisInsight | `http://localhost:8011` |
 
 ### Generate Test Data
 
@@ -128,7 +125,7 @@ Two teams (Red and Blue) compete to identify their agents on a 5x5 board of Isla
 
 ```
 IPG/
-├── backend/                    # FastAPI + Socket.IO
+├── backend/                    # FastAPI (pure REST)
 │   ├── ipg/
 │   │   ├── api/               # REST API
 │   │   │   ├── controllers/   # Business logic
@@ -138,10 +135,6 @@ IPG/
 │   │   │   ├── services/      # External integrations
 │   │   │   ├── constants.py   # All magic values
 │   │   │   └── middleware.py  # Security, request ID, logging (pure ASGI)
-│   │   ├── socketio/          # Real-time game events
-│   │   │   ├── controllers/   # Game logic (undercover, codenames)
-│   │   │   ├── models/        # Redis OM game state models
-│   │   │   └── routes/        # Socket.IO event handlers
 │   │   ├── app.py             # FastAPI app factory
 │   │   ├── database.py        # Async SQLAlchemy engine
 │   │   ├── dependencies.py    # DI with Annotated + Depends
@@ -153,9 +146,9 @@ IPG/
 │   ├── src/
 │   │   ├── api/               # ky HTTP client + Kubb generated hooks
 │   │   ├── components/        # UI components (shadcn/ui)
-│   │   ├── hooks/             # Socket.IO, auth hooks
+│   │   ├── hooks/             # Custom hooks
 │   │   ├── i18n/              # English + Arabic translations
-│   │   ├── lib/               # Utilities (cn, socket, auth)
+│   │   ├── lib/               # Utilities (cn, auth)
 │   │   ├── providers/         # Auth, Query, Theme providers
 │   │   └── routes/            # TanStack Router (file-based)
 │   └── vite.config.ts
@@ -180,8 +173,8 @@ IPG/
 - **Route -> Controller -> Model**: No business logic in routes — routes delegate everything to controllers
 - **Async Everything**: All database operations and external calls are async
 - **Dependency Injection**: FastAPI's `Depends()` with `Annotated` type hints
-- **REST + Socket.IO**: REST API for CRUD operations, Socket.IO for real-time game events
-- **Redis Game State**: Active game state lives in Redis (aredis_om), persistent data in PostgreSQL
+- **Pure REST + Polling**: REST API for all operations, TanStack Query polling for real-time updates
+- **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state
 
 ### Deployment Environments
 
@@ -269,8 +262,8 @@ The backend uses `IPG_ENV` to select which `.env.{env}` file to load:
 | File | Purpose |
 |------|---------|
 | `backend/.env` | Selector: `IPG_ENV=development` |
-| `backend/.env.development` | Local dev config (SQLite, local Redis) |
-| `backend/.env.production` | Production config (PostgreSQL, Redis service) |
+| `backend/.env.development` | Local dev config (SQLite) |
+| `backend/.env.production` | Production config (PostgreSQL) |
 | `backend/.env.example` | Reference template (committed) |
 
 ## API Documentation
@@ -287,7 +280,6 @@ The backend uses `IPG_ENV` to select which `.env.{env}` file to load:
 feat(auth): ✨ add JWT token refresh endpoint
 fix(game): 🐛 fix vote counting in undercover
 refactor(models): ♻️ migrate to async database
-perf(socket): ⚡ throttle Redis TTL refreshes
 ci: 🚀 add GitHub Actions CI/CD pipeline
 ```
 
@@ -297,4 +289,4 @@ This project is proprietary and confidential.
 
 ---
 
-Built with [FastAPI](https://fastapi.tiangolo.com/), [React](https://react.dev/), and [Socket.IO](https://socket.io/)
+Built with [FastAPI](https://fastapi.tiangolo.com/) and [React](https://react.dev/)

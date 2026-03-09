@@ -7,10 +7,14 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import DEFAULT_DESCRIPTION_TIMER_SECONDS, DEFAULT_VOTING_TIMER_SECONDS
+from ipg.api.constants import (
+    DEFAULT_DESCRIPTION_TIMER_SECONDS,
+    DEFAULT_VOTING_TIMER_SECONDS,
+    TIMER_EXPIRATION_TOLERANCE_SECONDS,
+)
 from ipg.api.controllers.achievement import AchievementController
 from ipg.api.controllers.game import GameController
-from ipg.api.controllers.game_lock import cleanup_game_lock, get_game_lock
+from ipg.api.controllers.game_lock import get_game_lock
 from ipg.api.controllers.room import RoomController
 from ipg.api.controllers.stats import StatsController
 from ipg.api.controllers.undercover import UndercoverController
@@ -108,126 +112,133 @@ class UndercoverGameController:
 
     async def create_and_start(self, room_id: UUID, user_id: UUID) -> dict:
         """Start a new Undercover game in the given room."""
-        db_room = await self._room_controller.get_room_by_id(room_id)
+        async with get_game_lock(f"room:{room_id}", self.session):
+            db_room = await self._room_controller.get_room_by_id(room_id)
 
-        if db_room.active_game_id:
-            raise BaseError(
-                message=f"Room {room_id} already has an active game",
-                frontend_message="A game is already in progress.",
-                status_code=400,
-            )
+            if db_room.active_game_id:
+                raise BaseError(
+                    message=f"Room {room_id} already has an active game",
+                    frontend_message="A game is already in progress.",
+                    status_code=400,
+                )
 
-        # Get connected non-spectator players from RoomUserLink
-        links = (
-            await self.session.exec(
-                select(RoomUserLink).where(
-                    RoomUserLink.room_id == db_room.id,
-                    RoomUserLink.connected == True,  # noqa: E712
-                    RoomUserLink.is_spectator == False,  # noqa: E712
+            # Get connected non-spectator players from RoomUserLink
+            links = (
+                await self.session.exec(
+                    select(RoomUserLink).where(
+                        RoomUserLink.room_id == db_room.id,
+                        RoomUserLink.connected == True,  # noqa: E712
+                        RoomUserLink.is_spectator == False,  # noqa: E712
+                    )
+                )
+            ).all()
+
+            if not links:
+                raise RoomNotFoundError(room_id=room_id)
+
+            # Get user info for each linked player
+            player_users = []
+            for link in links:
+                u = (await self.session.exec(select(User).where(User.id == link.user_id))).first()
+                if u:
+                    player_users.append(u)
+
+            num_players = len(player_users)
+            room_settings = getattr(db_room, "settings", None) or {}
+            mr_white_enabled = room_settings.get("enable_mr_white", True) and num_players >= 4
+            roles = self._compute_roles(num_players, mr_white_enabled)
+
+            players = [
+                {
+                    "user_id": str(u.id),
+                    "username": u.username,
+                    "role": role,
+                    "is_alive": True,
+                    "is_mayor": False,
+                }
+                for u, role in zip(player_users, roles, strict=True)
+            ]
+            players[random.randint(0, len(players) - 1)]["is_mayor"] = True
+
+            civilian_word, undercover_word = await self._get_civilian_and_undercover_words()
+            civilian_word_hint = civilian_word.hint
+            undercover_word_hint = undercover_word.hint
+
+            db_game = await self._game_controller.create_game(
+                GameCreate(
+                    room_id=db_room.id,
+                    number_of_players=num_players,
+                    type=GameType.UNDERCOVER,
+                    game_configurations={
+                        "civilian_word": civilian_word.word,
+                        "undercover_word": undercover_word.word,
+                        "civilian_word_id": str(civilian_word.id),
+                        "undercover_word_id": str(undercover_word.id),
+                    },
                 )
             )
-        ).all()
 
-        if not links:
-            raise RoomNotFoundError(room_id=room_id)
-
-        # Get user info for each linked player
-        player_users = []
-        for link in links:
-            u = (await self.session.exec(select(User).where(User.id == link.user_id))).first()
-            if u:
-                player_users.append(u)
-
-        num_players = len(player_users)
-        room_settings = getattr(db_room, "settings", None) or {}
-        mr_white_enabled = room_settings.get("enable_mr_white", True) and num_players >= 4
-        roles = self._compute_roles(num_players, mr_white_enabled)
-
-        players = [
-            {
-                "user_id": str(u.id),
-                "username": u.username,
-                "role": role,
-                "is_alive": True,
-                "is_mayor": False,
+            # Build initial live_state
+            description_order = self._generate_description_order(players)
+            first_turn = {
+                "votes": {},
+                "words": {},
+                "description_order": description_order,
+                "current_describer_index": 0,
+                "phase": "describing",
             }
-            for u, role in zip(player_users, roles, strict=True)
-        ]
-        players[random.randint(0, len(players) - 1)]["is_mayor"] = True
 
-        civilian_word, undercover_word = await self._get_civilian_and_undercover_words()
+            # Read timer settings from room settings if available
+            room_settings = getattr(db_room, "settings", None) or {}
+            desc_timer = room_settings.get("description_timer", DEFAULT_DESCRIPTION_TIMER_SECONDS)
+            vote_timer = room_settings.get("voting_timer", DEFAULT_VOTING_TIMER_SECONDS)
 
-        db_game = await self._game_controller.create_game(
-            GameCreate(
-                room_id=db_room.id,
-                number_of_players=num_players,
-                type=GameType.UNDERCOVER,
-                game_configurations={
-                    "civilian_word": civilian_word.word,
-                    "undercover_word": undercover_word.word,
-                    "civilian_word_id": str(civilian_word.id),
-                    "undercover_word_id": str(undercover_word.id),
+            live_state = {
+                "civilian_word": civilian_word.word,
+                "undercover_word": undercover_word.word,
+                "civilian_word_hint": civilian_word_hint,
+                "undercover_word_hint": undercover_word_hint,
+                "hint_usage": {},
+                "players": players,
+                "eliminated_players": [],
+                "turns": [first_turn],
+                "timer_config": {
+                    "description_seconds": desc_timer,
+                    "voting_seconds": vote_timer,
                 },
+                "timer_started_at": datetime.now(UTC).isoformat(),
+            }
+
+            db_game.live_state = live_state
+            db_game.game_status = GameStatus.IN_PROGRESS
+            flag_modified(db_game, "live_state")
+            self.session.add(db_game)
+
+            # Set active game on room
+            db_room.active_game_id = db_game.id
+            self.session.add(db_room)
+
+            # Create turn record
+            turn = await self._game_controller.create_turn(game_id=db_game.id)
+            await self._game_controller.create_turn_event(
+                game_id=db_game.id,
+                event_create=EventCreate(
+                    name="start_turn",
+                    data={"game_id": str(db_game.id), "turn_id": str(turn.id), "message": "Turn started."},
+                    user_id=db_room.owner_id,
+                ),
             )
-        )
 
-        # Build initial live_state
-        description_order = self._generate_description_order(players)
-        first_turn = {
-            "votes": {},
-            "words": {},
-            "description_order": description_order,
-            "current_describer_index": 0,
-            "phase": "describing",
-        }
+            await self.session.commit()
 
-        # Read timer settings from room settings if available
-        room_settings = getattr(db_room, "settings", None) or {}
-        desc_timer = room_settings.get("description_timer", DEFAULT_DESCRIPTION_TIMER_SECONDS)
-        vote_timer = room_settings.get("voting_timer", DEFAULT_VOTING_TIMER_SECONDS)
-
-        live_state = {
-            "civilian_word": civilian_word.word,
-            "undercover_word": undercover_word.word,
-            "players": players,
-            "eliminated_players": [],
-            "turns": [first_turn],
-            "timer_config": {
-                "description_seconds": desc_timer,
-                "voting_seconds": vote_timer,
-            },
-            "timer_started_at": datetime.now().isoformat(),
-        }
-
-        db_game.live_state = live_state
-        db_game.game_status = GameStatus.IN_PROGRESS
-        self.session.add(db_game)
-
-        # Set active game on room
-        db_room.active_game_id = db_game.id
-        self.session.add(db_room)
-
-        # Create turn record
-        turn = await self._game_controller.create_turn(game_id=db_game.id)
-        await self._game_controller.create_turn_event(
-            game_id=db_game.id,
-            event_create=EventCreate(
-                name="start_turn",
-                data={"game_id": str(db_game.id), "turn_id": str(turn.id), "message": "Turn started."},
-                user_id=db_room.owner_id,
-            ),
-        )
-
-        await self.session.commit()
-
-        return {
-            "game_id": str(db_game.id),
-            "room_id": str(db_room.id),
-        }
+            return {
+                "game_id": str(db_game.id),
+                "room_id": str(db_room.id),
+            }
 
     async def start_next_round(self, game_id: UUID, room_id: UUID, user_id: UUID) -> dict:
         """Start a new round (turn) in an existing game."""
-        async with get_game_lock(str(game_id)):
+        async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
 
@@ -240,7 +251,7 @@ class UndercoverGameController:
                 "phase": "describing",
             }
             state["turns"].append(new_turn)
-            state["timer_started_at"] = datetime.now().isoformat()
+            state["timer_started_at"] = datetime.now(UTC).isoformat()
             game.live_state = state
             flag_modified(game, "live_state")
             self.session.add(game)
@@ -272,7 +283,7 @@ class UndercoverGameController:
 
     async def submit_description(self, game_id: UUID, user_id: UUID, word: str) -> dict:
         """Submit a single-word description for the current turn."""
-        async with get_game_lock(str(game_id)):
+        async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
             current_turn = state["turns"][-1]
@@ -312,7 +323,7 @@ class UndercoverGameController:
 
             if all_done:
                 current_turn["phase"] = "voting"
-                state["timer_started_at"] = datetime.now().isoformat()
+                state["timer_started_at"] = datetime.now(UTC).isoformat()
 
             game.live_state = state
             flag_modified(game, "live_state")
@@ -327,7 +338,7 @@ class UndercoverGameController:
 
     async def submit_vote(self, game_id: UUID, user_id: UUID, voted_for: UUID) -> dict:  # noqa: C901
         """Submit a vote for a player."""
-        async with get_game_lock(str(game_id)):
+        async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
 
@@ -353,6 +364,13 @@ class UndercoverGameController:
                 raise CantVoteForDeadPersonError(user_id=user_id, dead_user_id=voted_for)
             if str(user_id) == str(voted_for):
                 raise CantVoteForYourselfError(user_id=user_id)
+
+            if str(user_id) in state["turns"][-1]["votes"]:
+                raise BaseError(
+                    message="You have already voted this round.",
+                    frontend_message="You have already voted this round.",
+                    status_code=400,
+                )
 
             state["turns"][-1]["votes"][str(user_id)] = str(voted_for)
 
@@ -380,7 +398,6 @@ class UndercoverGameController:
                     if room:
                         room.active_game_id = None
                         self.session.add(room)
-                    cleanup_game_lock(str(game_id))
                     # Process stats and achievements
                     newly_unlocked = await self._process_game_end_stats(state, winner_label)
                     if newly_unlocked:
@@ -424,11 +441,11 @@ class UndercoverGameController:
         if started.tzinfo is None:
             started = started.replace(tzinfo=UTC)
         elapsed = (datetime.now(UTC) - started).total_seconds()
-        return elapsed >= allowed - 2  # 2s tolerance for network latency
+        return elapsed >= allowed - TIMER_EXPIRATION_TOLERANCE_SECONDS
 
     async def handle_timer_expired(self, game_id: UUID, user_id: UUID) -> dict:
         """Handle timer expiration — auto-skip description or auto-random-vote."""
-        async with get_game_lock(str(game_id)):
+        async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
 
@@ -451,7 +468,7 @@ class UndercoverGameController:
                 # Auto-skip remaining describers by setting index to end
                 current_turn["current_describer_index"] = len(current_turn["description_order"])
                 current_turn["phase"] = "voting"
-                state["timer_started_at"] = datetime.now().isoformat()
+                state["timer_started_at"] = datetime.now(UTC).isoformat()
                 action = "skip_to_voting"
 
             elif current_turn["phase"] == "voting":
@@ -469,7 +486,6 @@ class UndercoverGameController:
                     if room:
                         room.active_game_id = None
                         self.session.add(room)
-                    cleanup_game_lock(str(game_id))
                     # Process stats and achievements
                     newly_unlocked = await self._process_game_end_stats(state, winner_label)
                     if newly_unlocked:
@@ -530,7 +546,7 @@ class UndercoverGameController:
             return UndercoverRole.UNDERCOVER.value
         return None
 
-    async def get_state(self, game_id: UUID, user_id: UUID, sid: str | None = None) -> dict:
+    async def get_state(self, game_id: UUID, user_id: UUID, sid: str | None = None, lang: str = "en") -> dict:
         """Get full game state for a player. Used for polling and initial page load."""
         game = await self._get_game(game_id)
         state = game.live_state
@@ -554,17 +570,19 @@ class UndercoverGameController:
             await self.session.commit()
 
         my_word = self._get_player_word(player, state)
+        my_word_hint = self._get_player_word_hint(player, state, lang)
         turn_state = self._build_turn_state(state, str(user_id))
         winner = self._get_winner_label(state)
         is_host = await self._check_is_host(game.room_id, user_id)
         vote_history = self._build_vote_history(state)
 
-        return {
+        result = {
             "game_id": str(game.id),
             "room_id": str(game.room_id),
             "is_host": is_host,
             "my_role": player["role"],
             "my_word": my_word,
+            "my_word_hint": my_word_hint,
             "is_alive": player["is_alive"],
             "players": [
                 {
@@ -587,6 +605,17 @@ class UndercoverGameController:
             **turn_state,
         }
 
+        # When game is over, include word explanations for educational reveal
+        if winner:
+            result["word_explanations"] = {
+                "civilian_word": state["civilian_word"],
+                "civilian_word_hint": self._resolve_hint(state.get("civilian_word_hint"), lang),
+                "undercover_word": state["undercover_word"],
+                "undercover_word_hint": self._resolve_hint(state.get("undercover_word_hint"), lang),
+            }
+
+        return result
+
     async def _get_game(self, game_id: UUID) -> Game:
         """Fetch a Game from PostgreSQL or raise GameNotFoundError."""
         game = (await self.session.exec(select(Game).where(Game.id == game_id))).first()
@@ -601,6 +630,40 @@ class UndercoverGameController:
         if player["role"] == UndercoverRole.UNDERCOVER.value:
             return state["undercover_word"]
         return state["civilian_word"]
+
+    def _get_player_word_hint(self, player: dict, state: dict, lang: str) -> str | None:
+        """Get the hint for the player's word, resolved to the requested language."""
+        if player["role"] == UndercoverRole.MR_WHITE.value:
+            return None
+        if player["role"] == UndercoverRole.UNDERCOVER.value:
+            return self._resolve_hint(state.get("undercover_word_hint"), lang)
+        return self._resolve_hint(state.get("civilian_word_hint"), lang)
+
+    @staticmethod
+    def _resolve_hint(hint_dict: dict | None, lang: str) -> str | None:
+        """Resolve a multilingual hint dict to a single string for the given language."""
+        if not hint_dict:
+            return None
+        return hint_dict.get(lang) or hint_dict.get("en") or next(iter(hint_dict.values()), None)
+
+    async def record_hint_view(self, game_id: UUID, user_id: UUID, word: str) -> dict:
+        """Record that a player viewed a hint for a word (deduplicated)."""
+        async with get_game_lock(str(game_id), self.session):
+            game = await self._get_game(game_id)
+            state = game.live_state
+
+            hint_usage = state.setdefault("hint_usage", {})
+            user_key = str(user_id)
+            user_hints = hint_usage.setdefault(user_key, [])
+            if word not in user_hints:
+                user_hints.append(word)
+
+            game.live_state = state
+            flag_modified(game, "live_state")
+            self.session.add(game)
+            await self.session.commit()
+
+        return {"game_id": str(game_id), "recorded": True}
 
     def _build_turn_state(self, state: dict, user_id: str) -> dict:
         """Build the turn-specific state dict."""
@@ -634,6 +697,7 @@ class UndercoverGameController:
 
         Returns a list of {user_id, achievements: [{code, name, icon, tier}]} for newly unlocked.
         """
+        hint_usage = state.get("hint_usage", {})
         newly_unlocked_all: list[dict] = []
         for player in state["players"]:
             user_id = UUID(player["user_id"])
@@ -645,6 +709,17 @@ class UndercoverGameController:
                 stats = await self._stats_controller.update_stats_after_game(
                     user_id=user_id, game_type="undercover", won=won, role=role
                 )
+                # Update hint-related stats
+                user_hints = hint_usage.get(str(user_id), [])
+                hints_viewed_count = len(user_hints)
+                if hints_viewed_count > 0:
+                    stats.total_hints_viewed += hints_viewed_count
+                if won and hints_viewed_count == 0:
+                    stats.games_without_hints += 1
+                self.session.add(stats)
+                await self.session.commit()
+                await self.session.refresh(stats)
+
                 unlocked = await self._achievement_controller.check_achievements(user_id, stats)
                 if unlocked:
                     newly_unlocked_all.append(

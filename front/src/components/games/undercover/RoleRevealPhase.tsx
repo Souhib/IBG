@@ -1,19 +1,28 @@
 import { Shield } from "lucide-react"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { HintButton } from "@/components/games/shared/HintButton"
 
 interface RoleRevealPhaseProps {
   myRole: string
   myWord?: string
+  myWordHint?: string | null
+  onHintViewed?: (word: string) => void
   onDismiss: () => void
 }
 
 export const RoleRevealPhase = memo(function RoleRevealPhase({
   myRole,
   myWord,
+  myWordHint,
+  onHintViewed,
   onDismiss,
 }: RoleRevealPhaseProps) {
   const { t } = useTranslation()
+
+  const handleHintView = useCallback(() => {
+    if (myWord && onHintViewed) onHintViewed(myWord)
+  }, [myWord, onHintViewed])
 
   return (
     <div className="rounded-xl border bg-card p-8 text-center mb-8">
@@ -29,7 +38,10 @@ export const RoleRevealPhase = memo(function RoleRevealPhase({
       {myWord && (
         <div className="mt-4">
           <p className="text-sm text-muted-foreground">{t("game.yourWord")}</p>
-          <p className="text-2xl font-bold mt-1">{myWord}</p>
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <p className="text-2xl font-bold">{myWord}</p>
+            <HintButton hint={myWordHint ?? null} onView={handleHintView} />
+          </div>
         </div>
       )}
       <button

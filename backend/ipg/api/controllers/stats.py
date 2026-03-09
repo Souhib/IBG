@@ -306,7 +306,7 @@ class StatsController:
             await self.session.exec(
                 select(Game).where(
                     Game.id.in_(shared_game_ids),  # type: ignore[union-attr]
-                    Game.game_status == GameStatus.ENDED,
+                    Game.game_status == GameStatus.FINISHED,
                 )
             )
         ).all()

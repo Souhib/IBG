@@ -149,6 +149,8 @@
     "winner": "Gagnant",
     "playAgain": "Rejouer",
     "backToRoom": "Retour au salon",
+    "wordExplanations": "Explications des mots",
+    "hintButton": "Afficher l'explication",
     "undercover": {
       "iUnderstand": "J'ai compris",
       "nextRound": "Manche suivante",
@@ -167,6 +169,8 @@
       "descriptionOrder": "Ordre de description",
       "yourTurn": "C'est votre tour !",
       "wordMustBeSingleWord": "Doit être un seul mot (sans espaces)",
+      "civilianWord": "Mot civil",
+      "undercoverWord": "Mot infiltré",
       "leaveGame": "Quitter la partie",
       "descriptionSubmitted": "Votre indice a été envoyé !",
       "allDescriptionsIn": "Tous les indices sont reçus !",

@@ -311,6 +311,7 @@ export interface CodenamesBoardState {
     clue_number: number;
     guesses_made: number;
     max_guesses: number;
+    card_votes?: Record<string, number>;
   };
   red_remaining: number;
   blue_remaining: number;

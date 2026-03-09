@@ -158,6 +158,8 @@
     "winner": "الفائز",
     "playAgain": "العب مرة أخرى",
     "backToRoom": "العودة للغرفة",
+    "wordExplanations": "شرح الكلمات",
+    "hintButton": "عرض الشرح",
     "undercover": {
       "iUnderstand": "فهمت",
       "nextRound": "الجولة التالية",
@@ -176,6 +178,8 @@
       "descriptionOrder": "ترتيب الوصف",
       "yourTurn": "دورك!",
       "wordMustBeSingleWord": "يجب أن تكون كلمة واحدة (بدون مسافات)",
+      "civilianWord": "كلمة المدني",
+      "undercoverWord": "كلمة المتخفي",
       "leaveGame": "مغادرة اللعبة",
       "descriptionSubmitted": "!تم إرسال وصفك",
       "allDescriptionsIn": "!تم جمع كل الأوصاف",
@@ -201,7 +205,12 @@
       "clue": "تلميح",
       "guesses": "التخمينات",
       "correct": "صحيح",
-      "wrong": "خطأ"
+      "wrong": "خطأ",
+      "votesProgress": "الأصوات: {{current}} / {{total}}",
+      "voteSubmitted": "تم التصويت",
+      "waitingForVotes": "في انتظار تصويت العملاء...",
+      "tieWarning": "تعادل! تم الاختيار عشوائياً بين البطاقات المتعادلة",
+      "voteChanged": "تم تغيير التصويت"
     }
   },
   "stats": {

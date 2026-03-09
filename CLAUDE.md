@@ -123,7 +123,7 @@ docker compose -f docker-compose.dokploy.yml up -d
 | Frontend | React 19, TanStack Router/Query, Tailwind v4, shadcn/ui |
 | Real-time | TanStack Query polling (2s interval) |
 | API Codegen | Kubb (OpenAPI -> React Query hooks) |
-| i18n | i18next (English + Arabic) |
+| i18n | i18next (English + Arabic + French) |
 | Testing | pytest (backend), Vitest (frontend) |
 | CI/CD | GitHub Actions |
 | Deployment | Docker + Dokploy (Oracle VPS) |
@@ -142,6 +142,7 @@ A task is NEVER complete until the ENTIRE test suite passes with:
 - **0 failed tests**
 - **0 flaky tests**
 - **0 tests with any issue whatsoever**
+- **Backend tests MUST be run with `--use-postgres` flag** (`uv run pytest --use-postgres`). The default SQLite mode skips PostgreSQL-specific tests (advisory locks, etc.). You cannot declare backend tests as passing unless they were run with this flag. Note: `uv run poe test` does NOT forward extra args — use `uv run pytest --use-postgres` directly.
 
 **The E2E suite must pass 3 consecutive runs with 0 failures and 0 flaky.** Intermittent issues only surface under repeated execution. All 3 runs must be completely clean before a feature is considered done.
 
@@ -189,12 +190,12 @@ cd backend && uv run poe check && uv run poe test
 cd front && bun run lint && bun run typecheck
 
 # E2E — MANDATORY after any backend or frontend change that touches main logic
-# (API routes, controllers, Socket.IO, game components, rooms, auth, shared state)
+# (API routes, controllers, game components, rooms, auth, shared state)
 # Only skip for purely cosmetic/unrelated pages (e.g. About page, static content)
 cd e2e && npx playwright test
 ```
 
-**CRITICAL: E2E tests are NOT optional.** Any change to backend controllers, Socket.IO handlers, API routes, game logic, room management, auth flow, or frontend components that interact with the backend MUST be followed by a full E2E run. The E2E suite is the final safety net — unit tests and linters alone are not sufficient to catch integration regressions.
+**CRITICAL: E2E tests are NOT optional.** Any change to backend controllers, API routes, game logic, room management, auth flow, or frontend components that interact with the backend MUST be followed by a full E2E run. The E2E suite is the final safety net — unit tests and linters alone are not sufficient to catch integration regressions.
 
 Do not consider a task complete until ALL tests pass with zero failures AND zero flaky tests — whether or not the failures appear related to your changes. A flaky test is still a failing test. If a pre-existing flaky test blocks completion, fix it before moving on.
 
@@ -210,7 +211,7 @@ Do not consider a task complete until ALL tests pass with zero failures AND zero
 
 #### Import Organization
 
-**All imports must be at the top of the file.** Never place imports inside functions or methods, even for lazy loading. The only acceptable exception is to break circular imports involving Redis OM models (e.g., `ipg.socketio.models` ↔ `ipg.api.controllers`), and even then, add a comment explaining why.
+**All imports must be at the top of the file.** Never place imports inside functions or methods, even for lazy loading.
 
 ```python
 # Good - imports at the top
@@ -228,14 +229,6 @@ class MyController:
 class MyController:
     async def my_method(self):
         from loguru import logger  # DON'T DO THIS
-        ...
-
-# Acceptable exception - circular import with Redis OM
-class MyController:
-    async def _check_redis(self):
-        # Lazy import to avoid circular dependency:
-        # room.py -> socketio.models.user -> socketio.models.shared -> room.py
-        from ipg.socketio.models.user import User as RedisUser
         ...
 ```
 
@@ -264,7 +257,7 @@ class MyController:
 
 - All tests follow the **Prepare / Act / Assert** pattern with clear section separation
 - Always verify both **return values** and **database state** (re-fetch from DB after mutations)
-- Mock external services (Redis) in unit tests; use real Redis (testcontainers) in socket tests
+- No external services to mock — game locks use in-process `asyncio.Lock`
 
 ## Key Patterns
 
@@ -275,7 +268,7 @@ class MyController:
 - **Enhanced Errors**: Auto i18n keys, auto-logging, `frontend_message` for UI
 - **Multi-env Settings**: `IPG_ENV` selector (.env -> .env.{env})
 - **Pure REST + Polling**: All game state via REST endpoints, TanStack Query polling for real-time updates (no WebSocket)
-- **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state (previously Redis)
+- **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state
 - **Manual kick**: Host can kick players from room; no auto-disconnect
 - **Kubb Codegen**: Auto-generated React Query hooks from FastAPI's OpenAPI spec
 
@@ -283,7 +276,7 @@ class MyController:
 
 ### Backend — Game Logic
 
-**All game state mutations use `asyncio.Lock` per game_id.** Vote submission, description submission, and disconnect handling ALL acquire the same lock. If you add a new game mutation endpoint, wrap it in `get_game_lock(str(game_id))`.
+**All game state mutations use `get_game_lock(game_id, session)`.** This uses PostgreSQL **transaction-level** advisory locks (`pg_try_advisory_xact_lock`) in production — they auto-release on commit/rollback, preventing lock leaks. Falls back to in-process `asyncio.Lock` for SQLite (tests). Vote submission, description submission, and disconnect handling ALL acquire the same lock. If you add a new game mutation endpoint, wrap it in `get_game_lock(str(game_id), self.session)`. **Never use session-level advisory locks** (`pg_advisory_lock`) — they leak when connections are recycled by the pool.
 
 **Role distribution must guarantee at least 1 civilian.** 3-player games: `num_mr_white=0, num_undercover=1, num_civilians=2`. The Mr. White role doesn't work with only 3 players.
 
@@ -306,6 +299,8 @@ await session.commit()
 **Use `selectinload()` on ORM queries that cross relationships.** Missing eager-loading causes N+1 query waterfalls.
 
 **Never use `BaseHTTPMiddleware`.** Use pure ASGI middleware for zero-overhead request processing.
+
+**Always use timezone-aware timestamps for values sent to the frontend.** Use `datetime.now(UTC).isoformat()` (produces `+00:00` suffix) instead of `datetime.now().isoformat()` (naive). JavaScript's `new Date()` interprets naive ISO strings as local time, causing clock skew between Docker containers (UTC) and browsers (local timezone).
 
 ### Frontend — Polling Architecture
 
@@ -352,6 +347,14 @@ page.locator('text=Discuss and vote')
 - Roles: Spymaster, Operative
 - 5x5 board of Islamic terms
 - Spymaster gives one-word clues, operatives guess
+
+### Hint System (Both Games)
+- Words have multilingual hints (JSON `hint` column: `{en, ar, fr}`)
+- Hints shown via Info icon popover (HintButton component)
+- Hint usage tracked in `live_state.hint_usage` for achievements
+- `POST /games/{game_id}/hint-viewed` records unique word views
+- Game over screen shows all word explanations
+- `_resolve_hint(hint_dict, lang)` helper with fallback chain: exact lang → `en` → first value
 
 ## Git Conventions
 

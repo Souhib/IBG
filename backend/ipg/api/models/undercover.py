@@ -2,6 +2,7 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from pydantic import model_validator
+from sqlalchemy import JSON, Column
 from sqlmodel import Field
 
 from ipg.api.models.game import GameBase
@@ -13,6 +14,7 @@ class WordBase(DBModel):
     category: str
     short_description: str
     long_description: str
+    hint: dict | None = Field(default=None, sa_column=Column(JSON))
 
 
 class Word(WordBase, table=True):

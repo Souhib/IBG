@@ -15,8 +15,6 @@ from ipg.api.models.room import RoomCreate, RoomJoin, RoomStatus
 from ipg.api.models.table import Game, User
 from ipg.api.models.undercover import Word
 from ipg.api.models.user import UserCreate
-from ipg.socketio.models.room import Room as RedisRoom
-from ipg.socketio.models.user import User as RedisUser
 
 DATABASE_URL = "sqlite:///database.db"
 
@@ -36,6 +34,11 @@ sample_words = [
         "category": "Pillars of Islam",
         "short_description": "Pilgrimage to Mecca.",
         "long_description": "Hajj is the fifth pillar of Islam, requiring Muslims who are physically and financially able to undertake a pilgrimage to Mecca at least once in their lifetime.",
+        "hint": {
+            "en": "The annual pilgrimage to Mecca, one of the five pillars of Islam",
+            "ar": "الحج السنوي إلى مكة، أحد أركان الإسلام الخمسة",
+            "fr": "Le pèlerinage annuel à La Mecque, l'un des cinq piliers de l'islam",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -43,6 +46,11 @@ sample_words = [
         "category": "Islamic Rituals",
         "short_description": "Minor pilgrimage to Mecca.",
         "long_description": "Umrah, the minor pilgrimage to Mecca, can be undertaken at any time of the year, unlike Hajj, which has specific dates according to the Islamic lunar calendar.",
+        "hint": {
+            "en": "The minor pilgrimage to Mecca, can be performed at any time of year",
+            "ar": "العمرة، الحج الأصغر إلى مكة، يمكن أداؤها في أي وقت من السنة",
+            "fr": "Le petit pèlerinage à La Mecque, peut être accompli à tout moment de l'année",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -50,6 +58,11 @@ sample_words = [
         "category": "Pillars of Islam",
         "short_description": "Islamic ritual prayer.",
         "long_description": "Salah is the second pillar of Islam, consisting of five daily prayers that are obligatory for all adult Muslims.",
+        "hint": {
+            "en": "The five daily prayers, the second pillar of Islam",
+            "ar": "الصلوات الخمس اليومية، الركن الثاني من أركان الإسلام",
+            "fr": "Les cinq prières quotidiennes, le deuxième pilier de l'islam",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -57,6 +70,11 @@ sample_words = [
         "category": "Pillars of Islam",
         "short_description": "Fasting during Ramadan.",
         "long_description": "Sawm, or fasting, is the fourth pillar of Islam, observed during the month of Ramadan, where Muslims fast from dawn until sunset.",
+        "hint": {
+            "en": "Fasting from dawn to sunset during Ramadan, the fourth pillar of Islam",
+            "ar": "الصيام من الفجر حتى غروب الشمس خلال رمضان، الركن الرابع من أركان الإسلام",
+            "fr": "Le jeûne de l'aube au coucher du soleil pendant le Ramadan, le quatrième pilier de l'islam",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -64,6 +82,11 @@ sample_words = [
         "category": "Pillars of Islam",
         "short_description": "Compulsory charity.",
         "long_description": "Zakat is the third pillar of Islam, requiring Muslims to give a fixed portion of their wealth to the needy.",
+        "hint": {
+            "en": "Obligatory charity — giving a fixed portion of wealth to the needy",
+            "ar": "الزكاة — إعطاء نسبة محددة من المال للمحتاجين",
+            "fr": "L'aumône obligatoire — donner une part fixe de sa richesse aux nécessiteux",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -71,6 +94,11 @@ sample_words = [
         "category": "Islamic Charitable Practices",
         "short_description": "Voluntary charity.",
         "long_description": "Sadaqah refers to voluntary charitable acts performed by Muslims, extending beyond monetary donations to include acts of kindness and generosity.",
+        "hint": {
+            "en": "Voluntary charity and acts of kindness beyond obligatory giving",
+            "ar": "الصدقة التطوعية وأعمال الخير التي تتجاوز العطاء الواجب",
+            "fr": "La charité volontaire et les actes de bonté au-delà du don obligatoire",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -78,6 +106,11 @@ sample_words = [
         "category": "Pillars of Islam",
         "short_description": "Islamic declaration of faith.",
         "long_description": "The Shahada is the first pillar of Islam, expressing the declaration of faith in the oneness of Allah and the prophethood of Muhammad.",
+        "hint": {
+            "en": "The declaration of faith — 'There is no god but Allah, and Muhammad is His messenger'",
+            "ar": "شهادة أن لا إله إلا الله وأن محمداً رسول الله",
+            "fr": "La déclaration de foi — 'Il n'y a de dieu qu'Allah et Muhammad est Son messager'",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -85,6 +118,11 @@ sample_words = [
         "category": "Islamic Beliefs",
         "short_description": "Oneness of God in Islam.",
         "long_description": "Tawhid is the principle of monotheism in Islam, affirming the oneness and absolute sovereignty of God as the central tenet of the Islamic faith.",
+        "hint": {
+            "en": "The fundamental principle of God's oneness and absolute sovereignty",
+            "ar": "المبدأ الأساسي لوحدانية الله وسيادته المطلقة",
+            "fr": "Le principe fondamental de l'unicité de Dieu et de Sa souveraineté absolue",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -92,6 +130,11 @@ sample_words = [
         "category": "Islamic Concepts",
         "short_description": "Struggle or effort in the way of God.",
         "long_description": "Jihad represents a broad Islamic concept that encompasses struggle against evil inclinations, effort in the way of God, and in some contexts, warfare in defense of the Islamic community.",
+        "hint": {
+            "en": "Struggle and effort in the way of God, including inner spiritual struggle",
+            "ar": "الجهاد في سبيل الله، بما في ذلك الجهاد الروحي الداخلي",
+            "fr": "L'effort et la lutte dans la voie de Dieu, y compris la lutte spirituelle intérieure",
+        },
     },
     {
         "id": fake.uuid4(),
@@ -99,6 +142,11 @@ sample_words = [
         "category": "Islamic History",
         "short_description": "Prophet Muhammad's migration to Medina.",
         "long_description": "The Hijrah refers to the migration of the Prophet Muhammad and his followers from Mecca to Medina in 622 CE, marking the beginning of the Islamic calendar.",
+        "hint": {
+            "en": "The Prophet's migration from Mecca to Medina in 622 CE, start of the Islamic calendar",
+            "ar": "هجرة النبي من مكة إلى المدينة عام 622 م، بداية التقويم الهجري",
+            "fr": "La migration du Prophète de La Mecque à Médine en 622, début du calendrier islamique",
+        },
     },
 ]
 
@@ -195,16 +243,6 @@ async def insert_sample_data() -> None:
                 owner_id=owner.id,
             )
         )
-
-        redis_users = []
-        for index, user in enumerate(users):
-            new_user = RedisUser(id=str(user.id), username=user.username, sid=fake.uuid4())
-            await new_user.save()
-            redis_users.append(new_user)
-            print(f"User {index + 1} has sid {new_user.sid}")
-
-        redis_room = RedisRoom(id=str(room.id), users=redis_users)
-        await redis_room.save()
 
         for user in users:
             if user.id != room.owner_id:

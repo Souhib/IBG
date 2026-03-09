@@ -21,19 +21,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ─── Redis (with RedisInsight) ────────────────────────────
-
-  redis:
-    image: redis/redis-stack:latest
-    environment:
-      - REDIS_ARGS=--stop-writes-on-bgsave-error no
-    ports:
-      - "63791:6379"
-      - "8011:8001"  # RedisInsight UI
-    volumes:
-      - redisdata:/data
-    restart: unless-stopped
-
   # ─── Backend API ──────────────────────────────────────────
 
   backend:
@@ -45,7 +32,6 @@ services:
       - "5051:5000"
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ipg}:${POSTGRES_PASSWORD:-ipg}@db:5432/${POSTGRES_DB:-ipg}
-      REDIS_URL: redis://redis:6379
       ENVIRONMENT: development
       IPG_ENV: development
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-change-me}
@@ -55,8 +41,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
     restart: unless-stopped
 
   # ─── Frontend SPA ─────────────────────────────────────────
@@ -106,5 +90,4 @@ services:
 
 volumes:
   pgdata:
-  redisdata:
   umami_pgdata:

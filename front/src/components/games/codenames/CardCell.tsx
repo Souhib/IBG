@@ -1,10 +1,12 @@
-import { memo } from "react"
+import { memo, useCallback } from "react"
+import { HintButton } from "@/components/games/shared/HintButton"
 import { cn } from "@/lib/utils"
 
 interface CodenamesCard {
   word: string
   card_type: "red" | "blue" | "neutral" | "assassin" | null
   revealed: boolean
+  hint?: string | null
 }
 
 interface CardCellProps {
@@ -14,6 +16,9 @@ interface CardCellProps {
   canGuess: boolean
   isFinished: boolean
   onGuess: (index: number) => void
+  voteCount?: number
+  isMyVote?: boolean
+  onHintViewed?: (word: string) => void
 }
 
 export const CardCell = memo(function CardCell({
@@ -23,7 +28,13 @@ export const CardCell = memo(function CardCell({
   canGuess,
   isFinished,
   onGuess,
+  voteCount,
+  isMyVote,
+  onHintViewed,
 }: CardCellProps) {
+  const handleHintView = useCallback(() => {
+    if (onHintViewed) onHintViewed(card.word)
+  }, [onHintViewed, card.word])
   // Show color if: card revealed, player is spymaster, or game is finished (full reveal)
   const showColor = card.revealed || isSpymaster || isFinished
   let bgColor = "bg-card hover:bg-muted"
@@ -68,14 +79,25 @@ export const CardCell = memo(function CardCell({
       onClick={() => onGuess(index)}
       disabled={!canGuess || card.revealed || isFinished}
       className={cn(
-        "rounded-lg border p-3 text-center text-sm font-medium transition-all min-h-[60px] flex items-center justify-center",
+        "relative rounded-lg border p-3 text-center text-sm font-medium transition-all min-h-[60px] flex items-center justify-center",
         bgColor,
         card.revealed && "opacity-75",
         canGuess && !card.revealed && !isFinished && "cursor-pointer hover:shadow-md",
         (!canGuess || card.revealed || isFinished) && "cursor-default",
+        isMyVote && !card.revealed && "ring-2 ring-primary ring-offset-1",
       )}
     >
       {card.word}
+      {card.hint && (card.revealed || isSpymaster || isFinished) && (
+        <span className="absolute top-0.5 left-0.5">
+          <HintButton hint={card.hint} onView={handleHintView} className="p-0.5" />
+        </span>
+      )}
+      {!!voteCount && voteCount > 0 && !card.revealed && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          {voteCount}
+        </span>
+      )}
     </button>
   )
 })

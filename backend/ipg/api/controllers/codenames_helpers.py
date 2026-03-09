@@ -7,6 +7,7 @@ from ipg.api.constants import (
     CODENAMES_NEUTRAL_CARDS,
     CODENAMES_SECOND_TEAM_CARDS,
 )
+from ipg.api.schemas.error import BaseError
 
 
 class CodenamesTeam(StrEnum):
@@ -130,4 +131,8 @@ def get_player_from_game(players: list[dict], user_id: str) -> dict:
     for player in players:
         if player["user_id"] == user_id:
             return player
-    raise ValueError(f"Player with user_id {user_id} not found in game")
+    raise BaseError(
+        message=f"Player {user_id} not found in game.",
+        frontend_message="You are not in this game.",
+        status_code=400,
+    )

@@ -56,3 +56,52 @@ def test_check_words_are_different_succeeds_when_words_are_different():
     # Assert
     assert term_pair.word1_id == word1_id
     assert term_pair.word2_id == word2_id
+
+
+def test_create_word_with_hint():
+    """Creating a word with a hint dict succeeds."""
+
+    # Arrange / Act
+    word = WordCreate(
+        word="mosque",
+        category="islamic",
+        short_description="Place of worship",
+        long_description="A place where Muslims gather for prayer",
+        hint={"en": "A building for Islamic worship", "fr": "Un lieu de culte islamique"},
+    )
+
+    # Assert
+    assert word.hint is not None
+    assert word.hint["en"] == "A building for Islamic worship"
+    assert word.hint["fr"] == "Un lieu de culte islamique"
+
+
+def test_create_word_without_hint():
+    """Creating a word without a hint defaults to None."""
+
+    # Arrange / Act
+    word = WordCreate(
+        word="mosque",
+        category="islamic",
+        short_description="Place of worship",
+        long_description="A place where Muslims gather for prayer",
+    )
+
+    # Assert
+    assert word.hint is None
+
+
+def test_create_word_with_empty_hint():
+    """Creating a word with an empty hint dict succeeds."""
+
+    # Arrange / Act
+    word = WordCreate(
+        word="mosque",
+        category="islamic",
+        short_description="Place of worship",
+        long_description="A place where Muslims gather for prayer",
+        hint={},
+    )
+
+    # Assert
+    assert word.hint == {}

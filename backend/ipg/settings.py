@@ -51,9 +51,6 @@ class Settings(BaseSettings):
     # Frontend
     frontend_url: str = "http://localhost:3000"
 
-    # Redis
-    redis_url: str = ""
-
     # Sentry
     sentry_dsn: str = ""
 

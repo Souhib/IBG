@@ -34,6 +34,10 @@ class NextRoundRequest(BaseModel):
     room_id: UUID
 
 
+class HintViewedRequest(BaseModel):
+    word: str
+
+
 # --- Game Action Endpoints ---
 
 
@@ -52,8 +56,9 @@ async def get_undercover_state(
     current_user: Annotated[User, Depends(get_current_user)],
     controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
     sid: str | None = None,
+    lang: str = "en",
 ) -> dict:
-    return await controller.get_state(game_id, current_user.id, sid=sid)
+    return await controller.get_state(game_id, current_user.id, sid=sid, lang=lang)
 
 
 @router.post("/games/{game_id}/describe")
@@ -83,6 +88,16 @@ async def timer_expired(
     controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
 ) -> dict:
     return await controller.handle_timer_expired(game_id, current_user.id)
+
+
+@router.post("/games/{game_id}/hint-viewed")
+async def record_hint_viewed(
+    game_id: UUID,
+    body: HintViewedRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[UndercoverGameController, Depends(get_undercover_game_controller)],
+) -> dict:
+    return await controller.record_hint_view(game_id, current_user.id, body.word)
 
 
 @router.post("/games/{game_id}/next-round")

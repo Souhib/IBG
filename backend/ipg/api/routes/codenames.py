@@ -3,6 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from pydantic import Field
 from starlette.status import HTTP_201_CREATED
 
 from ipg.api.controllers.codenames import CodenamesController
@@ -33,11 +34,15 @@ class StartCodenamesRequest(BaseModel):
 
 class GiveClueRequest(BaseModel):
     clue_word: str
-    clue_number: int
+    clue_number: int = Field(ge=0)
 
 
 class GuessCardRequest(BaseModel):
     card_index: int
+
+
+class HintViewedRequest(BaseModel):
+    word: str
 
 
 # --- Game Action Endpoints ---
@@ -60,8 +65,9 @@ async def get_codenames_board(
     current_user: Annotated[User, Depends(get_current_user)],
     controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
     sid: str | None = None,
+    lang: str = "en",
 ) -> dict:
-    return await controller.get_board(game_id, current_user.id, sid=sid)
+    return await controller.get_board(game_id, current_user.id, sid=sid, lang=lang)
 
 
 @router.post("/games/{game_id}/clue")
@@ -91,6 +97,16 @@ async def timer_expired(
     controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
 ) -> dict:
     return await controller.handle_timer_expired(game_id, current_user.id)
+
+
+@router.post("/games/{game_id}/hint-viewed")
+async def record_hint_viewed(
+    game_id: UUID,
+    body: HintViewedRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    controller: Annotated[CodenamesGameController, Depends(get_codenames_game_controller)],
+) -> dict:
+    return await controller.record_hint_view(game_id, current_user.id, body.word)
 
 
 @router.post("/games/{game_id}/end-turn")

@@ -73,3 +73,14 @@ def test_achievement_definition_default_values():
     assert definition.threshold == 1
     assert definition.tier == 1
     assert definition.game_type is None
+
+
+def test_user_stats_hint_fields_default_to_zero():
+    """UserStats hint-related fields default to 0."""
+
+    # Arrange / Act
+    stats = UserStats(user_id=uuid4())
+
+    # Assert
+    assert stats.games_without_hints == 0
+    assert stats.total_hints_viewed == 0

@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_auth/game/undercover/$gameId")({
 
 function UndercoverGamePage() {
   const { gameId } = Route.useParams()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -71,10 +71,12 @@ function UndercoverGamePage() {
       const res = await apiClient({
         method: "GET",
         url: `/api/v1/undercover/games/${gameId}/state`,
+        params: { lang: i18n.language },
       })
       return res.data as {
         my_role: string
         my_word: string
+        my_word_hint: string | null
         is_alive: boolean
         players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
         eliminated_players: { user_id: string; username: string; role: string }[]
@@ -96,6 +98,12 @@ function UndercoverGamePage() {
         timer_config?: { description_seconds: number; voting_seconds: number }
         timer_started_at?: string | null
         newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
+        word_explanations?: {
+          civilian_word: string
+          civilian_word_hint: string | null
+          undercover_word: string
+          undercover_word_hint: string | null
+        }
       }
     },
     refetchInterval: 2000,
@@ -303,6 +311,21 @@ function UndercoverGamePage() {
     setRoleRevealed(true)
   }, [])
 
+  const handleHintViewed = useCallback(
+    async (word: string) => {
+      try {
+        await apiClient({
+          method: "POST",
+          url: `/api/v1/undercover/games/${gameId}/hint-viewed`,
+          data: { word },
+        })
+      } catch {
+        // Silent — hint tracking is best-effort
+      }
+    },
+    [gameId],
+  )
+
   // Achievement notifications
   useAchievementNotifications(serverState?.newly_unlocked_achievements, user?.id)
 
@@ -471,6 +494,8 @@ function UndercoverGamePage() {
         <RoleRevealPhase
           myRole={gameState.my_role}
           myWord={gameState.my_word}
+          myWordHint={serverState?.my_word_hint ?? null}
+          onHintViewed={handleHintViewed}
           onDismiss={handleDismissRole}
         />
       )}
@@ -496,6 +521,8 @@ function UndercoverGamePage() {
         <DescriptionPhase
           myRole={gameState.my_role}
           myWord={gameState.my_word}
+          myWordHint={serverState?.my_word_hint ?? null}
+          onHintViewed={handleHintViewed}
           descriptionOrder={gameState.descriptionOrder}
           currentDescriberIndex={gameState.currentDescriberIndex}
           descriptions={gameState.descriptions}
@@ -516,6 +543,8 @@ function UndercoverGamePage() {
           players={gameState.players}
           myRole={gameState.my_role}
           myWord={gameState.my_word}
+          myWordHint={serverState?.my_word_hint ?? null}
+          onHintViewed={handleHintViewed}
           descriptions={gameState.descriptions}
           descriptionOrder={gameState.descriptionOrder}
           isAlive={isAlive}
@@ -542,6 +571,7 @@ function UndercoverGamePage() {
         <GameOverScreen
           winner={gameState.winner}
           roomId={roomIdRef.current}
+          wordExplanations={serverState?.word_explanations}
           onBackToRoom={handleBackToRoom}
           onLeaveRoom={handleLeaveRoom}
         />

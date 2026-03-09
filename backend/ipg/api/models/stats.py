@@ -68,6 +68,10 @@ class UserStats(BaseTable, table=True):
     codenames_words_guessed: int = 0
     codenames_perfect_rounds: int = 0
 
+    # Hint system
+    games_without_hints: int = 0
+    total_hints_viewed: int = 0
+
     # Hosting
     rooms_created: int = 0
     games_hosted: int = 0

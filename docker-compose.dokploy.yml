@@ -23,19 +23,6 @@ services:
       - internal
     restart: always
 
-  redis:
-    image: redis/redis-stack-server:latest
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - internal
-    restart: always
-
   # ─── Backend API ─────────────────────────────────────────────
 
   backend:
@@ -45,8 +32,6 @@ services:
       target: production
     environment:
       DATABASE_URL: postgresql+asyncpg://ipg:${DB_PASSWORD}@db:5432/ipg
-      REDIS_URL: redis://redis:6379
-
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ENCRYPTION_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
@@ -63,8 +48,6 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     ports:
       - "33648:5000"
@@ -142,7 +125,6 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
   umami_postgres_data:
 
 networks:

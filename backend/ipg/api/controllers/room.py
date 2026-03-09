@@ -284,8 +284,12 @@ class RoomController:
         """Get room state for all players."""
         room = await self.get_room_by_id(room_id)
 
-        # Get all users in the room (bulk fetch to avoid N+1)
-        all_links = (await self.session.exec(select(RoomUserLink).where(RoomUserLink.room_id == room_id))).all()
+        # Get connected users in the room (bulk fetch to avoid N+1)
+        all_links = (
+            await self.session.exec(
+                select(RoomUserLink).where(RoomUserLink.room_id == room_id).where(RoomUserLink.connected == True)  # noqa: E712
+            )
+        ).all()
 
         user_ids = [rul.user_id for rul in all_links]
         users = (await self.session.exec(select(User).where(User.id.in_(user_ids)))).all() if user_ids else []

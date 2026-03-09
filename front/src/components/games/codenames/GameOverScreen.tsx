@@ -1,13 +1,21 @@
-import { LogOut, RotateCcw } from "lucide-react"
+import { BookOpen, LogOut, RotateCcw } from "lucide-react"
 import { memo, useCallback, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
 import { cn } from "@/lib/utils"
 
+interface CodenamesCard {
+  word: string
+  card_type: "red" | "blue" | "neutral" | "assassin" | null
+  revealed: boolean
+  hint?: string | null
+}
+
 interface GameOverScreenProps {
   winner: "red" | "blue"
   roomId: string | null
+  board?: CodenamesCard[]
   onBackToRoom: () => void
   onLeaveRoom: () => void
 }
@@ -15,6 +23,7 @@ interface GameOverScreenProps {
 export const GameOverScreen = memo(function GameOverScreen({
   winner,
   roomId,
+  board,
   onBackToRoom,
   onLeaveRoom,
 }: GameOverScreenProps) {
@@ -51,6 +60,24 @@ export const GameOverScreen = memo(function GameOverScreen({
           : t("games.codenames.teams.blue")}{" "}
         {t("game.codenames.wins")}
       </p>
+      {/* Word Explanations — educational reveal */}
+      {board && board.some((c) => c.hint) && (
+        <div className="mt-6 rounded-lg border bg-muted/30 p-4 text-left max-h-48 overflow-y-auto">
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            {t("game.wordExplanations")}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {board.filter((c) => c.hint).map((card) => (
+              <div key={card.word} className="rounded-md bg-muted/50 px-3 py-2">
+                <p className="text-sm font-semibold">{card.word}</p>
+                <p className="text-xs text-muted-foreground">{card.hint}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-6 flex items-center justify-center gap-3">
         {roomId && (
           <button

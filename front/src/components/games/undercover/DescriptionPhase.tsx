@@ -1,6 +1,7 @@
 import { Loader2, MessageCircle } from "lucide-react"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { HintButton } from "@/components/games/shared/HintButton"
 import { cn } from "@/lib/utils"
 
 interface DescriptionOrderEntry {
@@ -11,6 +12,8 @@ interface DescriptionOrderEntry {
 interface DescriptionPhaseProps {
   myRole?: string
   myWord?: string
+  myWordHint?: string | null
+  onHintViewed?: (word: string) => void
   descriptionOrder: DescriptionOrderEntry[]
   currentDescriberIndex: number
   descriptions: Record<string, string>
@@ -27,6 +30,8 @@ interface DescriptionPhaseProps {
 export const DescriptionPhase = memo(function DescriptionPhase({
   myRole,
   myWord,
+  myWordHint,
+  onHintViewed,
   descriptionOrder,
   currentDescriberIndex,
   descriptions,
@@ -41,6 +46,10 @@ export const DescriptionPhase = memo(function DescriptionPhase({
 }: DescriptionPhaseProps) {
   const { t } = useTranslation()
 
+  const handleHintView = useCallback(() => {
+    if (myWord && onHintViewed) onHintViewed(myWord)
+  }, [myWord, onHintViewed])
+
   const currentDescriber =
     descriptionOrder.length > 0 && currentDescriberIndex < descriptionOrder.length
       ? descriptionOrder[currentDescriberIndex]
@@ -53,6 +62,7 @@ export const DescriptionPhase = memo(function DescriptionPhase({
         <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-4 text-center">
           <span className="text-sm text-muted-foreground">{t("game.undercover.yourWordReminder")}:</span>{" "}
           <span className="font-bold text-primary">{myWord}</span>
+          <HintButton hint={myWordHint ?? null} onView={handleHintView} />
         </div>
       )}
 

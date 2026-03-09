@@ -1,5 +1,6 @@
 """Test configuration and fixtures for IPG backend."""
 
+import subprocess
 from datetime import datetime
 
 import pytest
@@ -7,7 +8,7 @@ import pytest_asyncio
 from faker import Faker
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -33,6 +34,50 @@ from ipg.api.models.room import RoomCreate, RoomStatus
 from ipg.api.models.table import Room, User
 from ipg.api.models.undercover import TermPair, Word, WordCreate
 from ipg.settings import Settings
+
+# ========== PyTest Configuration ==========
+
+
+def pytest_addoption(parser):
+    """Add --use-postgres flag to run tests against a PostgreSQL testcontainer."""
+    parser.addoption(
+        "--use-postgres",
+        action="store_true",
+        default=False,
+        help="Use PostgreSQL testcontainer instead of in-memory SQLite",
+    )
+
+
+def pytest_configure(config):
+    """Register the 'postgres' marker and check Docker availability when --use-postgres is specified."""
+    config.addinivalue_line("markers", "postgres: marks tests requiring PostgreSQL (skip without --use-postgres)")
+    if config.getoption("--use-postgres", default=False):
+        error_reason = None
+        try:
+            result = subprocess.run(["docker", "info"], check=False, capture_output=True, timeout=10)
+            if result.returncode != 0:
+                error_reason = "Docker is not running"
+        except FileNotFoundError:
+            error_reason = "Docker is not installed"
+        except subprocess.TimeoutExpired:
+            error_reason = "Docker is not responding (timed out)"
+
+        if error_reason:
+            raise pytest.UsageError(
+                f"\n\n{error_reason}!\n\n"
+                f"--use-postgres requires Docker to run PostgreSQL testcontainers.\n"
+                f"Please start Docker and try again, or run without --use-postgres.\n"
+            )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Auto-skip @pytest.mark.postgres tests when running without --use-postgres."""
+    if not config.getoption("--use-postgres"):
+        skip_postgres = pytest.mark.skip(reason="Requires PostgreSQL (use --use-postgres flag)")
+        for item in items:
+            if "postgres" in item.keywords:
+                item.add_marker(skip_postgres)
+
 
 # ========== Core Infrastructure ==========
 
@@ -60,30 +105,62 @@ def get_test_settings() -> Settings:
     )
 
 
+@pytest.fixture(name="use_postgres", scope="session")
+def get_use_postgres(request):
+    """Determine whether to use PostgreSQL or SQLite for tests."""
+    return request.config.getoption("--use-postgres")
+
+
+@pytest.fixture(name="postgres_container", scope="session")
+def get_postgres_container(use_postgres):
+    """Start a PostgreSQL testcontainer once for the entire test session."""
+    if not use_postgres:
+        yield None
+        return
+
+    from testcontainers.postgres import PostgresContainer  # noqa: PLC0415
+
+    with PostgresContainer("postgres:16-alpine") as postgres:
+        yield postgres
+
+
 @pytest_asyncio.fixture(name="engine", scope="function")
-async def get_engine():
-    """Create an in-memory SQLite async engine for testing.
+async def get_engine(use_postgres, postgres_container):
+    """Create a database engine for testing.
 
-    Uses StaticPool to ensure all connections share the same in-memory database.
-    Enables foreign key enforcement via PRAGMA.
+    SQLite (default): In-memory with StaticPool, PRAGMA foreign_keys=ON.
+    PostgreSQL (--use-postgres): Testcontainer with NullPool.
     """
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+    if use_postgres:
+        if postgres_container is None:
+            raise RuntimeError("PostgreSQL container not available. Make sure Docker is running.")
 
-    @event.listens_for(engine.sync_engine, "connect")
-    def _set_sqlite_pragma(dbapi_conn, connection_record):  # noqa: ARG001
-        cursor = dbapi_conn.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
+        db_url = postgres_container.get_connection_url().replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+        engine = create_async_engine(db_url, echo=False, poolclass=NullPool)
 
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+        async with engine.begin() as conn:
+            await conn.run_sync(lambda sync_engine: SQLModel.metadata.create_all(sync_engine, checkfirst=True))
 
-    yield engine
-    await engine.dispose()
+        yield engine
+        await engine.dispose()
+    else:
+        engine = create_async_engine(
+            "sqlite+aiosqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def _set_sqlite_pragma(dbapi_conn, connection_record):  # noqa: ARG001
+            cursor = dbapi_conn.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
+        async with engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+
+        yield engine
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture(name="session", scope="function")
@@ -97,11 +174,17 @@ async def get_session(engine: AsyncEngine) -> AsyncSession:
 async def clear_database(engine: AsyncEngine):
     """Clear the database after each test function to prevent cross-test pollution."""
     yield
+    is_sqlite = "sqlite" in str(engine.url)
     async with engine.begin() as conn:
-        await conn.execute(text("PRAGMA foreign_keys = OFF;"))
-        await conn.run_sync(SQLModel.metadata.drop_all)
-        await conn.execute(text("PRAGMA foreign_keys = ON;"))
-        await conn.run_sync(lambda sync_engine: SQLModel.metadata.create_all(sync_engine, checkfirst=True))
+        if is_sqlite:
+            await conn.execute(text("PRAGMA foreign_keys = OFF;"))
+            await conn.run_sync(SQLModel.metadata.drop_all)
+            await conn.execute(text("PRAGMA foreign_keys = ON;"))
+            await conn.run_sync(lambda sync_engine: SQLModel.metadata.create_all(sync_engine, checkfirst=True))
+        else:
+            # PostgreSQL: truncate all tables for faster cleanup
+            for table in reversed(SQLModel.metadata.sorted_tables):
+                await conn.execute(text(f'TRUNCATE TABLE "{table.name}" CASCADE'))  # noqa: S608
 
 
 # ========== Controller Fixtures ==========

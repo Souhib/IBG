@@ -42,7 +42,7 @@ api/
 │   ├── undercover_game.py # Undercover game logic (REST + PostgreSQL JSON)
 │   ├── codenames_game.py  # Codenames game logic (REST + PostgreSQL JSON)
 │   ├── codenames_helpers.py # Board builder, player assigner
-│   ├── game_lock.py   # In-process asyncio.Lock per game_id
+│   ├── game_lock.py   # PostgreSQL advisory locks per game_id (asyncio.Lock fallback for SQLite)
 │   ├── disconnect.py  # Disconnect/kick handlers (used by kick_player)
 │   ├── stats.py       # User statistics
 │   └── achievement.py # Achievement tracking + seeding
@@ -80,13 +80,13 @@ All game state stored in `Game.live_state` JSON column:
 - **Undercover**: `{players, turns, civilian_word, undercover_word, phase, ...}`
 - **Codenames**: `{board, players, current_team, current_turn, status, winner, ...}`
 
-All game mutations use `asyncio.Lock` per game_id:
+All game mutations use `get_game_lock(game_id, session)` — PostgreSQL advisory locks in production, asyncio.Lock fallback for SQLite tests:
 ```python
 from sqlalchemy.orm.attributes import flag_modified
 from ipg.api.controllers.game_lock import get_game_lock
 
 async def submit_vote(self, game_id: UUID, ...):
-    async with get_game_lock(str(game_id)):
+    async with get_game_lock(str(game_id), self.session):
         game = (await self.session.exec(select(Game).where(Game.id == game_id))).one()
         state = game.live_state
         # ... modify state ...

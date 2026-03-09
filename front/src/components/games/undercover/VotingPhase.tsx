@@ -1,6 +1,7 @@
 import { Crown, MessageCircle, Skull, ThumbsUp, User } from "lucide-react"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { HintButton } from "@/components/games/shared/HintButton"
 import { cn } from "@/lib/utils"
 
 interface DescriptionOrderEntry {
@@ -19,6 +20,8 @@ interface VotingPhaseProps {
   players: UndercoverPlayer[]
   myRole?: string
   myWord?: string
+  myWordHint?: string | null
+  onHintViewed?: (word: string) => void
   descriptions: Record<string, string>
   descriptionOrder: DescriptionOrderEntry[]
   isAlive: boolean
@@ -34,6 +37,8 @@ export const VotingPhase = memo(function VotingPhase({
   players,
   myRole,
   myWord,
+  myWordHint,
+  onHintViewed,
   descriptions,
   descriptionOrder,
   isAlive,
@@ -46,6 +51,10 @@ export const VotingPhase = memo(function VotingPhase({
 }: VotingPhaseProps) {
   const { t } = useTranslation()
 
+  const handleHintView = useCallback(() => {
+    if (myWord && onHintViewed) onHintViewed(myWord)
+  }, [myWord, onHintViewed])
+
   return (
     <div className="mb-8">
       {/* Role/Word reminder */}
@@ -53,6 +62,7 @@ export const VotingPhase = memo(function VotingPhase({
         <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-4 text-center">
           <span className="text-sm text-muted-foreground">{t("game.undercover.yourWordReminder")}:</span>{" "}
           <span className="font-bold text-primary">{myWord}</span>
+          <HintButton hint={myWordHint ?? null} onView={handleHintView} />
         </div>
       )}
 

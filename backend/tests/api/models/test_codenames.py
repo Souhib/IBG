@@ -37,3 +37,38 @@ def test_create_word():
 
     # Assert
     assert word.word == "Quran"
+
+
+def test_create_word_with_hint():
+    """Creating a codenames word with a hint dict succeeds."""
+
+    # Arrange / Act
+    word = CodenamesWordCreate(
+        word="Quran",
+        hint={"en": "The holy book of Islam", "ar": "الكتاب المقدس في الإسلام"},
+    )
+
+    # Assert
+    assert word.hint is not None
+    assert word.hint["en"] == "The holy book of Islam"
+    assert word.hint["ar"] == "الكتاب المقدس في الإسلام"
+
+
+def test_create_word_without_hint():
+    """Creating a codenames word without a hint defaults to None."""
+
+    # Arrange / Act
+    word = CodenamesWordCreate(word="Quran")
+
+    # Assert
+    assert word.hint is None
+
+
+def test_create_word_with_empty_hint():
+    """Creating a codenames word with an empty hint dict succeeds."""
+
+    # Arrange / Act
+    word = CodenamesWordCreate(word="Quran", hint={})
+
+    # Assert
+    assert word.hint == {}

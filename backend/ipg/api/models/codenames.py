@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship
 
 from ipg.api.models.shared import DBModel
@@ -26,6 +27,7 @@ class CodenamesWord(BaseTable, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     word: str = Field(index=True)
     word_pack_id: UUID = Field(foreign_key="codenames_word_pack.id")
+    hint: dict | None = Field(default=None, sa_column=Column(JSON))
     word_pack: CodenamesWordPack | None = Relationship(back_populates="words")
 
 
@@ -40,3 +42,4 @@ class CodenamesWordCreate(DBModel):
     """Schema for adding a word to a pack."""
 
     word: str
+    hint: dict | None = None

@@ -8,8 +8,5 @@ python-dotenv
 bcrypt
 passlib
 pydantic-settings
-python-socketio[asyncio_client]
 loguru
-socketio
 logfire[fastapi]
-redis-om

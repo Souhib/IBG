@@ -726,3 +726,18 @@ export async function findOperative(
   if (!found) throw new Error(`No operative found for team=${team}`);
   return found;
 }
+
+/**
+ * Find ALL operative PlayerContexts for a given team.
+ */
+export async function findAllOperatives(
+  players: PlayerContext[],
+  gameId?: string,
+  team?: "red" | "blue",
+): Promise<PlayerContext[]> {
+  const roles = await getCodenamesRoles(players, gameId);
+  return players.filter((p) => {
+    const r = roles.get(p.login.user.id);
+    return r && r.role === "operative" && (team ? r.team === team : true);
+  });
+}

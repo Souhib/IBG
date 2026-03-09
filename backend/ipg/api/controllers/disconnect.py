@@ -6,7 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ipg.api.controllers.codenames_helpers import CodenamesGameStatus
-from ipg.api.controllers.game_lock import cleanup_game_lock, get_game_lock
+from ipg.api.controllers.game_lock import get_game_lock
 from ipg.api.models.game import GameStatus
 from ipg.api.models.relationship import RoomUserLink
 from ipg.api.models.room import RoomType
@@ -68,7 +68,7 @@ async def _handle_game_disconnect(session: AsyncSession, game: Game, user_id: st
 
 async def _handle_undercover_disconnect(session: AsyncSession, game: Game, user_id: str, room: Room) -> None:
     """Handle undercover game disconnect: mark player dead, check win conditions."""
-    async with get_game_lock(str(game.id)):
+    async with get_game_lock(str(game.id), session):
         # Re-fetch to avoid stale state
         game = (await session.exec(select(Game).where(Game.id == game.id))).first()
         if not game or not game.live_state:
@@ -95,7 +95,6 @@ async def _handle_undercover_disconnect(session: AsyncSession, game: Game, user_
             game.end_time = datetime.now()
             room.active_game_id = None
             session.add(room)
-            cleanup_game_lock(str(game.id))
         else:
             # Check win conditions
             num_alive_undercover = sum(
@@ -119,7 +118,6 @@ async def _handle_undercover_disconnect(session: AsyncSession, game: Game, user_
                 game.end_time = datetime.now()
                 room.active_game_id = None
                 session.add(room)
-                cleanup_game_lock(str(game.id))
 
         game.live_state = state
         flag_modified(game, "live_state")
@@ -129,7 +127,7 @@ async def _handle_undercover_disconnect(session: AsyncSession, game: Game, user_
 
 async def _handle_codenames_disconnect(session: AsyncSession, game: Game, user_id: str, room: Room) -> None:
     """Handle codenames game disconnect: check if team is empty."""
-    async with get_game_lock(str(game.id)):
+    async with get_game_lock(str(game.id), session):
         game = (await session.exec(select(Game).where(Game.id == game.id))).first()
         if not game or not game.live_state:
             return
@@ -157,7 +155,6 @@ async def _handle_codenames_disconnect(session: AsyncSession, game: Game, user_i
             game.end_time = datetime.now()
             room.active_game_id = None
             session.add(room)
-            cleanup_game_lock(str(game.id))
 
         game.live_state = state
         flag_modified(game, "live_state")

@@ -1,11 +1,15 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from freezegun import freeze_time
 
 from ipg.api.controllers.stats import StatsController
+from ipg.api.models.game import GameStatus, GameType
+from ipg.api.models.relationship import UserGameLink
+from ipg.api.models.table import Game
 from ipg.api.schemas.error import UserNotFoundError
+from ipg.api.schemas.stats import DailyGameRecord, GameDurationStats, HeadToHeadStats
 
 
 async def test_get_or_create_user_stats_creates(stats_controller: StatsController, create_user):
@@ -405,3 +409,460 @@ async def test_update_stats_win_then_loss_then_win(stats_controller: StatsContro
     assert stats.total_games_played == 3
     assert stats.total_games_won == 2
     assert stats.total_games_lost == 1
+
+
+# ========== get_game_history_for_charts ==========
+
+
+async def test_game_history_returns_daily_records(stats_controller: StatsController, create_user, create_room, session):
+    """Two finished games on different days produce two DailyGameRecord entries with correct win/loss counts."""
+
+    # Arrange
+    user1 = await create_user(username="hist1", email="hist1@test.com")
+    user2 = await create_user(username="hist2", email="hist2@test.com")
+    room = await create_room(owner=user1)
+
+    now = datetime.now()
+    day1 = now - timedelta(days=2)
+    day2 = now - timedelta(days=1)
+
+    # Game 1: user1 is civilian, civilians win -> user1 wins (day1)
+    game1 = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=day1,
+        end_time=day1 + timedelta(minutes=15),
+        live_state={
+            "players": [
+                {"user_id": str(user1.id), "role": "civilian", "team": None},
+                {"user_id": str(user2.id), "role": "undercover", "team": None},
+            ],
+            "winner": "civilians",
+        },
+    )
+    session.add(game1)
+    await session.commit()
+
+    link1 = UserGameLink(user_id=user1.id, game_id=game1.id)
+    session.add(link1)
+    await session.commit()
+
+    # Game 2: user1 is civilian, undercovers win -> user1 loses (day2)
+    game2 = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=day2,
+        end_time=day2 + timedelta(minutes=20),
+        live_state={
+            "players": [
+                {"user_id": str(user1.id), "role": "civilian", "team": None},
+                {"user_id": str(user2.id), "role": "undercover", "team": None},
+            ],
+            "winner": "undercovers",
+        },
+    )
+    session.add(game2)
+    await session.commit()
+
+    link2 = UserGameLink(user_id=user1.id, game_id=game2.id)
+    session.add(link2)
+    await session.commit()
+
+    # Act
+    records = await stats_controller.get_game_history_for_charts(user1.id, days=30)
+
+    # Assert
+    assert len(records) == 2
+    assert all(isinstance(r, DailyGameRecord) for r in records)
+    # Records are sorted by date ascending
+    assert records[0].date <= records[1].date
+    # Day1: 1 win, Day2: 1 loss
+    day1_record = records[0]
+    day2_record = records[1]
+    assert day1_record.wins == 1
+    assert day1_record.losses == 0
+    assert day1_record.total == 1
+    assert day2_record.wins == 0
+    assert day2_record.losses == 1
+    assert day2_record.total == 1
+
+
+async def test_game_history_empty_when_no_games(stats_controller: StatsController, create_user):
+    """A user with no games gets an empty list from get_game_history_for_charts."""
+
+    # Arrange
+    user = await create_user(username="nohist", email="nohist@test.com")
+
+    # Act
+    records = await stats_controller.get_game_history_for_charts(user.id, days=30)
+
+    # Assert
+    assert records == []
+
+
+async def test_game_history_respects_days_cutoff(stats_controller: StatsController, create_user, create_room, session):
+    """A game older than the days cutoff is excluded from game history."""
+
+    # Arrange
+    user = await create_user(username="cutoff", email="cutoff@test.com")
+    room = await create_room(owner=user)
+
+    old_time = datetime.now() - timedelta(days=60)
+
+    game = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=old_time,
+        end_time=old_time + timedelta(minutes=10),
+        live_state={
+            "players": [
+                {"user_id": str(user.id), "role": "civilian", "team": None},
+            ],
+            "winner": "civilians",
+        },
+    )
+    session.add(game)
+    await session.commit()
+
+    link = UserGameLink(user_id=user.id, game_id=game.id)
+    session.add(link)
+    await session.commit()
+
+    # Act
+    records = await stats_controller.get_game_history_for_charts(user.id, days=30)
+
+    # Assert
+    assert records == []
+
+
+# ========== get_game_duration_stats ==========
+
+
+async def test_game_duration_stats_with_games(stats_controller: StatsController, create_user, create_room, session):
+    """Games with start and end times produce correct avg/fastest/longest duration stats."""
+
+    # Arrange
+    user = await create_user(username="dur1", email="dur1@test.com")
+    room = await create_room(owner=user)
+
+    base_time = datetime(2025, 6, 1, 12, 0)
+
+    # Game 1: 10 minutes = 600 seconds
+    game1 = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=base_time,
+        end_time=base_time + timedelta(minutes=10),
+        live_state={"players": [{"user_id": str(user.id), "role": "civilian"}], "winner": "civilians"},
+    )
+    session.add(game1)
+    await session.commit()
+    session.add(UserGameLink(user_id=user.id, game_id=game1.id))
+    await session.commit()
+
+    # Game 2: 30 minutes = 1800 seconds
+    game2 = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=base_time,
+        end_time=base_time + timedelta(minutes=30),
+        live_state={"players": [{"user_id": str(user.id), "role": "civilian"}], "winner": "civilians"},
+    )
+    session.add(game2)
+    await session.commit()
+    session.add(UserGameLink(user_id=user.id, game_id=game2.id))
+    await session.commit()
+
+    # Act
+    result = await stats_controller.get_game_duration_stats(user.id)
+
+    # Assert
+    assert isinstance(result, GameDurationStats)
+    assert result.total_games_with_duration == 2
+    assert result.fastest_seconds == 600.0
+    assert result.longest_seconds == 1800.0
+    assert result.average_seconds == 1200.0  # (600 + 1800) / 2
+
+
+async def test_game_duration_stats_no_games(stats_controller: StatsController, create_user):
+    """A user with no games gets zero/None duration stats."""
+
+    # Arrange
+    user = await create_user(username="nodur", email="nodur@test.com")
+
+    # Act
+    result = await stats_controller.get_game_duration_stats(user.id)
+
+    # Assert
+    assert isinstance(result, GameDurationStats)
+    assert result.average_seconds == 0
+    assert result.fastest_seconds is None
+    assert result.longest_seconds is None
+    assert result.undercover_avg_seconds is None
+    assert result.codenames_avg_seconds is None
+    assert result.total_games_with_duration == 0
+
+
+async def test_game_duration_stats_per_type(stats_controller: StatsController, create_user, create_room, session):
+    """Undercover and codenames games produce separate per-type average durations."""
+
+    # Arrange
+    user = await create_user(username="durtype", email="durtype@test.com")
+    room = await create_room(owner=user)
+
+    base_time = datetime(2025, 6, 1, 12, 0)
+
+    # Undercover game: 20 minutes = 1200 seconds
+    uc_game = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=3,
+        start_time=base_time,
+        end_time=base_time + timedelta(minutes=20),
+        live_state={"players": [{"user_id": str(user.id), "role": "civilian"}], "winner": "civilians"},
+    )
+    session.add(uc_game)
+    await session.commit()
+    session.add(UserGameLink(user_id=user.id, game_id=uc_game.id))
+    await session.commit()
+
+    # Codenames game: 40 minutes = 2400 seconds
+    cn_game = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.CODENAMES,
+        game_status=GameStatus.FINISHED,
+        number_of_players=4,
+        start_time=base_time,
+        end_time=base_time + timedelta(minutes=40),
+        live_state={"players": [{"user_id": str(user.id), "role": "operative", "team": "red"}], "winner": "red"},
+    )
+    session.add(cn_game)
+    await session.commit()
+    session.add(UserGameLink(user_id=user.id, game_id=cn_game.id))
+    await session.commit()
+
+    # Act
+    result = await stats_controller.get_game_duration_stats(user.id)
+
+    # Assert
+    assert result.total_games_with_duration == 2
+    assert result.undercover_avg_seconds == 1200.0
+    assert result.codenames_avg_seconds == 2400.0
+    assert result.average_seconds == 1800.0  # (1200 + 2400) / 2
+
+
+# ========== get_head_to_head ==========
+
+
+async def test_head_to_head_with_shared_games(stats_controller: StatsController, create_user, create_room, session):
+    """Two users who played together have correct user_wins/opponent_wins/draws in head-to-head stats."""
+
+    # Arrange
+    user1 = await create_user(username="h2h1", email="h2h1@test.com")
+    user2 = await create_user(username="h2h2", email="h2h2@test.com")
+    room = await create_room(owner=user1)
+
+    base_time = datetime(2025, 6, 1, 12, 0)
+
+    # Game 1: civilians win -> user1 (civilian) wins, user2 (undercover) loses
+    game1 = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=base_time,
+        end_time=base_time + timedelta(minutes=15),
+        live_state={
+            "players": [
+                {"user_id": str(user1.id), "role": "civilian", "team": None},
+                {"user_id": str(user2.id), "role": "undercover", "team": None},
+            ],
+            "winner": "civilians",
+        },
+    )
+    session.add(game1)
+    await session.commit()
+    session.add(UserGameLink(user_id=user1.id, game_id=game1.id))
+    session.add(UserGameLink(user_id=user2.id, game_id=game1.id))
+    await session.commit()
+
+    # Game 2: undercovers win -> user2 (undercover) wins, user1 (civilian) loses
+    game2 = Game(
+        id=uuid4(),
+        room_id=room.id,
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=2,
+        start_time=base_time,
+        end_time=base_time + timedelta(minutes=20),
+        live_state={
+            "players": [
+                {"user_id": str(user1.id), "role": "civilian", "team": None},
+                {"user_id": str(user2.id), "role": "undercover", "team": None},
+            ],
+            "winner": "undercovers",
+        },
+    )
+    session.add(game2)
+    await session.commit()
+    session.add(UserGameLink(user_id=user1.id, game_id=game2.id))
+    session.add(UserGameLink(user_id=user2.id, game_id=game2.id))
+    await session.commit()
+
+    # Act
+    result = await stats_controller.get_head_to_head(user1.id, user2.id)
+
+    # Assert
+    assert isinstance(result, HeadToHeadStats)
+    assert result.user_id == user1.id
+    assert result.opponent_id == user2.id
+    assert result.user_wins == 1
+    assert result.opponent_wins == 1
+    assert result.draws == 0
+    assert result.total_games == 2
+
+
+async def test_head_to_head_no_shared_games(stats_controller: StatsController, create_user):
+    """Two users who never played together get all-zero head-to-head stats."""
+
+    # Arrange
+    user1 = await create_user(username="h2hn1", email="h2hn1@test.com")
+    user2 = await create_user(username="h2hn2", email="h2hn2@test.com")
+
+    # Act
+    result = await stats_controller.get_head_to_head(user1.id, user2.id)
+
+    # Assert
+    assert isinstance(result, HeadToHeadStats)
+    assert result.user_id == user1.id
+    assert result.opponent_id == user2.id
+    assert result.user_wins == 0
+    assert result.opponent_wins == 0
+    assert result.draws == 0
+    assert result.total_games == 0
+
+
+# ========== _did_user_win ==========
+
+
+async def test_did_user_win_undercover_civilian_wins(create_user):
+    """In undercover, a civilian player wins when winner is 'civilians'."""
+
+    # Arrange
+    user = await create_user(username="dwciv", email="dwciv@test.com")
+    game = Game(
+        id=uuid4(),
+        room_id=uuid4(),
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=3,
+        live_state={
+            "players": [
+                {"user_id": str(user.id), "role": "civilian", "team": None},
+            ],
+            "winner": "civilians",
+        },
+    )
+
+    # Act
+    result = StatsController._did_user_win(game, user.id, "civilians")
+
+    # Assert
+    assert result is True
+
+
+async def test_did_user_win_undercover_undercover_wins(create_user):
+    """In undercover, an undercover player wins when winner is 'undercovers'."""
+
+    # Arrange
+    user = await create_user(username="dwuc", email="dwuc@test.com")
+    game = Game(
+        id=uuid4(),
+        room_id=uuid4(),
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=3,
+        live_state={
+            "players": [
+                {"user_id": str(user.id), "role": "undercover", "team": None},
+            ],
+            "winner": "undercovers",
+        },
+    )
+
+    # Act
+    result = StatsController._did_user_win(game, user.id, "undercovers")
+
+    # Assert
+    assert result is True
+
+
+async def test_did_user_win_codenames(create_user):
+    """In codenames, a player wins when their team matches the winner."""
+
+    # Arrange
+    user = await create_user(username="dwcn", email="dwcn@test.com")
+    game = Game(
+        id=uuid4(),
+        room_id=uuid4(),
+        type=GameType.CODENAMES,
+        game_status=GameStatus.FINISHED,
+        number_of_players=4,
+        live_state={
+            "players": [
+                {"user_id": str(user.id), "role": "operative", "team": "red"},
+            ],
+            "winner": "red",
+        },
+    )
+
+    # Act
+    result = StatsController._did_user_win(game, user.id, "red")
+
+    # Assert
+    assert result is True
+
+
+async def test_did_user_win_no_winner(create_user):
+    """When winner is None, _did_user_win returns False."""
+
+    # Arrange
+    user = await create_user(username="dwnw", email="dwnw@test.com")
+    game = Game(
+        id=uuid4(),
+        room_id=uuid4(),
+        type=GameType.UNDERCOVER,
+        game_status=GameStatus.FINISHED,
+        number_of_players=3,
+        live_state={
+            "players": [
+                {"user_id": str(user.id), "role": "civilian", "team": None},
+            ],
+            "winner": None,
+        },
+    )
+
+    # Act
+    result = StatsController._did_user_win(game, user.id, None)
+
+    # Assert
+    assert result is False

@@ -1,12 +1,20 @@
-import { LogOut, RotateCcw } from "lucide-react"
+import { BookOpen, LogOut, RotateCcw } from "lucide-react"
 import { memo, useCallback, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import apiClient, { getApiErrorMessage } from "@/api/client"
 
+interface WordExplanations {
+  civilian_word: string
+  civilian_word_hint: string | null
+  undercover_word: string
+  undercover_word_hint: string | null
+}
+
 interface GameOverScreenProps {
   winner?: string
   roomId: string | null
+  wordExplanations?: WordExplanations
   onBackToRoom: () => void
   onLeaveRoom: () => void
 }
@@ -14,6 +22,7 @@ interface GameOverScreenProps {
 export const GameOverScreen = memo(function GameOverScreen({
   winner,
   roomId,
+  wordExplanations,
   onBackToRoom,
   onLeaveRoom,
 }: GameOverScreenProps) {
@@ -42,6 +51,32 @@ export const GameOverScreen = memo(function GameOverScreen({
       <p className="text-xl mt-4">
         {t("game.winner")}: {winner}
       </p>
+      {/* Word Explanations — educational reveal */}
+      {wordExplanations && (wordExplanations.civilian_word_hint || wordExplanations.undercover_word_hint) && (
+        <div className="mt-6 rounded-lg border bg-muted/30 p-4 text-left">
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            {t("game.wordExplanations")}
+          </h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">{t("game.undercover.civilianWord")}</p>
+              <p className="font-semibold">{wordExplanations.civilian_word}</p>
+              {wordExplanations.civilian_word_hint && (
+                <p className="text-sm text-muted-foreground mt-0.5">{wordExplanations.civilian_word_hint}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{t("game.undercover.undercoverWord")}</p>
+              <p className="font-semibold">{wordExplanations.undercover_word}</p>
+              {wordExplanations.undercover_word_hint && (
+                <p className="text-sm text-muted-foreground mt-0.5">{wordExplanations.undercover_word_hint}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-6 flex items-center justify-center gap-3">
         {roomId && (
           <button

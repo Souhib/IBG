@@ -1,10 +1,14 @@
 from uuid import uuid4
 
 import pytest
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ipg.api.controllers.shared import get_password_hash, verify_password
 from ipg.api.controllers.user import UserController
+from ipg.api.models.table import User
 from ipg.api.models.user import UserCreate, UserUpdate
-from ipg.api.schemas.error import UserAlreadyExistsError, UserNotFoundError
+from ipg.api.schemas.error import InvalidCredentialsError, UserAlreadyExistsError, UserNotFoundError
 
 
 async def test_create_user_success(user_controller: UserController):
@@ -232,3 +236,56 @@ async def test_update_user_password_not_found(user_controller: UserController):
     # Act & Assert
     with pytest.raises(UserNotFoundError):
         await user_controller.update_user_password(non_existent_id, "newpassword456")
+
+
+async def test_delete_user_account_success(user_controller: UserController, session: AsyncSession, create_user):
+    """Deleting a user account with correct password removes the user."""
+    # Prepare
+    user = await create_user(username="delaccount", email="delaccount@test.com", password="mypassword")
+    user.password = get_password_hash("mypassword")
+    session.add(user)
+    await session.commit()
+
+    # Act
+    await user_controller.delete_user_account(user.id, "mypassword")
+
+    # Assert — user is deleted
+    deleted_user = (await session.exec(select(User).where(User.id == user.id))).first()
+    assert deleted_user is None
+
+
+async def test_delete_user_account_wrong_password(user_controller: UserController, session: AsyncSession, create_user):
+    """Deleting a user account with wrong password raises InvalidCredentialsError."""
+    # Prepare
+    user = await create_user(username="wrongpw", email="wrongpw@test.com", password="correctpassword")
+    user.password = get_password_hash("correctpassword")
+    session.add(user)
+    await session.commit()
+
+    # Act & Assert
+    with pytest.raises(InvalidCredentialsError):
+        await user_controller.delete_user_account(user.id, "wrongpassword")
+
+
+async def test_delete_user_account_not_found(user_controller: UserController):
+    """Deleting a non-existent user account raises UserNotFoundError."""
+    # Arrange
+    non_existent_id = uuid4()
+
+    # Act & Assert
+    with pytest.raises(UserNotFoundError):
+        await user_controller.delete_user_account(non_existent_id, "anypassword")
+
+
+async def test_update_user_password_verifiable(user_controller: UserController):
+    """Updated password can be verified with verify_password."""
+    # Prepare
+    user_create = UserCreate(username="verifiable", email_address="verify@test.com", password="old", country=None)
+    user = await user_controller.create_user(user_create)
+
+    # Act
+    updated = await user_controller.update_user_password(user.id, "newsecurepass")
+
+    # Assert — the new password is verifiable
+    assert verify_password("newsecurepass", updated.password) is True
+    assert verify_password("old", updated.password) is False

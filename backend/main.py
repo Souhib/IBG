@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-from ipg.api.controllers.game_lock import close_redis, init_redis
 from ipg.app import create_app
 from ipg.database import create_app_engine, create_db_and_tables
 from ipg.logger_config import configure_logger
@@ -20,9 +19,7 @@ async def lifespan(app: FastAPI):
     )
     engine = await create_app_engine(settings)
     await create_db_and_tables(engine)
-    await init_redis(settings.redis_url)
     yield
-    await close_redis()
     await engine.dispose()
 
 

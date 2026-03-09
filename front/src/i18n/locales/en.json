@@ -158,6 +158,8 @@
     "winner": "Winner",
     "playAgain": "Play Again",
     "backToRoom": "Back to Room",
+    "wordExplanations": "Word Explanations",
+    "hintButton": "Show explanation",
     "undercover": {
       "iUnderstand": "I Understand",
       "nextRound": "Next Round",
@@ -176,6 +178,8 @@
       "descriptionOrder": "Description Order",
       "yourTurn": "Your turn!",
       "wordMustBeSingleWord": "Must be a single word (no spaces)",
+      "civilianWord": "Civilian word",
+      "undercoverWord": "Undercover word",
       "leaveGame": "Leave Game",
       "descriptionSubmitted": "Your hint was submitted!",
       "allDescriptionsIn": "All hints are in!",
@@ -201,7 +205,12 @@
       "clue": "Clue",
       "guesses": "Guesses",
       "correct": "Correct",
-      "wrong": "Wrong"
+      "wrong": "Wrong",
+      "votesProgress": "Votes: {{current}} / {{total}}",
+      "voteSubmitted": "Vote submitted",
+      "waitingForVotes": "Waiting for operatives to vote...",
+      "tieWarning": "Tie! Randomly selected between tied cards",
+      "voteChanged": "Vote changed"
     }
   },
   "stats": {
