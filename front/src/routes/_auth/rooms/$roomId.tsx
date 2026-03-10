@@ -1,15 +1,25 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Check, Copy, Crown, Eye, KeyRound, LogOut, Users, X } from "lucide-react"
+import { Check, Copy, Crown, Eye, KeyRound, LogOut, UserPlus, Users, X } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
-import apiClient, { getApiErrorMessage } from "@/api/client"
+import { getApiErrorMessage } from "@/api/client"
+import {
+  useGetRoomStateApiV1RoomsRoomIdStateGet,
+  getRoomStateApiV1RoomsRoomIdStateGetQueryKey,
+  useStartUndercoverGameApiV1UndercoverGamesRoomIdStartPost,
+  useStartCodenamesGameApiV1CodenamesGamesRoomIdStartPost,
+  useLeaveRoomApiV1RoomsLeavePatch,
+  useKickPlayerApiV1RoomsRoomIdKickPatch,
+} from "@/api/generated"
 import { ChatPanel } from "@/components/rooms/ChatPanel"
+import { InviteFriendModal } from "@/components/rooms/InviteFriendModal"
 import { RoomSettings } from "@/components/rooms/RoomSettings"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
+import { storeRoomIdForGame } from "@/lib/room-session"
 
 interface RoomData {
   id: string
@@ -42,68 +52,42 @@ function RoomLobbyPage() {
   const navigate = useNavigate()
   const [copied, setCopied] = useState("")
   const [gameType, setGameType] = useState<GameType>("undercover")
-  const [isStartingGame, setIsStartingGame] = useState(false)
   const queryClient = useQueryClient()
-  const joinedRef = useRef(false)
   const navigatingToGameRef = useRef(false)
   const previousPlayerIdsRef = useRef<Map<string, string>>(new Map())
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   // Socket.IO for real-time updates (replaces polling)
   useSocket({ roomId, enabled: !!user })
 
-  // Join room via REST on mount
-  useEffect(() => {
-    if (!user || joinedRef.current) return
-    joinedRef.current = true
-
-    // We join via REST — the heartbeat is handled by polling GET /rooms/{roomId}
-    apiClient({
-      method: "PATCH",
-      url: "/api/v1/rooms/join",
-      data: { user_id: user.id, room_id: roomId },
-    }).catch(() => {
-      // Join might fail if already in room (re-join) — that's fine
-    })
-  }, [user, roomId])
-
-  // Poll room state every 2 seconds (uses /state endpoint for heartbeat + connection status)
-  const { data: roomData, isLoading, error: queryError } = useQuery({
-    queryKey: ["room", roomId],
-    queryFn: async () => {
-      const res = await apiClient({
-        method: "GET",
-        url: `/api/v1/rooms/${roomId}/state`,
-      })
-      const state = res.data as {
-        id: string
-        public_id: string
-        owner_id: string
-        password: string
-        active_game_id: string | null
-        game_type: string | null
-        settings: Record<string, unknown> | null
-        players: { user_id: string; username: string; is_connected: boolean; is_disconnected: boolean; is_host: boolean; is_spectator: boolean }[]
-        type: string
-      }
-      return {
-        id: state.id,
-        public_id: state.public_id,
-        owner_id: state.owner_id,
-        password: state.password,
-        active_game_id: state.active_game_id,
-        game_type: state.game_type,
-        settings: state.settings,
-        users: state.players.map((p) => ({
-          id: p.user_id,
-          username: p.username,
-          is_spectator: p.is_spectator,
-        })),
-      } as RoomData
+  // Poll room state every 2 seconds (Socket.IO delivers real-time updates,
+  // but polling is the fallback when events are missed under load)
+  const { data: rawRoomData, isLoading, error: queryError } = useGetRoomStateApiV1RoomsRoomIdStateGet(
+    { room_id: roomId },
+    {
+      query: {
+        refetchOnWindowFocus: true,
+        refetchInterval: 2000,
+        enabled: !!user,
+      },
     },
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
-    enabled: !!user,
-  })
+  )
+
+  // Transform raw API data to component shape
+  const roomData: RoomData | undefined = rawRoomData ? {
+    id: (rawRoomData as Record<string, unknown>).id as string,
+    public_id: (rawRoomData as Record<string, unknown>).public_id as string,
+    owner_id: (rawRoomData as Record<string, unknown>).owner_id as string,
+    password: (rawRoomData as Record<string, unknown>).password as string,
+    active_game_id: (rawRoomData as Record<string, unknown>).active_game_id as string | null,
+    game_type: (rawRoomData as Record<string, unknown>).game_type as string | null,
+    settings: (rawRoomData as Record<string, unknown>).settings as Record<string, unknown> | null,
+    users: ((rawRoomData as Record<string, unknown>).players as { user_id: string; username: string; is_spectator: boolean }[] || []).map((p) => ({
+      id: p.user_id,
+      username: p.username,
+      is_spectator: p.is_spectator,
+    })),
+  } : undefined
 
   // Derive players and spectators from room data
   const allUsers: Player[] = roomData
@@ -147,6 +131,7 @@ function RoomLobbyPage() {
   useEffect(() => {
     if (!roomData?.active_game_id || navigatingToGameRef.current) return
     navigatingToGameRef.current = true
+    storeRoomIdForGame(roomData.active_game_id, roomData.id)
     toast.success(t("toast.gameStarting"))
     const gt = roomData.game_type || gameType
     if (gt === "codenames") {
@@ -156,29 +141,44 @@ function RoomLobbyPage() {
     }
   }, [roomData?.active_game_id, roomData?.game_type, gameType, navigate, t])
 
-  const handleStartGame = async () => {
+  const startUndercoverMutation = useStartUndercoverGameApiV1UndercoverGamesRoomIdStartPost({
+    mutation: {
+      onSuccess: (data) => {
+        const d = data as { game_id: string; room_id: string }
+        navigatingToGameRef.current = true
+        storeRoomIdForGame(d.game_id, d.room_id)
+        toast.success(t("toast.gameStarting"))
+        navigate({ to: "/game/undercover/$gameId", params: { gameId: d.game_id } })
+      },
+      onError: (err) => toast.error(getApiErrorMessage(err, "Failed to start game")),
+    },
+  })
+
+  const startCodenamesMutation = useStartCodenamesGameApiV1CodenamesGamesRoomIdStartPost({
+    mutation: {
+      onSuccess: (data) => {
+        const d = data as { game_id: string; room_id: string }
+        navigatingToGameRef.current = true
+        storeRoomIdForGame(d.game_id, d.room_id)
+        toast.success(t("toast.gameStarting"))
+        navigate({ to: "/game/codenames/$gameId", params: { gameId: d.game_id } })
+      },
+      onError: (err) => toast.error(getApiErrorMessage(err, "Failed to start game")),
+    },
+  })
+
+  const isStartingGame = startUndercoverMutation.isPending || startCodenamesMutation.isPending
+
+  const handleStartGame = () => {
     if (!roomData || isStartingGame) return
-    setIsStartingGame(true)
-    try {
-      const url =
-        gameType === "codenames"
-          ? `/api/v1/codenames/games/${roomData.id}/start`
-          : `/api/v1/undercover/games/${roomData.id}/start`
-      const res = await apiClient({ method: "POST", url })
-      const data = res.data as { game_id: string; room_id: string }
-      navigatingToGameRef.current = true
-      toast.success(t("toast.gameStarting"))
-      if (gameType === "undercover") {
-        navigate({ to: "/game/undercover/$gameId", params: { gameId: data.game_id } })
-      } else {
-        navigate({ to: "/game/codenames/$gameId", params: { gameId: data.game_id } })
-      }
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to start game"))
-    } finally {
-      setIsStartingGame(false)
+    if (gameType === "codenames") {
+      startCodenamesMutation.mutate({ room_id: roomData.id })
+    } else {
+      startUndercoverMutation.mutate({ room_id: roomData.id })
     }
   }
+
+  const leaveMutation = useLeaveRoomApiV1RoomsLeavePatch()
 
   const handleLeaveRoom = async () => {
     if (!user || !roomData) {
@@ -186,11 +186,7 @@ function RoomLobbyPage() {
       return
     }
     try {
-      await apiClient({
-        method: "PATCH",
-        url: "/api/v1/rooms/leave",
-        data: { user_id: user.id, room_id: roomData.id },
-      })
+      await leaveMutation.mutateAsync({ data: { user_id: user.id, room_id: roomData.id } })
     } catch {
       // Ignore errors — navigate anyway
     }
@@ -209,15 +205,13 @@ function RoomLobbyPage() {
     }
   }, [allUsers, user, roomData, navigate, t])
 
+  const kickMutation = useKickPlayerApiV1RoomsRoomIdKickPatch()
+
   const handleKickPlayer = async (userId: string) => {
     if (!roomData) return
     try {
-      await apiClient({
-        method: "PATCH",
-        url: `/api/v1/rooms/${roomData.id}/kick`,
-        data: { user_id: userId },
-      })
-      queryClient.invalidateQueries({ queryKey: ["room", roomId] })
+      await kickMutation.mutateAsync({ room_id: roomData.id, data: { user_id: userId } })
+      queryClient.invalidateQueries({ queryKey: getRoomStateApiV1RoomsRoomIdStateGetQueryKey({ room_id: roomId }) })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to kick player"))
     }
@@ -384,6 +378,20 @@ function RoomLobbyPage() {
         </div>
       )}
 
+      {/* Invite Friend Button */}
+      {roomData && !isSpectator && (
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => setShowInviteModal(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            <UserPlus className="h-4 w-4" />
+            {t("room.inviteFriend")}
+          </button>
+        </div>
+      )}
+
       {/* Room Settings (host only) */}
       {isHost && !isSpectator && roomData && (
         <RoomSettings
@@ -455,6 +463,14 @@ function RoomLobbyPage() {
 
       {/* Chat Panel */}
       {user && <ChatPanel roomId={roomId} currentUserId={user.id} />}
+
+      {/* Invite Friend Modal */}
+      {showInviteModal && roomData && (
+        <InviteFriendModal
+          roomId={roomData.id}
+          onClose={() => setShowInviteModal(false)}
+        />
+      )}
     </div>
   )
 }

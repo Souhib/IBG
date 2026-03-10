@@ -1,8 +1,8 @@
-# CLAUDE.md - IPG (Islamic Party Games)
+# CLAUDE.md - Majlisna (Islamic Party Games)
 
 ## Project Overview
 
-IPG is a real-time multiplayer platform for Islamized versions of popular party games. Currently supports **Undercover** and **Codenames**, with plans for more games.
+**Majlisna** (`majlisna.app`) is a real-time multiplayer platform for Islamized versions of popular party games. Currently supports **Undercover** and **Codenames**, with plans for more games.
 
 ### Architecture
 
@@ -35,7 +35,7 @@ IPG/
 │   │   ├── api/               # API client + Kubb generated hooks
 │   │   ├── components/        # UI components
 │   │   ├── hooks/             # Custom hooks
-│   │   ├── i18n/              # English + Arabic translations
+│   │   ├── i18n/              # English + Arabic + French translations
 │   │   ├── lib/               # Utilities (cn, auth)
 │   │   ├── providers/         # Auth, Query, Theme providers
 │   │   └── routes/            # TanStack Router file-based
@@ -43,8 +43,8 @@ IPG/
 │   └── vite.config.ts
 ├── e2e/                       # Playwright E2E tests
 ├── docker-compose.yml         # Local dev (PostgreSQL)
-├── docker-compose.dokploy.yml # Production (Oracle VPS)
-└── .github/workflows/         # CI/CD
+├── docker-compose.dokploy.yml # Production (Oracle VPS, Traefik labels)
+└── .github/workflows/         # CI/CD (auto-deploy on push to main)
 ```
 
 ### Component Documentation
@@ -66,7 +66,7 @@ When working on a specific component, consult both this root CLAUDE.md for proje
 cd backend
 
 # Start dev server
-uv run python main.py                    # http://localhost:5000
+uv run python main.py                    # http://localhost:5111
 
 # Code quality
 uv run poe lint                          # Ruff lint check
@@ -109,9 +109,17 @@ bun run test:coverage                    # With coverage
 # Start all services locally
 docker compose up -d
 
-# Production deployment (Dokploy)
+# Production deployment (Dokploy) — usually handled by CI/CD
 docker compose -f docker-compose.dokploy.yml up -d
 ```
+
+### Production URLs
+
+- **Frontend**: https://majlisna.app
+- **Backend API**: https://majlisna.app/api/v1/ or https://api.majlisna.app/api/v1/
+- **Health check**: https://majlisna.app/health
+- **API docs**: https://majlisna.app/scalar
+- **OpenAPI spec**: https://majlisna.app/openapi.json
 
 ## Tech Stack
 
@@ -129,6 +137,9 @@ docker compose -f docker-compose.dokploy.yml up -d
 | Testing | pytest (backend), Vitest (frontend) |
 | CI/CD | GitHub Actions |
 | Deployment | Docker + Dokploy (Oracle VPS) |
+| Domain | `majlisna.app` (Cloudflare DNS + proxy) |
+| SSL | Cloudflare Flexible (CF terminates HTTPS, HTTP to origin) |
+| Reverse Proxy | Traefik (managed by Dokploy, routes via Docker labels) |
 
 ## Coding Standards
 
@@ -209,6 +220,17 @@ Do not consider a task complete until ALL tests pass with zero failures AND zero
 3. Determine if your changes caused the failure or if it's unrelated
 4. Fix the issue — don't try to prove it's "not your fault" by stashing
 
+### No Retries as Fixes
+
+**NEVER add retries, reloads, or try/catch-and-retry to "fix" a failing test or flaky behavior.** Retries mask the real problem and create silent bugs that surface later in production or in harder-to-debug scenarios.
+
+When something fails or is flaky:
+1. **Understand the root cause deeply** — read error messages, check state, trace the flow
+2. **Fix the actual problem** — wrong selector, race condition, missing wait, incorrect data
+3. **Never wrap a failure in a retry loop** and call it done — that's hiding the bug, not fixing it
+4. **If a wait/timeout is genuinely too short**, increasing it is fine — but only after confirming the underlying logic is correct and the timeout is the only issue
+5. **If you must add resilience** (e.g., page reload), it must be justified, logged visibly (`console.warn`), and still fail hard if the retry doesn't resolve it — never swallow errors silently
+
 ### Python/FastAPI Guidelines
 
 #### Import Organization
@@ -273,6 +295,12 @@ class MyController:
 - **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state
 - **Manual kick**: Host can kick players from room; no auto-disconnect
 - **Kubb Codegen**: Auto-generated React Query hooks from FastAPI's OpenAPI spec
+- **Spectator Mode**: Users can join rooms as spectators (`RoomUserLink.is_spectator`). Spectators see sanitized game state (no roles/words until game over), read-only UI with no action buttons.
+- **Friend Invites**: Room hosts can invite friends via `POST /api/v1/rooms/{id}/invite`. Socket.IO personal rooms (`user:{user_id}`) deliver real-time invite notifications.
+- **Game History**: `GET /api/v1/games/{id}/summary` returns typed `GameSummary` with `VoteRound`, `ClueHistoryEntry`, player roles, and word explanations.
+- **Caching**: `ipg.api.utils.cache.TTLCache` caches undercover words/term pairs, codenames word packs, and user stats. Tests use autouse `clear_cache` fixture.
+- **PWA**: Manifest + service worker for installable web app with offline navigation shell.
+- **Pre-commit**: `prek` hooks run ruff lint/format + mypy on commit.
 
 ## Lessons Learned
 
@@ -304,9 +332,17 @@ await session.commit()
 
 **Always use timezone-aware timestamps for values sent to the frontend.** Use `datetime.now(UTC).isoformat()` (produces `+00:00` suffix) instead of `datetime.now().isoformat()` (naive). JavaScript's `new Date()` interprets naive ISO strings as local time, causing clock skew between Docker containers (UTC) and browsers (local timezone).
 
+**Never use Pydantic v1 `class Config: json_encoders` in models.** Pydantic v2 serializes UUIDs to strings by default. The v1 `json_encoders = {UUID: str}` pattern creates `FieldInfoMetadata` objects that are unhashable, crashing FastAPI's OpenAPI schema generation with `TypeError: unhashable type: 'FieldInfoMetadata'`.
+
+**Always type response schemas fully — no `list[dict]` or `dict`.** Create proper Pydantic models for all nested structures (e.g., `VoteRound`, `ClueHistoryEntry`). Untyped dicts can cause Pydantic schema generation issues and produce useless OpenAPI/Kubb types.
+
+**Dev backend runs on port 5111 to avoid macOS AirPlay conflict on port 5000.** Configured via `PORT=5111` in `.env.development`. Docker containers still use 5000 internally (no AirPlay conflict inside containers).
+
 ### Frontend — Socket.IO + TanStack Query
 
-**Socket.IO pushes state into TanStack Query cache via `queryClient.setQueryData()`.** The `useSocket` hook connects to Socket.IO, receives `room_state` and `game_state` events, and writes them directly into the query cache. `useQuery` is kept for initial load + `refetchOnWindowFocus` fallback, but `refetchInterval` is removed.
+**Socket.IO pushes state into TanStack Query cache via `queryClient.setQueryData()`.** The `useSocket` hook connects to Socket.IO, receives `room_state` and `game_state` events, and writes them directly into the query cache. It returns `{ connected }` so consumers can disable polling when connected. Game pages use `refetchInterval: socketConnected ? false : 2_000` — zero polling when Socket.IO is up, fast 2s fallback when disconnected. Room lobby keeps `refetchInterval: 2000` unconditionally.
+
+**Game pages get roomId from SessionStorage for instant Socket.IO connection.** The room lobby stores `roomId` via `storeRoomIdForGame()` before navigating. Game pages read it via `retrieveRoomIdForGame()` in a lazy `useState` initializer, avoiding the ~2s delay of waiting for the first REST poll. Falls back to REST-provided roomId on page refresh.
 
 **Game state is derived from server via `useMemo`, not accumulated from events.** All UI state is derived from the server response (whether from Socket.IO push or initial fetch). No local state accumulation.
 
@@ -332,11 +368,22 @@ page.locator('text=Discuss and vote')
 
 ### Infrastructure
 
-**The CI/CD pipeline auto-deploys on push to `main`.** GitHub Actions detects which components changed and only rebuilds what's needed.
+**The CI/CD pipeline auto-deploys on push to `main`.** GitHub Actions detects which components changed and only rebuilds what's needed. The pipeline ensures infrastructure (db, pgbouncer, redis) is healthy before deploying the backend.
 
 **E2E docker-compose is separate from production.** `docker-compose.e2e.yml` runs the backend with `IPG_ENV=development` and a dedicated PostgreSQL. Never mix E2E and production compose files.
 
 **Backend health check endpoint is `/health`.**
+
+**Production domain is `majlisna.app`.** Routing:
+- `majlisna.app` → Frontend (Nginx serving React SPA)
+- `majlisna.app/api/*`, `/socket.io/*`, `/health`, `/scalar`, `/openapi.json` → Backend (FastAPI)
+- `api.majlisna.app` → Backend (alternative subdomain)
+
+Cloudflare handles DNS (proxied/orange cloud) and SSL termination (Flexible mode — HTTPS to Cloudflare, HTTP to origin). Traefik on the server routes requests via Docker compose labels. `VITE_API_URL` is baked at frontend build time — rebuild frontend when changing it.
+
+**Production server**: Oracle VPS at `141.253.103.145`, accessible via SSH as `ubuntu`. Deploy directory: `/etc/dokploy/compose/compose-index-cross-platform-capacitor-27v2m5/code` (synced via rsync, not a git repo). Repo clone at `/home/ubuntu/Project/IPG`.
+
+**Redis is ephemeral and non-critical.** Redis is only used for Socket.IO cross-worker pub/sub. If Redis is down, the app works but Socket.IO won't broadcast across workers. The CI pipeline treats Redis health as a non-blocking warning. If Redis crash-loops due to corrupt `dump.rdb`, delete the RDB file from the Docker volume and recreate the container.
 
 ## Games
 

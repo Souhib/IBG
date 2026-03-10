@@ -1,6 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { io, type Socket } from 'socket.io-client'
+import { getRoomStateApiV1RoomsRoomIdStateGetQueryKey } from '@/api/generated'
+import { getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey } from '@/api/generated'
+import { getUndercoverStateApiV1UndercoverGamesGameIdStateGetQueryKey } from '@/api/generated'
 import { getStoredToken } from '@/lib/auth'
 
 interface UseSocketOptions {
@@ -8,6 +11,13 @@ interface UseSocketOptions {
   gameId?: string | null
   gameType?: 'undercover' | 'codenames'
   enabled?: boolean
+}
+
+function getGameQueryKeyPrefix(gameType: string, gameId: string) {
+  if (gameType === 'codenames') {
+    return getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey({ game_id: gameId })
+  }
+  return getUndercoverStateApiV1UndercoverGamesGameIdStateGetQueryKey({ game_id: gameId })
 }
 
 /**
@@ -20,14 +30,26 @@ interface UseSocketOptions {
  *
  * Mutations still go through REST. Socket.IO is notification-only.
  */
-export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocketOptions) {
+export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocketOptions): { connected: boolean } {
   const queryClient = useQueryClient()
   const socketRef = useRef<Socket | null>(null)
   const gameIdRef = useRef<string | null | undefined>(null)
   const gameTypeRef = useRef<string | undefined>(gameType)
+  const [connected, setConnected] = useState(false)
 
   // Keep gameType ref in sync
   gameTypeRef.current = gameType
+
+  const handleConnect = useCallback(() => {
+    setConnected(true)
+    if (gameIdRef.current) {
+      socketRef.current?.emit('join_game', { game_id: gameIdRef.current })
+    }
+  }, [])
+
+  const handleDisconnect = useCallback(() => {
+    setConnected(false)
+  }, [])
 
   // Main connection effect
   useEffect(() => {
@@ -39,56 +61,40 @@ export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocke
     const socket = io(window.location.origin, {
       path: '/socket.io',
       auth: { token, room_id: roomId },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 3000,
       reconnectionAttempts: Infinity,
     })
 
     socketRef.current = socket
 
     socket.on('room_state', (state: Record<string, unknown>) => {
-      // Transform to match the queryFn shape used by $roomId.tsx
-      const players = state.players as { user_id: string; username: string; is_spectator: boolean }[]
-      queryClient.setQueryData(['room', roomId], {
-        id: state.id,
-        public_id: state.public_id,
-        owner_id: state.owner_id,
-        password: state.password,
-        active_game_id: state.active_game_id,
-        game_type: state.game_type,
-        settings: state.settings,
-        users: players
-          ? players.map((p) => ({
-              id: p.user_id,
-              username: p.username,
-              is_spectator: p.is_spectator,
-            }))
-          : [],
-      })
+      queryClient.setQueryData(
+        getRoomStateApiV1RoomsRoomIdStateGetQueryKey({ room_id: roomId }),
+        state,
+      )
     })
 
     // Server sends initial game_state on join_game (per-user, role-aware)
     socket.on('game_state', (state: Record<string, unknown>) => {
       if (gameIdRef.current && gameTypeRef.current) {
-        queryClient.setQueryData([gameTypeRef.current, gameIdRef.current], state)
+        const keyPrefix = getGameQueryKeyPrefix(gameTypeRef.current, gameIdRef.current)
+        queryClient.setQueriesData({ queryKey: keyPrefix }, state)
       }
     })
 
     // Server sends game_updated signal after mutations — invalidate to trigger re-fetch
     socket.on('game_updated', () => {
       if (gameIdRef.current && gameTypeRef.current) {
-        queryClient.invalidateQueries({ queryKey: [gameTypeRef.current, gameIdRef.current] })
+        const keyPrefix = getGameQueryKeyPrefix(gameTypeRef.current, gameIdRef.current)
+        queryClient.invalidateQueries({ queryKey: keyPrefix })
       }
     })
 
-    // When connection is established (or re-established), join game room if gameId is pending
-    socket.on('connect', () => {
-      if (gameIdRef.current) {
-        socket.emit('join_game', { game_id: gameIdRef.current })
-      }
-    })
+    socket.on('connect', handleConnect)
+    socket.on('disconnect', handleDisconnect)
 
     socket.on('connect_error', (err: Error) => {
       console.error('Socket.IO connection error:', err.message)
@@ -97,8 +103,9 @@ export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocke
     return () => {
       socket.disconnect()
       socketRef.current = null
+      setConnected(false)
     }
-  }, [enabled, roomId, queryClient])
+  }, [enabled, roomId, queryClient, handleConnect, handleDisconnect])
 
   // Join game room when gameId changes (handles late gameId arrival)
   useEffect(() => {
@@ -107,4 +114,6 @@ export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocke
       socketRef.current.emit('join_game', { game_id: gameId })
     }
   }, [gameId])
+
+  return { connected }
 }

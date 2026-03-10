@@ -1,12 +1,23 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Crown, Loader2, LogOut, MessageCircle, Trophy } from "lucide-react"
+import { Crown, Eye, Loader2, LogOut, MessageCircle, Trophy } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
-import apiClient, { getApiErrorMessage } from "@/api/client"
+import { getApiErrorMessage } from "@/api/client"
+import {
+  useGetUndercoverStateApiV1UndercoverGamesGameIdStateGet,
+  getUndercoverStateApiV1UndercoverGamesGameIdStateGetQueryKey,
+  useSubmitVoteApiV1UndercoverGamesGameIdVotePost,
+  useSubmitDescriptionApiV1UndercoverGamesGameIdDescribePost,
+  useRecordHintViewedApiV1UndercoverGamesGameIdHintViewedPost,
+  useTimerExpiredApiV1UndercoverGamesGameIdTimerExpiredPost,
+  useLeaveRoomApiV1RoomsLeavePatch,
+  getRoomStateApiV1RoomsRoomIdStateGetQueryKey,
+} from "@/api/generated"
 import { useAchievementNotifications } from "@/components/achievements/AchievementToast"
+import { GameErrorFallback } from "@/components/games/shared/GameErrorFallback"
 import { PhaseTimer } from "@/components/games/shared/PhaseTimer"
 import { DescriptionPhase } from "@/components/games/undercover/DescriptionPhase"
 import { EliminationOverlay } from "@/components/games/undercover/EliminationOverlay"
@@ -15,22 +26,35 @@ import { GameOverScreen } from "@/components/games/undercover/GameOverScreen"
 import { RoleRevealPhase } from "@/components/games/undercover/RoleRevealPhase"
 import { VotingPhase } from "@/components/games/undercover/VotingPhase"
 import { useSocket } from "@/hooks/use-socket"
+import { deriveUndercoverPhase, derivePlayerList, deriveVotedPlayers } from "@/lib/game-state"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
+import { retrieveRoomIdForGame } from "@/lib/room-session"
 
 interface DescriptionOrderEntry {
   user_id: string
   username: string
 }
 
+interface VoteEntry {
+  voter: string
+  voter_id: string
+  target: string
+  target_id: string
+}
+
+interface EliminationData {
+  username: string
+  role: string
+  votes: VoteEntry[]
+}
+
 interface GameState {
   players: { id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
-  phase: "role_reveal" | "describing" | "playing" | "elimination" | "game_over"
+  phase: "role_reveal" | "describing" | "playing" | "game_over"
   round: number
   my_role?: string
   my_word?: string
-  eliminated_player_username?: string
-  eliminated_player_role?: string
   winner?: string
   votedPlayers: string[]
   isHost: boolean
@@ -39,8 +63,14 @@ interface GameState {
   descriptions: Record<string, string>
 }
 
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+
 export const Route = createFileRoute("/_auth/game/undercover/$gameId")({
-  component: UndercoverGamePage,
+  component: () => (
+    <ErrorBoundary fallback={<GameErrorFallback />}>
+      <UndercoverGamePage />
+    </ErrorBoundary>
+  ),
 })
 
 function UndercoverGamePage() {
@@ -51,10 +81,14 @@ function UndercoverGamePage() {
   const queryClient = useQueryClient()
 
   const roomIdRef = useRef<string | null>(null)
-  const [socketRoomId, setSocketRoomId] = useState<string | null>(null)
+  const [socketRoomId, setSocketRoomId] = useState<string | null>(() => {
+    const stored = retrieveRoomIdForGame(gameId)
+    if (stored) roomIdRef.current = stored
+    return stored
+  })
 
-  // Socket.IO for real-time updates (replaces polling)
-  useSocket({ roomId: socketRoomId, gameId, gameType: "undercover", enabled: !!user })
+  // Socket.IO for real-time updates — polling only kicks in when disconnected
+  const { connected: socketConnected } = useSocket({ roomId: socketRoomId, gameId, gameType: "undercover", enabled: !!user })
 
   const [roleRevealed, setRoleRevealed] = useState(false)
   const [selectedVote, setSelectedVote] = useState<string | null>(null)
@@ -69,53 +103,63 @@ function UndercoverGamePage() {
   const previousPhaseRef = useRef<string | null>(null)
   const previousRoundRef = useRef<number>(0)
   const [cancelMessage, setCancelMessage] = useState<string | null>(null)
+  const [showEliminationOverlay, setShowEliminationOverlay] = useState(false)
+  const [eliminationData, setEliminationData] = useState<EliminationData | null>(null)
 
-  // Poll game state via REST every 2 seconds
-  const { data: serverState, isLoading, error: queryError } = useQuery({
-    queryKey: ["undercover", gameId],
-    queryFn: async () => {
-      const res = await apiClient({
-        method: "GET",
-        url: `/api/v1/undercover/games/${gameId}/state`,
-        params: { lang: i18n.language },
-      })
-      return res.data as {
-        my_role: string
-        my_word: string
-        my_word_hint: string | null
-        is_alive: boolean
-        players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
-        eliminated_players: { user_id: string; username: string; role: string }[]
-        turn_number: number
-        has_voted: boolean
-        room_id?: string
-        is_host?: boolean
-        votes?: Record<string, string>
-        winner?: string | null
-        turn_phase?: string
-        description_order?: DescriptionOrderEntry[]
-        current_describer_index?: number
-        descriptions?: Record<string, string>
-        vote_history?: {
-          round: number
-          votes: { voter: string; voter_id: string; target: string; target_id: string }[]
-          eliminated: { username: string; role: string; user_id: string } | null
-        }[]
-        timer_config?: { description_seconds: number; voting_seconds: number }
-        timer_started_at?: string | null
-        newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
-        word_explanations?: {
-          civilian_word: string
-          civilian_word_hint: string | null
-          undercover_word: string
-          undercover_word_hint: string | null
-        }
-      }
+  // Poll game state via REST only when Socket.IO is disconnected (safety net)
+  const { data: serverState, isLoading, error: queryError } = useGetUndercoverStateApiV1UndercoverGamesGameIdStateGet(
+    { game_id: gameId },
+    { lang: i18n.language },
+    {
+      query: {
+        refetchOnWindowFocus: true,
+        refetchInterval: socketConnected ? false : 2_000,
+        enabled: !!user,
+      },
     },
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
-    enabled: !!user,
-  })
+  ) as {
+    data: {
+      my_role: string
+      my_word: string
+      my_word_hint: string | null
+      is_alive: boolean
+      players: { user_id: string; username: string; is_alive: boolean; is_mayor?: boolean }[]
+      eliminated_players: { user_id: string; username: string; role: string }[]
+      turn_number: number
+      has_voted: boolean
+      room_id?: string
+      is_host?: boolean
+      votes?: Record<string, string>
+      winner?: string | null
+      turn_phase?: string
+      description_order?: DescriptionOrderEntry[]
+      current_describer_index?: number
+      descriptions?: Record<string, string>
+      vote_history?: {
+        round: number
+        votes: { voter: string; voter_id: string; target: string; target_id: string }[]
+        eliminated: { username: string; role: string; user_id: string } | null
+      }[]
+      timer_config?: { description_seconds: number; voting_seconds: number }
+      timer_started_at?: string | null
+      newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
+      word_explanations?: {
+        civilian_word: string
+        civilian_word_hint: string | null
+        undercover_word: string
+        undercover_word_hint: string | null
+      }
+    } | undefined
+    isLoading: boolean
+    error: Error | null
+  }
+
+  // Mutation hooks
+  const voteMutation = useSubmitVoteApiV1UndercoverGamesGameIdVotePost()
+  const describeMutation = useSubmitDescriptionApiV1UndercoverGamesGameIdDescribePost()
+  const hintViewedMutation = useRecordHintViewedApiV1UndercoverGamesGameIdHintViewedPost()
+  const timerExpiredMutation = useTimerExpiredApiV1UndercoverGamesGameIdTimerExpiredPost()
+  const leaveMutation = useLeaveRoomApiV1RoomsLeavePatch()
 
   // Derive game state from server data
   const gameState = useMemo<GameState>(() => {
@@ -137,46 +181,22 @@ function UndercoverGamePage() {
       if (!socketRoomId) setSocketRoomId(serverState.room_id)
     }
 
-    const votedPlayerIds = serverState.votes ? Object.keys(serverState.votes) : []
+    const votedPlayerIds = deriveVotedPlayers(serverState.votes)
 
-    let phase: GameState["phase"]
-    if (serverState.winner) {
-      phase = "game_over"
-    } else if (serverState.turn_phase === "describing") {
-      phase = roleRevealed || serverState.turn_number > 1 ? "describing" : "role_reveal"
-    } else if (serverState.turn_number > 0) {
-      phase = "playing"
-    } else {
-      phase = "role_reveal"
-    }
-
-    // Detect elimination
-    const prevPhase = previousPhaseRef.current
-    const lastEliminated = serverState.eliminated_players.length > 0
-      ? serverState.eliminated_players[serverState.eliminated_players.length - 1]
-      : null
-
-    let eliminated_player_username: string | undefined
-    let eliminated_player_role: string | undefined
-
-    if (prevPhase === "playing" && serverState.turn_phase === "describing" && lastEliminated) {
-      eliminated_player_username = lastEliminated.username
-      eliminated_player_role = lastEliminated.role
-    }
+    const phase = deriveUndercoverPhase({
+      winner: serverState.winner,
+      turn_phase: serverState.turn_phase,
+      turn_number: serverState.turn_number,
+      my_role: serverState.my_role,
+      roleRevealed,
+    })
 
     return {
-      players: serverState.players.map((p) => ({
-        id: p.user_id,
-        username: p.username,
-        is_alive: p.is_alive,
-        is_mayor: p.is_mayor,
-      })),
+      players: derivePlayerList(serverState.players),
       phase,
       round: serverState.turn_number,
       my_role: serverState.my_role,
       my_word: serverState.my_word,
-      eliminated_player_username,
-      eliminated_player_role,
       winner: serverState.winner || undefined,
       votedPlayers: votedPlayerIds,
       isHost: serverState.is_host ?? false,
@@ -201,6 +221,21 @@ function UndercoverGamePage() {
         clearTimeout(votingTransitionTimerRef.current)
         votingTransitionTimerRef.current = null
         setShowVotingTransition(false)
+      }
+
+      // Show elimination overlay if a player was eliminated (not game over)
+      if (!serverState.winner) {
+        const latestVoteRound = serverState.vote_history?.find(
+          (r) => r.round === previousRoundRef.current,
+        )
+        if (latestVoteRound?.eliminated) {
+          setEliminationData({
+            username: latestVoteRound.eliminated.username,
+            role: latestVoteRound.eliminated.role,
+            votes: latestVoteRound.votes,
+          })
+          setShowEliminationOverlay(true)
+        }
       }
     }
 
@@ -258,16 +293,12 @@ function UndercoverGamePage() {
       toast.info(t("game.undercover.votedFor", { username: votedPlayer.username }))
     }
     try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/undercover/games/${gameId}/vote`,
-        data: { voted_for: selectedVote },
-      })
-      queryClient.invalidateQueries({ queryKey: ["undercover", gameId] })
+      await voteMutation.mutateAsync({ game_id: gameId, data: { voted_for: selectedVote } })
+      queryClient.invalidateQueries({ queryKey: getUndercoverStateApiV1UndercoverGamesGameIdStateGetQueryKey({ game_id: gameId }) })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to submit vote"))
     }
-  }, [selectedVote, hasVoted, gameId, user, gameState.players, t, queryClient])
+  }, [selectedVote, hasVoted, gameId, user, gameState.players, t, queryClient, voteMutation])
 
   const handleSubmitDescription = useCallback(async () => {
     if (!user || isSubmittingDescription) return
@@ -287,33 +318,15 @@ function UndercoverGamePage() {
     setDescriptionError("")
     setIsSubmittingDescription(true)
     try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/undercover/games/${gameId}/describe`,
-        data: { word },
-      })
+      await describeMutation.mutateAsync({ game_id: gameId, data: { word } })
       setDescriptionInput("")
-      queryClient.invalidateQueries({ queryKey: ["undercover", gameId] })
+      queryClient.invalidateQueries({ queryKey: getUndercoverStateApiV1UndercoverGamesGameIdStateGetQueryKey({ game_id: gameId }) })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to submit description"))
     } finally {
       setIsSubmittingDescription(false)
     }
-  }, [descriptionInput, user, gameId, isSubmittingDescription, t, queryClient])
-
-  const handleNextRound = useCallback(async () => {
-    if (!roomIdRef.current) return
-    try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/undercover/games/${gameId}/next-round`,
-        data: { room_id: roomIdRef.current },
-      })
-      queryClient.invalidateQueries({ queryKey: ["undercover", gameId] })
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to start next round"))
-    }
-  }, [gameId, queryClient])
+  }, [descriptionInput, user, gameId, isSubmittingDescription, t, queryClient, describeMutation])
 
   const handleDismissRole = useCallback(() => {
     setRoleRevealed(true)
@@ -322,16 +335,12 @@ function UndercoverGamePage() {
   const handleHintViewed = useCallback(
     async (word: string) => {
       try {
-        await apiClient({
-          method: "POST",
-          url: `/api/v1/undercover/games/${gameId}/hint-viewed`,
-          data: { word },
-        })
+        await hintViewedMutation.mutateAsync({ game_id: gameId, data: { word } })
       } catch {
         // Silent — hint tracking is best-effort
       }
     },
-    [gameId],
+    [gameId, hintViewedMutation],
   )
 
   // Achievement notifications
@@ -342,17 +351,14 @@ function UndercoverGamePage() {
     if (!gameState.isHost || timerExpiredRef.current) return
     timerExpiredRef.current = true
     try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/undercover/games/${gameId}/timer-expired`,
-      })
-      queryClient.invalidateQueries({ queryKey: ["undercover", gameId] })
+      await timerExpiredMutation.mutateAsync({ game_id: gameId })
+      queryClient.invalidateQueries({ queryKey: getUndercoverStateApiV1UndercoverGamesGameIdStateGetQueryKey({ game_id: gameId }) })
     } catch {
       // Ignore — another client may have already triggered it
     } finally {
       timerExpiredRef.current = false
     }
-  }, [gameId, gameState.isHost, queryClient])
+  }, [gameId, gameState.isHost, queryClient, timerExpiredMutation])
 
   const handleLeaveRoom = useCallback(async () => {
     if (!user || !roomIdRef.current) {
@@ -360,24 +366,24 @@ function UndercoverGamePage() {
       return
     }
     try {
-      await apiClient({
-        method: "PATCH",
-        url: "/api/v1/rooms/leave",
-        data: { user_id: user.id, room_id: roomIdRef.current },
-      })
+      await leaveMutation.mutateAsync({ data: { user_id: user.id, room_id: roomIdRef.current } })
     } catch {
       // Ignore errors — navigate anyway
     }
     toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
-  }, [user, navigate, t])
+  }, [user, navigate, t, leaveMutation])
 
   const handleBackToRoom = useCallback(() => {
     if (roomIdRef.current) {
-      queryClient.removeQueries({ queryKey: ["room", roomIdRef.current] })
+      queryClient.removeQueries({ queryKey: getRoomStateApiV1RoomsRoomIdStateGetQueryKey({ room_id: roomIdRef.current }) })
       navigate({ to: "/rooms/$roomId", params: { roomId: roomIdRef.current } })
     }
   }, [navigate, queryClient])
+
+  const handleDismissElimination = useCallback(() => {
+    setShowEliminationOverlay(false)
+  }, [])
 
   const handleDescriptionInputChange = useCallback((value: string) => {
     setDescriptionInput(value)
@@ -386,6 +392,7 @@ function UndercoverGamePage() {
 
   const myPlayer = gameState.players.find((p) => p.id === user?.id)
   const isAlive = myPlayer?.is_alive !== false
+  const isSpectator = gameState.my_role === "spectator"
 
   const isMyTurnToDescribe =
     gameState.phase === "describing" &&
@@ -487,6 +494,12 @@ function UndercoverGamePage() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">{t("games.undercover.name")}</h1>
         <p className="text-sm text-muted-foreground mt-1">Round {gameState.round}</p>
+        {isSpectator && (
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+            <Eye className="h-3 w-3" />
+            {t("game.spectating")}
+          </div>
+        )}
       </div>
 
       {/* Loading State */}
@@ -497,8 +510,8 @@ function UndercoverGamePage() {
         </div>
       )}
 
-      {/* Role Reveal */}
-      {gameState.phase === "role_reveal" && gameState.my_role && (
+      {/* Role Reveal (not for spectators) */}
+      {gameState.phase === "role_reveal" && gameState.my_role && !isSpectator && (
         <RoleRevealPhase
           myRole={gameState.my_role}
           myWord={gameState.my_word}
@@ -565,12 +578,13 @@ function UndercoverGamePage() {
         />
       )}
 
-      {/* Elimination */}
-      {gameState.phase === "elimination" && (
+      {/* Elimination Overlay (full-screen with vote breakdown) */}
+      {showEliminationOverlay && eliminationData && (
         <EliminationOverlay
-          eliminatedUsername={gameState.eliminated_player_username}
-          eliminatedRole={gameState.eliminated_player_role}
-          onNextRound={handleNextRound}
+          eliminatedUsername={eliminationData.username}
+          eliminatedRole={eliminationData.role}
+          votes={eliminationData.votes}
+          onDismiss={handleDismissElimination}
         />
       )}
 

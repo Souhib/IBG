@@ -1,12 +1,24 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Trophy, Users } from "lucide-react"
+import { Eye, Trophy, Users } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
-import apiClient, { getApiErrorMessage } from "@/api/client"
+import { getApiErrorMessage } from "@/api/client"
+import {
+  useGetCodenamesBoardApiV1CodenamesGamesGameIdBoardGet,
+  getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey,
+  useGiveClueApiV1CodenamesGamesGameIdCluePost,
+  useGuessCardApiV1CodenamesGamesGameIdGuessPost,
+  useEndTurnApiV1CodenamesGamesGameIdEndTurnPost,
+  useRecordHintViewedApiV1CodenamesGamesGameIdHintViewedPost,
+  useTimerExpiredApiV1CodenamesGamesGameIdTimerExpiredPost,
+  useLeaveRoomApiV1RoomsLeavePatch,
+  getRoomStateApiV1RoomsRoomIdStateGetQueryKey,
+} from "@/api/generated"
 import { useAchievementNotifications } from "@/components/achievements/AchievementToast"
+import { GameErrorFallback } from "@/components/games/shared/GameErrorFallback"
 import { PhaseTimer } from "@/components/games/shared/PhaseTimer"
 import { ClueHistory } from "@/components/games/codenames/ClueHistory"
 import { CluePanel } from "@/components/games/codenames/CluePanel"
@@ -16,6 +28,7 @@ import { ScorePanel } from "@/components/games/codenames/ScorePanel"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
+import { retrieveRoomIdForGame } from "@/lib/room-session"
 
 interface CodenamesCard {
   word: string
@@ -44,8 +57,8 @@ interface CodenamesGameState {
   board: CodenamesCard[]
   current_team: "red" | "blue"
   current_turn: CodenamesTurn | null
-  my_team: "red" | "blue"
-  my_role: "spymaster" | "operative"
+  my_team: "red" | "blue" | "spectator"
+  my_role: "spymaster" | "operative" | "spectator"
   red_remaining: number
   blue_remaining: number
   status: "waiting" | "in_progress" | "finished"
@@ -54,8 +67,14 @@ interface CodenamesGameState {
   room_id?: string
 }
 
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+
 export const Route = createFileRoute("/_auth/game/codenames/$gameId")({
-  component: CodenamesGamePage,
+  component: () => (
+    <ErrorBoundary fallback={<GameErrorFallback />}>
+      <CodenamesGamePage />
+    </ErrorBoundary>
+  ),
 })
 
 function CodenamesGamePage() {
@@ -65,10 +84,14 @@ function CodenamesGamePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const roomIdRef = useRef<string | null>(null)
-  const [socketRoomId, setSocketRoomId] = useState<string | null>(null)
+  const [socketRoomId, setSocketRoomId] = useState<string | null>(() => {
+    const stored = retrieveRoomIdForGame(gameId)
+    if (stored) roomIdRef.current = stored
+    return stored
+  })
 
-  // Socket.IO for real-time updates (replaces polling)
-  useSocket({ roomId: socketRoomId, gameId, gameType: "codenames", enabled: !!user })
+  // Socket.IO for real-time updates — polling only kicks in when disconnected
+  const { connected: socketConnected } = useSocket({ roomId: socketRoomId, gameId, gameType: "codenames", enabled: !!user })
 
   const [clueWord, setClueWord] = useState("")
   const [clueNumber, setClueNumber] = useState(1)
@@ -78,44 +101,53 @@ function CodenamesGamePage() {
   const gameOverTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const previousStatusRef = useRef<string | null>(null)
 
-  // Poll game state via REST every 2 seconds
-  const { data: serverState, isLoading, error: queryError } = useQuery({
-    queryKey: ["codenames", gameId],
-    queryFn: async () => {
-      const res = await apiClient({
-        method: "GET",
-        url: `/api/v1/codenames/games/${gameId}/board`,
-        params: { lang: i18n.language },
-      })
-      return res.data as {
-        game_id: string
-        room_id?: string
-        team: "red" | "blue"
-        role: "spymaster" | "operative"
-        is_host?: boolean
-        board: CodenamesCard[]
-        current_team: "red" | "blue"
-        red_remaining: number
-        blue_remaining: number
-        status: string
-        current_turn: CodenamesTurn | null
-        winner: "red" | "blue" | null
-        players?: CodenamesPlayer[]
-        clue_history?: {
-          team: "red" | "blue"
-          clue_word: string
-          clue_number: number
-          guesses: { word: string; card_type: string; correct: boolean }[]
-        }[]
-        timer_config?: { clue_seconds: number; guess_seconds: number }
-        timer_started_at?: string | null
-        newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
-      }
+  // Poll game state via REST only when Socket.IO is disconnected (safety net)
+  const { data: serverState, isLoading, error: queryError } = useGetCodenamesBoardApiV1CodenamesGamesGameIdBoardGet(
+    { game_id: gameId },
+    { lang: i18n.language },
+    {
+      query: {
+        refetchOnWindowFocus: true,
+        refetchInterval: socketConnected ? false : 2_000,
+        enabled: !!user,
+      },
     },
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
-    enabled: !!user,
-  })
+  ) as {
+    data: {
+      game_id: string
+      room_id?: string
+      team: "red" | "blue" | "spectator"
+      role: "spymaster" | "operative" | "spectator"
+      is_host?: boolean
+      board: CodenamesCard[]
+      current_team: "red" | "blue"
+      red_remaining: number
+      blue_remaining: number
+      status: string
+      current_turn: CodenamesTurn | null
+      winner: "red" | "blue" | null
+      players?: CodenamesPlayer[]
+      clue_history?: {
+        team: "red" | "blue"
+        clue_word: string
+        clue_number: number
+        guesses: { word: string; card_type: string; correct: boolean }[]
+      }[]
+      timer_config?: { clue_seconds: number; guess_seconds: number }
+      timer_started_at?: string | null
+      newly_unlocked_achievements?: { user_id: string; achievements: { code: string; name: string; icon: string; tier: number }[] }[]
+    } | undefined
+    isLoading: boolean
+    error: Error | null
+  }
+
+  // Mutation hooks
+  const clueMutation = useGiveClueApiV1CodenamesGamesGameIdCluePost()
+  const guessMutation = useGuessCardApiV1CodenamesGamesGameIdGuessPost()
+  const endTurnMutation = useEndTurnApiV1CodenamesGamesGameIdEndTurnPost()
+  const hintViewedMutation = useRecordHintViewedApiV1CodenamesGamesGameIdHintViewedPost()
+  const timerExpiredMutation = useTimerExpiredApiV1CodenamesGamesGameIdTimerExpiredPost()
+  const leaveMutation = useLeaveRoomApiV1RoomsLeavePatch()
 
   // Derive game state from server data
   const gameState = useMemo<CodenamesGameState | null>(() => {
@@ -167,70 +199,54 @@ function CodenamesGamePage() {
   const handleHintViewed = useCallback(
     async (word: string) => {
       try {
-        await apiClient({
-          method: "POST",
-          url: `/api/v1/codenames/games/${gameId}/hint-viewed`,
-          data: { word },
-        })
+        await hintViewedMutation.mutateAsync({ game_id: gameId, data: { word } })
       } catch {
         // Silent — hint tracking is best-effort
       }
     },
-    [gameId],
+    [gameId, hintViewedMutation],
   )
 
   const handleGiveClue = useCallback(async () => {
     if (!clueWord.trim() || isSubmittingClue) return
     setIsSubmittingClue(true)
     try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/codenames/games/${gameId}/clue`,
-        data: { clue_word: clueWord.trim(), clue_number: clueNumber },
-      })
+      await clueMutation.mutateAsync({ game_id: gameId, data: { clue_word: clueWord.trim(), clue_number: clueNumber } })
       setClueWord("")
       setClueNumber(1)
-      queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
+      queryClient.invalidateQueries({ queryKey: getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey({ game_id: gameId }) })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to give clue"))
     } finally {
       setIsSubmittingClue(false)
     }
-  }, [gameId, clueWord, clueNumber, isSubmittingClue, queryClient])
+  }, [gameId, clueWord, clueNumber, isSubmittingClue, queryClient, clueMutation])
 
   const handleGuessCard = useCallback(
     async (index: number) => {
       try {
-        const res = await apiClient({
-          method: "POST",
-          url: `/api/v1/codenames/games/${gameId}/guess`,
-          data: { card_index: index },
-        })
-        const data = res.data as { all_voted?: boolean; vote_changed?: boolean; tied?: boolean }
+        const data = await guessMutation.mutateAsync({ game_id: gameId, data: { card_index: index } }) as { all_voted?: boolean; vote_changed?: boolean; tied?: boolean }
         if (data.all_voted === false) {
           toast.info(data.vote_changed ? t("game.codenames.voteChanged") : t("game.codenames.voteSubmitted"))
         } else if (data.tied) {
           toast.warning(t("game.codenames.tieWarning"))
         }
-        queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
+        queryClient.invalidateQueries({ queryKey: getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey({ game_id: gameId }) })
       } catch (err) {
         toast.error(getApiErrorMessage(err, "Failed to guess card"))
       }
     },
-    [gameId, queryClient, t],
+    [gameId, queryClient, t, guessMutation],
   )
 
   const handleEndTurn = useCallback(async () => {
     try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/codenames/games/${gameId}/end-turn`,
-      })
-      queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
+      await endTurnMutation.mutateAsync({ game_id: gameId })
+      queryClient.invalidateQueries({ queryKey: getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey({ game_id: gameId }) })
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to end turn"))
     }
-  }, [gameId, queryClient])
+  }, [gameId, queryClient, endTurnMutation])
 
   const handleLeaveRoom = useCallback(async () => {
     if (!user || !roomIdRef.current) {
@@ -238,21 +254,17 @@ function CodenamesGamePage() {
       return
     }
     try {
-      await apiClient({
-        method: "PATCH",
-        url: "/api/v1/rooms/leave",
-        data: { user_id: user.id, room_id: roomIdRef.current },
-      })
+      await leaveMutation.mutateAsync({ data: { user_id: user.id, room_id: roomIdRef.current } })
     } catch {
       // Ignore errors — navigate anyway
     }
     toast.info(t("toast.youLeftRoom"))
     navigate({ to: "/rooms" })
-  }, [user, navigate, t])
+  }, [user, navigate, t, leaveMutation])
 
   const handleBackToRoom = useCallback(() => {
     if (roomIdRef.current) {
-      queryClient.removeQueries({ queryKey: ["room", roomIdRef.current] })
+      queryClient.removeQueries({ queryKey: getRoomStateApiV1RoomsRoomIdStateGetQueryKey({ room_id: roomIdRef.current }) })
       navigate({ to: "/rooms/$roomId", params: { roomId: roomIdRef.current } })
     }
   }, [navigate, queryClient])
@@ -265,17 +277,14 @@ function CodenamesGamePage() {
     if (!serverState?.is_host || timerExpiredRef.current) return
     timerExpiredRef.current = true
     try {
-      await apiClient({
-        method: "POST",
-        url: `/api/v1/codenames/games/${gameId}/timer-expired`,
-      })
-      queryClient.invalidateQueries({ queryKey: ["codenames", gameId] })
+      await timerExpiredMutation.mutateAsync({ game_id: gameId })
+      queryClient.invalidateQueries({ queryKey: getCodenamesBoardApiV1CodenamesGamesGameIdBoardGetQueryKey({ game_id: gameId }) })
     } catch {
       // Ignore — another client may have already triggered it
     } finally {
       timerExpiredRef.current = false
     }
-  }, [gameId, queryClient, serverState?.is_host])
+  }, [gameId, queryClient, serverState?.is_host, timerExpiredMutation])
 
   if (cancelMessage) {
     return (
@@ -314,7 +323,8 @@ function CodenamesGamePage() {
     )
   }
 
-  const isMyTurn = gameState.current_team === gameState.my_team
+  const isSpectator = gameState.my_role === "spectator"
+  const isMyTurn = !isSpectator && gameState.current_team === gameState.my_team
   const isSpymaster = gameState.my_role === "spymaster"
   const canGiveClue = isMyTurn && isSpymaster && !gameState.current_turn?.clue_word
   const canGuess = isMyTurn && !isSpymaster && !!gameState.current_turn?.clue_word
@@ -379,6 +389,16 @@ function CodenamesGamePage() {
         isMyTurn={isMyTurn}
         isFinished={gameState.status === "finished"}
       />
+
+      {/* Spectator Badge */}
+      {isSpectator && (
+        <div className="mb-4 flex justify-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+            <Eye className="h-3 w-3" />
+            {t("game.spectating")}
+          </div>
+        </div>
+      )}
 
       {/* Phase Timer */}
       {serverState?.timer_config && serverState?.timer_started_at && gameState.status === "in_progress" &&
@@ -499,24 +519,26 @@ function CodenamesGamePage() {
       )}
 
       {/* My Info */}
-      <div className="mt-6 rounded-lg bg-muted/50 p-3 text-center text-sm text-muted-foreground">
-        {t("game.codenames.youAre")}{" "}
-        <span
-          className={cn(
-            "font-semibold",
-            gameState.my_team === "red" ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400",
-          )}
-        >
-          {gameState.my_team === "red"
-            ? t("games.codenames.teams.red")
-            : t("games.codenames.teams.blue")}
-        </span>{" "}
-        <span className="font-semibold">
-          {gameState.my_role === "spymaster"
-            ? t("games.codenames.roles.spymaster")
-            : t("games.codenames.roles.operative")}
-        </span>
-      </div>
+      {!isSpectator && (
+        <div className="mt-6 rounded-lg bg-muted/50 p-3 text-center text-sm text-muted-foreground">
+          {t("game.codenames.youAre")}{" "}
+          <span
+            className={cn(
+              "font-semibold",
+              gameState.my_team === "red" ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400",
+            )}
+          >
+            {gameState.my_team === "red"
+              ? t("games.codenames.teams.red")
+              : t("games.codenames.teams.blue")}
+          </span>{" "}
+          <span className="font-semibold">
+            {gameState.my_role === "spymaster"
+              ? t("games.codenames.roles.spymaster")
+              : t("games.codenames.roles.operative")}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

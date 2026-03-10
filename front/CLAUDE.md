@@ -13,7 +13,7 @@ cd front
 bun dev                     # http://localhost:3000
 
 # Generate API client from backend OpenAPI spec
-bun run generate            # Requires backend running on :5000
+bun run generate            # Requires backend running on :5111
 
 # Code quality
 bun run lint                # oxlint
@@ -104,32 +104,17 @@ function MyComponent() {
 
 **Never edit files in `src/api/generated/`.** Regenerate with `bun run generate`.
 
-### Real-time Polling (Game & Room Pages)
-Game state is fetched via `useQuery` with 2s polling. All UI state is derived from the server response via `useMemo`, not accumulated from events.
+### Real-time Updates (Socket.IO Primary, Conditional Polling Fallback)
+Socket.IO is the primary real-time transport. The room lobby stores `roomId` in SessionStorage before navigating to game pages (`storeRoomIdForGame`), so Socket.IO connects immediately on mount via a lazy `useState` initializer (`retrieveRoomIdForGame`). Fallback: if no stored roomId (e.g., page refresh), the first REST poll provides it.
 
-```typescript
-const { data: gameState } = useQuery({
-  queryKey: ["undercover", gameId],
-  queryFn: () => apiClient({ method: "GET", url: `/api/v1/undercover/games/${gameId}/state` })
-    .then(r => r.data),
-  refetchInterval: 2000,
-  refetchOnWindowFocus: true,
-})
-
-const voteMutation = useMutation({
-  mutationFn: (votedFor: string) =>
-    apiClient({ method: "POST", url: `/api/v1/undercover/games/${gameId}/vote`,
-      data: { voted_for: votedFor } }),
-  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["undercover", gameId] }),
-})
-```
+`useSocket` returns `{ connected }`. Game pages use `refetchInterval: socketConnected ? false : 2_000` — **zero polling when Socket.IO is connected**, fast 2s polling as fallback when disconnected. The room lobby polls every **2 seconds** unconditionally. All UI state is derived from the server response via `useMemo`, not accumulated from events.
 
 Phase transitions detected by comparing refs to previous state (`previousPhaseRef`, `previousRoundRef`).
 
-### Room Lobby (REST Polling)
-- Join room via REST `PATCH /api/v1/rooms/join` on mount
+### Room Lobby (REST Polling + Socket.IO)
 - Poll room state every 2s (`useQuery` with `refetchInterval: 2000`)
-- Auto-navigate when `active_game_id` appears in polled data
+- Socket.IO pushes real-time updates for room state
+- Auto-navigate when `active_game_id` appears (stores `roomId` in SessionStorage for game page)
 - Leave room via REST `PATCH /api/v1/rooms/leave`
 
 ### File-Based Routing
@@ -182,7 +167,7 @@ Single theme with light/dark mode support via CSS variables. Uses emerald green 
 ## Environment
 
 ```env
-VITE_API_URL=http://localhost:5000    # Backend API URL
+VITE_API_URL=http://localhost:5111    # Backend API URL
 ```
 
 Vite dev server proxies `/api` to the backend.
