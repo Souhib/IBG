@@ -21,6 +21,7 @@ concurrency:
 
 env:
   DEPLOY_DIR: /etc/dokploy/compose/compose-index-cross-platform-capacitor-27v2m5/code
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/ipg-frontend
 
 jobs:
   # ── Detect which paths changed ──────────────────────────────
@@ -125,12 +126,62 @@ jobs:
         continue-on-error: true
         run: bun run test
 
+  # ── Build frontend on x86 (Tailwind CSS v4 Oxide needs x86) ──
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.frontend == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./front
+          file: ./front/Dockerfile
+          target: production
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL || 'http://141.253.103.145:33648' }}
+            VITE_SENTRY_DSN=${{ vars.VITE_SENTRY_DSN || '' }}
+            VITE_UMAMI_URL=${{ vars.VITE_UMAMI_URL || '' }}
+            VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID || '' }}
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   # ── Deploy to VPS ───────────────────────────────────────────
 
   deploy:
     runs-on: self-hosted
-    needs: changes
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [changes, build-frontend]
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped')
     timeout-minutes: 15
 
     steps:
@@ -156,12 +207,12 @@ jobs:
         working-directory: ${{ env.DEPLOY_DIR }}
         run: docker compose -f docker-compose.dokploy.yml build backend
 
-      - name: Build frontend image
+      - name: Pull frontend image from GHCR
         if: needs.changes.outputs.frontend == 'true'
-        working-directory: ${{ env.DEPLOY_DIR }}
-        env:
-          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-        run: docker compose -f docker-compose.dokploy.yml build --no-cache frontend
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} code-frontend:latest
 
       - name: Ensure infrastructure is running
         if: needs.changes.outputs.backend == 'true'

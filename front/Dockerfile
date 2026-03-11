@@ -1,7 +1,9 @@
-# Multi-stage build for IBG frontend
+# Multi-stage build for IPG frontend
+# Build stage uses x86 (Tailwind CSS v4 Oxide engine needs x86 native binaries)
+# Production stage uses target platform (ARM64 on VPS)
 
-# Stage 1: Build
-FROM oven/bun:1-alpine AS build
+# Stage 1: Build (force x86 — Tailwind CSS v4 Oxide has no ARM64 support)
+FROM --platform=linux/amd64 oven/bun:1-alpine AS build
 
 WORKDIR /app
 
@@ -28,8 +30,8 @@ ENV VITE_UMAMI_URL=${VITE_UMAMI_URL}
 ENV VITE_UMAMI_WEBSITE_ID=${VITE_UMAMI_WEBSITE_ID}
 ENV VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
 
-# Build the application (increase memory for ARM64 VPS builds)
-ENV NODE_OPTIONS="--max-old-space-size=8192"
+# Build the application
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN bun run build
 
 # Stage 2: Production with Nginx

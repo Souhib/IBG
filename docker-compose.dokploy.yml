@@ -104,16 +104,7 @@ services:
   # ─── Frontend SPA ────────────────────────────────────────────
 
   frontend:
-    build:
-      context: ./front
-      dockerfile: Dockerfile
-      target: production
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://141.253.103.145:33648}
-        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
-        VITE_UMAMI_URL: ${VITE_UMAMI_URL:-}
-        VITE_UMAMI_WEBSITE_ID: ${VITE_UMAMI_WEBSITE_ID:-}
-        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+    image: ${FRONTEND_IMAGE:-code-frontend:latest}
     depends_on:
       - backend
     ports:
