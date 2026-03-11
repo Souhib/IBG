@@ -153,8 +153,8 @@ export function PrayerTimesNav() {
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed italic">
-                    "Our Lord descends every night to the nearest heaven when the last third of the night remains"
-                    <span className="not-italic ml-0.5 opacity-70">— Bukhari 1145</span>
+                    "{t("prayer.tahajjudHadith")}"
+                    <span className="not-italic ml-0.5 opacity-70">— {t("prayer.tahajjudSource")}</span>
                   </p>
                 </div>
               </div>

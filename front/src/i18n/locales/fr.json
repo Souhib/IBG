@@ -369,6 +369,8 @@
     "tahajjud": "Tahajjud",
     "useMyLocation": "Utiliser ma position",
     "searchCity": "Rechercher une ville...",
-    "changeCity": "Changer"
+    "changeCity": "Changer",
+    "tahajjudHadith": "Notre Seigneur descend chaque nuit au ciel le plus proche lorsqu'il reste le dernier tiers de la nuit",
+    "tahajjudSource": "Bukhari 1145"
   }
 }

@@ -377,7 +377,9 @@
     "tahajjud": "Tahajjud",
     "useMyLocation": "Use my location",
     "searchCity": "Search city...",
-    "changeCity": "Change"
+    "changeCity": "Change",
+    "tahajjudHadith": "Our Lord descends every night to the nearest heaven when the last third of the night remains",
+    "tahajjudSource": "Bukhari 1145"
   },
   "errors": {
     "loadFailed": "Failed to load data. Please try again.",
