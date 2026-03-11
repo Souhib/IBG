@@ -268,8 +268,16 @@ function RoomLobbyPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8 animate-slide-up">
-      <div className="text-center mb-8">
+      <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight gradient-text">{t("room.lobby")}</h1>
+        <button
+          type="button"
+          onClick={handleLeaveRoom}
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          {t("room.leave")}
+        </button>
       </div>
 
       {/* Room Info */}
@@ -455,16 +463,6 @@ function RoomLobbyPage() {
           </button>
         </div>
       )}
-
-      {/* Leave Room */}
-      <button
-        type="button"
-        onClick={handleLeaveRoom}
-        className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl border border-destructive/30 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200"
-      >
-        <LogOut className="h-4 w-4" />
-        {t("room.leave")}
-      </button>
 
       {/* Chat Panel */}
       {user && <ChatPanel roomId={roomId} currentUserId={user.id} />}
