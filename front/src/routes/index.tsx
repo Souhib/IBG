@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { motion } from "motion/react"
-import { BookOpen, ExternalLink, Grid2x2, Heart, Shield, Users } from "lucide-react"
+import { BookOpen, ExternalLink, Grid2x2, Heart, HelpCircle, Shield, Users } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/providers/AuthProvider"
 
@@ -108,24 +108,24 @@ function HomePage() {
       </motion.div>
 
       {/* Games Section */}
-      <div className="relative mt-20 grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+      <div className="relative mt-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
         {/* Undercover */}
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="glass rounded-2xl border border-border/30 p-8 card-hover hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+          className="glass rounded-2xl border border-border/30 p-7 card-hover hover:-translate-y-1 hover:shadow-xl hover:border-primary/20 transition-all duration-300 group"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="rounded-2xl bg-primary/10 p-3">
+            <div className="rounded-2xl bg-primary/10 p-3 group-hover:bg-primary/15 transition-colors duration-300">
               <Shield className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="text-2xl font-extrabold tracking-tight">{t("games.undercover.name")}</h2>
+            <h2 className="text-xl font-extrabold tracking-tight">{t("games.undercover.name")}</h2>
           </div>
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {t("games.undercover.description")}
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               {t("games.undercover.roles.civilian")}
             </span>
@@ -139,7 +139,7 @@ function HomePage() {
           <div className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
             <span className="font-mono tabular-nums">3-12</span>
-            <span>players</span>
+            <span>{t("room.players")}</span>
           </div>
         </motion.div>
 
@@ -147,19 +147,19 @@ function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.65 }}
-          className="glass rounded-2xl border border-border/30 p-8 card-hover hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="glass rounded-2xl border border-border/30 p-7 card-hover hover:-translate-y-1 hover:shadow-xl hover:border-accent/20 transition-all duration-300 group"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="rounded-2xl bg-accent/10 p-3">
+            <div className="rounded-2xl bg-accent/10 p-3 group-hover:bg-accent/15 transition-colors duration-300">
               <Grid2x2 className="h-6 w-6 text-accent" />
             </div>
-            <h2 className="text-2xl font-extrabold tracking-tight">{t("games.codenames.name")}</h2>
+            <h2 className="text-xl font-extrabold tracking-tight">{t("games.codenames.name")}</h2>
           </div>
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {t("games.codenames.description")}
           </p>
-          <div className="mt-6 flex gap-2">
+          <div className="mt-5 flex gap-2">
             <span className="rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400">
               {t("games.codenames.teams.red")}
             </span>
@@ -170,7 +170,41 @@ function HomePage() {
           <div className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
             <span className="font-mono tabular-nums">4-10</span>
-            <span>players</span>
+            <span>{t("room.players")}</span>
+          </div>
+        </motion.div>
+
+        {/* Word Quiz */}
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="glass rounded-2xl border border-border/30 p-7 card-hover hover:-translate-y-1 hover:shadow-xl hover:border-violet-500/20 transition-all duration-300 group sm:col-span-2 lg:col-span-1"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="rounded-2xl bg-violet-500/10 p-3 group-hover:bg-violet-500/15 transition-colors duration-300">
+              <HelpCircle className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+            </div>
+            <h2 className="text-xl font-extrabold tracking-tight">{t("games.wordQuiz.name")}</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {t("games.wordQuiz.description")}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <span className="rounded-full bg-violet-100 dark:bg-violet-900/30 px-3 py-1 text-xs font-medium text-violet-700 dark:text-violet-400">
+              {t("game.wordQuiz.hint")}
+            </span>
+            <span className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+              {t("game.wordQuiz.score")}
+            </span>
+            <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+              {t("game.wordQuiz.category")}
+            </span>
+          </div>
+          <div className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span className="font-mono tabular-nums">1+</span>
+            <span>{t("room.players")}</span>
           </div>
         </motion.div>
       </div>

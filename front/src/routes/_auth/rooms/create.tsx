@@ -105,7 +105,7 @@ function CreateRoomPage() {
               const config = {
                 undercover: { icon: "🕵️", players: "3-12", nameKey: "undercover" },
                 codenames: { icon: "🔤", players: "4-10", nameKey: "codenames" },
-                word_quiz: { icon: "📖", players: "1+", nameKey: "wordQuiz" },
+                word_quiz: { icon: "❓", players: "1+", nameKey: "wordQuiz" },
               }[type]
               return (
                 <button

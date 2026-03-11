@@ -423,6 +423,9 @@ function RoomLobbyPage() {
         </div>
       )}
 
+      {/* Chat Panel — integrated inline */}
+      {user && <ChatPanel roomId={roomId} currentUserId={user.id} />}
+
       {/* Room Settings (host only, not for word_quiz which uses defaults) */}
       {isHost && !isSpectator && roomData && gameType !== "word_quiz" && (
         <RoomSettings
@@ -443,7 +446,7 @@ function RoomLobbyPage() {
                 type="button"
                 onClick={() => setGameType("undercover")}
                 className={cn(
-                  "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                  "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
                   gameType === "undercover"
                     ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20"
                     : "glass hover:bg-muted/80",
@@ -455,7 +458,7 @@ function RoomLobbyPage() {
                 type="button"
                 onClick={() => setGameType("codenames")}
                 className={cn(
-                  "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                  "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
                   gameType === "codenames"
                     ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20"
                     : "glass hover:bg-muted/80",
@@ -467,7 +470,7 @@ function RoomLobbyPage() {
                 type="button"
                 onClick={() => setGameType("word_quiz")}
                 className={cn(
-                  "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                  "flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
                   gameType === "word_quiz"
                     ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20"
                     : "glass hover:bg-muted/80",
@@ -487,15 +490,12 @@ function RoomLobbyPage() {
             type="button"
             onClick={handleStartGame}
             disabled={players.length < minPlayers || isStartingGame}
-            className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/90 px-5 py-3.5 text-base font-extrabold tracking-tight text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 transition-all duration-200"
+            className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/90 px-5 py-3.5 text-base font-extrabold tracking-tight text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 transition-all duration-200 cursor-pointer"
           >
             {isStartingGame ? t("common.loading") : t("room.startGame")}
           </button>
         </div>
       )}
-
-      {/* Chat Panel */}
-      {user && <ChatPanel roomId={roomId} currentUserId={user.id} />}
 
       {/* Invite Friend Modal */}
       {showInviteModal && roomData && (
