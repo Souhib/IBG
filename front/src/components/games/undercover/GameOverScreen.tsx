@@ -20,6 +20,11 @@ interface GameOverScreenProps {
   onLeaveRoom: () => void
 }
 
+const WINNER_KEYS: Record<string, string> = {
+  civilians: "games.undercover.roles.civilian",
+  undercovers: "games.undercover.roles.undercover",
+}
+
 export const GameOverScreen = memo(function GameOverScreen({
   winner,
   roomId,
@@ -46,7 +51,7 @@ export const GameOverScreen = memo(function GameOverScreen({
       <h2 className="text-4xl font-extrabold tracking-tight">{t("game.gameOver")}</h2>
       <div className="inline-block mt-4 rounded-2xl bg-gradient-to-r from-primary/15 to-accent/15 px-6 py-2.5">
         <p className="text-xl font-bold text-primary">
-          {t("game.winner")}: {winner}
+          {t("game.winner")}: {winner && WINNER_KEYS[winner] ? t(WINNER_KEYS[winner]) : winner}
         </p>
       </div>
 

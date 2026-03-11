@@ -1,9 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { ArrowRight, LogOut } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { motion } from "motion/react"
 import { toast } from "sonner"
 import { getApiErrorMessage } from "@/api/client"
-import { useCreateRoomApiV1RoomsPost } from "@/api/generated"
+import { useCreateRoomApiV1RoomsPost, useGetActiveRoomApiV1RoomsActiveGet, useLeaveRoomApiV1RoomsLeavePatch } from "@/api/generated"
+import { useAuth } from "@/providers/AuthProvider"
 
 export const Route = createFileRoute("/_auth/rooms/create")({
   component: CreateRoomPage,
@@ -11,9 +14,24 @@ export const Route = createFileRoute("/_auth/rooms/create")({
 
 function CreateRoomPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [gameType, setGameType] = useState<"undercover" | "codenames">("undercover")
   const [error, setError] = useState("")
+
+  const { data: activeRoom, refetch: refetchActiveRoom } = useGetActiveRoomApiV1RoomsActiveGet({
+    query: { staleTime: 10_000 },
+  })
+
+  const leaveMutation = useLeaveRoomApiV1RoomsLeavePatch({
+    mutation: {
+      onSuccess: () => {
+        toast.success(t("toast.youLeftRoom"))
+        refetchActiveRoom()
+      },
+      onError: (err) => toast.error(getApiErrorMessage(err)),
+    },
+  })
 
   const createMutation = useCreateRoomApiV1RoomsPost({
     mutation: {
@@ -37,6 +55,41 @@ function CreateRoomPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-8 animate-slide-up">
       <h1 className="text-3xl font-extrabold tracking-tight gradient-text mb-8">{t("room.create")}</h1>
+
+      {/* Rejoin / Leave Room Banner */}
+      {activeRoom && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 glass rounded-2xl border-primary/30 px-5 py-4 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-extrabold tracking-tight">{t("room.rejoinRoom")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("room.roomCode")}: <span className="font-mono tabular-nums">{activeRoom.public_id}</span>
+              </p>
+            </div>
+            <Link
+              to="/rooms/$roomId"
+              params={{ roomId: activeRoom.room_id }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-primary/90 px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200"
+            >
+              {t("room.rejoinButton")}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <button
+            type="button"
+            onClick={() => user && leaveMutation.mutate({ data: { user_id: user.id, room_id: activeRoom.room_id } })}
+            disabled={leaveMutation.isPending}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors duration-200"
+          >
+            <LogOut className="h-3 w-3" />
+            {t("room.leave")}
+          </button>
+        </motion.div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
