@@ -3,8 +3,6 @@ import tailwindcss from '@tailwindcss/vite'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-import viteCompression from 'vite-plugin-compression'
-
 // https://vite.dev/config/
 export default defineConfig({
   esbuild: {
@@ -20,20 +18,6 @@ export default defineConfig({
     }),
     react(),
     tailwindcss(),
-    // Gzip compression
-    viteCompression({
-      algorithm: 'gzip',
-      ext: '.gz',
-      threshold: 10240,
-      deleteOriginFile: false,
-    }),
-    // Brotli compression
-    viteCompression({
-      algorithm: 'brotliCompress',
-      ext: '.br',
-      threshold: 10240,
-      deleteOriginFile: false,
-    }),
   ],
   resolve: {
     alias: {

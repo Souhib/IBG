@@ -32,7 +32,7 @@ ENV VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
 
 # Build the application
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN DEBUG=vite:* bun run build 2>&1 || { echo "=== BUILD FAILED, retrying with verbose ===" && npx vite build --debug 2>&1; exit 1; }
+RUN bun run build
 
 # Stage 2: Production with Nginx
 FROM nginx:alpine AS production
