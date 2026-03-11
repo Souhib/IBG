@@ -2,10 +2,13 @@
 # Build stage uses x86 (Tailwind CSS v4 Oxide engine needs x86 native binaries)
 # Production stage uses target platform (ARM64 on VPS)
 
-# Stage 1: Build (force x86 — Tailwind CSS v4 Oxide has no ARM64 support)
-FROM --platform=linux/amd64 oven/bun:1-alpine AS build
+# Stage 1: Build (force x86 for reliable native binaries in CI)
+FROM --platform=linux/amd64 node:22-alpine AS build
 
 WORKDIR /app
+
+# Install bun
+RUN npm install -g bun
 
 # Copy package files
 COPY package.json bun.lock ./
