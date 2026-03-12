@@ -62,5 +62,6 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--proxy-headers", "--forwarded-allow-ips", "*", "--loop", "uvloop", "--http", "httptools", "--workers", "4"]
+# Run the application (UVICORN_WORKERS env var overrides default of 4)
+ENV UVICORN_WORKERS=4
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port 5000 --proxy-headers --forwarded-allow-ips '*' --loop uvloop --http httptools --workers ${UVICORN_WORKERS}"

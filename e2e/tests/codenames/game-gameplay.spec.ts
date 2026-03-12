@@ -202,7 +202,7 @@ test.describe("Codenames Game Gameplay", () => {
         break;
       }
 
-      // Give clue via UI
+      // Give clue via UI (longer timeout for multi-turn games under concurrent load)
       await giveClue(spymaster.page, `clue${turn}`, 1);
 
       // Read spymaster's board to find a team card word
