@@ -746,9 +746,10 @@ export async function giveClue(
   spymasterPage: Page,
   clue: string,
   count: number,
+  { timeout = 30_000 }: { timeout?: number } = {},
 ): Promise<void> {
-  const clueInput = spymasterPage.locator('input[placeholder]').first();
-  await clueInput.waitFor({ state: "visible", timeout: 30_000 });
+  const clueInput = spymasterPage.locator('input[placeholder="One word clue"]');
+  await clueInput.waitFor({ state: "visible", timeout });
   await clueInput.fill(clue);
 
   const numberInput = spymasterPage.locator('input[type="number"]');
@@ -765,11 +766,13 @@ export async function guessCard(
   operativePage: Page,
   cardWord: string,
 ): Promise<void> {
-  // Use :not([disabled]) to skip already-revealed cards (handles duplicate words on board).
-  // This locator only matches enabled cards, so it waits for the clue to be delivered (cards become clickable).
-  const card = operativePage.locator(`.grid-cols-5 button:text-is("${cardWord}"):not([disabled])`).first();
+  // Match card by accessible name (starts with the word).
+  // The button name includes vote badge/hint text, so use regex for word boundary.
+  // Escape special regex chars in the word to prevent matching issues.
+  const escaped = cardWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const card = operativePage.locator(`.grid-cols-5`).getByRole("button", { name: new RegExp(`^${escaped}\\b`), disabled: false }).first();
   await expect(card).toBeEnabled({ timeout: 30_000 });
-  await card.click();
+  await card.click({ timeout: 15_000 });
 }
 
 /**

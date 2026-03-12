@@ -83,5 +83,31 @@ export default defineConfig({
       testMatch: ["**/user-journey/**"],
       timeout: 120_000,
     },
+    // Mobile viewport projects — run existing tests at iPhone 14 size (Chromium)
+    {
+      name: "mobile-smoke",
+      testMatch: ["**/smoke/**"],
+      use: {
+        ...devices["iPhone 14"],
+        browserName: "chromium",
+      },
+    },
+    {
+      name: "mobile-rooms",
+      testMatch: ["**/rooms/**"],
+      use: {
+        ...devices["iPhone 14"],
+        browserName: "chromium",
+      },
+    },
+    {
+      name: "mobile-wordquiz",
+      testMatch: ["**/wordquiz/**"],
+      timeout: 120_000,
+      use: {
+        ...devices["iPhone 14"],
+        browserName: "chromium",
+      },
+    },
   ],
 });

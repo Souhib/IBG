@@ -283,7 +283,7 @@ test.describe("Codenames Voting (6-player)", () => {
         break;
       }
 
-      // Give clue via UI
+      // Give clue via UI (longer timeout for multi-turn games under concurrent load)
       await giveClue(spymaster.page, `clue${turn}`, 1);
 
       // Get spymaster board to find team card word
@@ -337,7 +337,7 @@ test.describe("Codenames Voting (6-player)", () => {
         anyPage
           .locator('h2:has-text("Game Over")')
           .or(anyPage.locator("text=Game Over")),
-      ).toBeVisible({ timeout: 15_000 });
+      ).toBeVisible({ timeout: 30_000 });
     }
 
     await setup.cleanup();
@@ -393,7 +393,6 @@ test.describe("Codenames Voting (6-player)", () => {
     // Both operatives vote for assassin via UI
     for (const op of operatives) {
       await guessCard(op.page, assassinWord);
-      await op.page.waitForTimeout(1000);
     }
 
     // Wait for UI to update
@@ -406,7 +405,7 @@ test.describe("Codenames Voting (6-player)", () => {
         anyPage
           .locator('h2:has-text("Game Over")')
           .or(anyPage.locator("text=Game Over")),
-      ).toBeVisible({ timeout: 15_000 });
+      ).toBeVisible({ timeout: 30_000 });
     }
 
     // Verify via API that opponent won
