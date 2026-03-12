@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router"
-import { BookOpen, Check, ChevronDown, Flame, LogOut, Menu, Moon, Sun, Trophy, User, Users, X } from "lucide-react"
+import { BookOpen, Check, ChevronDown, Flame, LogOut, Menu, Moon, Sun, User, Users, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/providers/AuthProvider"
@@ -196,7 +196,6 @@ export function MainNav() {
     ? [
         { to: "/rooms" as const, label: t("nav.rooms"), icon: BookOpen },
         { to: "/challenges" as const, label: t("nav.challenges"), icon: Flame },
-        { to: "/leaderboard" as const, label: t("nav.leaderboard"), icon: Trophy },
       ]
     : []
 
@@ -293,7 +292,6 @@ export function MainNav() {
               {[
                 { to: "/rooms" as const, label: t("nav.rooms"), icon: BookOpen },
                 { to: "/challenges" as const, label: t("nav.challenges"), icon: Flame },
-                { to: "/leaderboard" as const, label: t("nav.leaderboard"), icon: Trophy },
                 { to: "/profile" as const, label: t("nav.profile"), icon: User },
                 { to: "/friends" as const, label: t("nav.friends"), icon: Users },
               ].map((link) => (

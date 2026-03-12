@@ -133,7 +133,13 @@
     "inviteFriend": "Inviter un ami",
     "inviteSent": "Invitation envoyée !",
     "inviteReceived": "{{username}} vous invite à rejoindre son salon",
-    "joinInvite": "Rejoindre"
+    "joinInvite": "Rejoindre",
+    "rejoinRoom": "Vous étiez dans un salon",
+    "youWereKicked": "Vous avez été expulsé du salon",
+    "mrWhiteMinPlayers": "Nécessite 4+ joueurs",
+    "wordQuizTurnDuration": "Durée du tour (secondes)",
+    "wordQuizRounds": "Nombre de manches",
+    "wordQuizHintInterval": "Intervalle des indices (secondes)"
   },
   "toast": {
     "playerJoined": "{{username}} a rejoint le salon",

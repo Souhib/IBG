@@ -137,7 +137,10 @@
     "inviteFriend": "Invite Friend",
     "inviteSent": "Invite sent!",
     "inviteReceived": "{{username}} invited you to join their room",
-    "joinInvite": "Join"
+    "joinInvite": "Join",
+    "wordQuizTurnDuration": "Turn Duration (seconds)",
+    "wordQuizRounds": "Number of Rounds",
+    "wordQuizHintInterval": "Hint Interval (seconds)"
   },
   "toast": {
     "playerJoined": "{{username}} joined the room",

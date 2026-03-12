@@ -22,7 +22,7 @@ interface ChatPanelProps {
 
 export function ChatPanel({ roomId, currentUserId }: ChatPanelProps) {
   const { t } = useTranslation()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isSending, setIsSending] = useState(false)

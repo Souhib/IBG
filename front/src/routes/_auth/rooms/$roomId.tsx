@@ -427,13 +427,15 @@ function RoomLobbyPage() {
       {user && <ChatPanel roomId={roomId} currentUserId={user.id} />}
 
       {/* Room Settings (host only, not for word_quiz which uses defaults) */}
-      {isHost && !isSpectator && roomData && gameType !== "word_quiz" && (
+      {isHost && !isSpectator && roomData && (
+        <div className="mt-6">
         <RoomSettings
           roomId={roomData.id}
           settings={roomData.settings ?? null}
           gameType={gameType}
           playerCount={players.length}
         />
+        </div>
       )}
 
       {/* Game Type Selector + Start Button (host only) */}
