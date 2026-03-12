@@ -346,7 +346,7 @@
     "educationSfsu": "San Francisco State University — Certificate",
     "experience": "الخبرة",
     "experienceMaduraTitle": "Madura Capital Management — Python Developer / DevOps",
-    "experienceMaduraPeriod": "سبتمبر 2024 — فبراير 2025",
+    "experienceMaduraPeriod": "سبتمبر 2024 — اليوم",
     "experienceMaduraDesc": "تطوير أدوات داخلية وأنظمة أتمتة لتبسيط عمليات التداول وتدفقات البيانات داخل صندوق التحوط. بناء مغذيات بيانات وخطوط أنابيب ETL بـ Prefect وواجهة React TypeScript لإدارة التداولات. تصميم خادم FastAPI نظيف مع خطوط CI/CD.",
     "experienceSnapTitle": "Snapchat (SnapLab) — Python Developer / DevOps / AWS",
     "experienceSnapPeriod": "مايو 2022 — سبتمبر 2024",
@@ -362,7 +362,7 @@
     "experienceCloudeasierDesc": "تطوير حلول لتقليل تكاليف البنية التحتية السحابية. بناء سكربتات Python على AWS Lambda و GCP Cloud Functions لتسعير وجدولة الحوسبة، نشر بـ Terraform.",
     "skills": "المهارات",
     "mentoringTitle": "إرشاد مجاني",
-    "mentoringText": "بخبرتي أستطيع مساعدة مهندسي علوم الحاسوب والمطورين أو أي شخص يريد تعلم المزيد عن علوم الحاسوب — مجاناً. تواصل معي عبر البريد الإلكتروني أو الهاتف. إذا لم أرد، اترك رسالة وسأتصل بك.",
+    "mentoringText": "بخبرتي أستطيع مساعدة مهندسي علوم الحاسوب والمطورين أو أي شخص يريد تعلم المزيد عن علوم الحاسوب — مجاناً. يمكنني أيضاً المساعدة في كتابة أو تحسين السيرة الذاتية، فهم سوق العمل، التحضير للمقابلات، أو تقديم نصائح عامة للبحث عن وظيفة. تواصل معي عبر البريد الإلكتروني أو الهاتف. إذا لم أرد، اترك رسالة وسأتصل بك.",
     "contactMe": "تواصل معي"
   },
   "friends": {

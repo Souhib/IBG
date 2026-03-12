@@ -346,7 +346,7 @@
     "educationSfsu": "San Francisco State University — Certificate",
     "experience": "Experience",
     "experienceMaduraTitle": "Madura Capital Management — Python Developer / DevOps",
-    "experienceMaduraPeriod": "September 2024 — February 2025",
+    "experienceMaduraPeriod": "September 2024 — Today",
     "experienceMaduraDesc": "Development of internal tools and automation systems to streamline trading operations and data flows within the hedge fund. Built data feeders, Prefect ETL pipelines, and a React TypeScript interface for trade management. Designed a clean FastAPI backend with CI/CD pipelines.",
     "experienceSnapTitle": "Snapchat (SnapLab) — Python Developer / DevOps / AWS",
     "experienceSnapPeriod": "May 2022 — September 2024",
@@ -362,7 +362,7 @@
     "experienceCloudeasierDesc": "Developed solutions enabling companies to reduce Cloud infrastructure costs. Built Python scripts on AWS Lambda and GCP Cloud Functions for compute instance pricing and scheduling, deployed via Terraform.",
     "skills": "Skills",
     "mentoringTitle": "Free Mentoring",
-    "mentoringText": "With my experience I can help CS engineers, developers, or anyone who wants to learn more about computer science — freely. Contact me via email or phone. If I don't answer, leave a message and I'll call you back.",
+    "mentoringText": "With my experience I can help CS engineers, developers, or anyone who wants to learn more about computer science — freely. I can also help with your resume, understanding the job market, preparing for interviews, or giving general advice when looking for jobs. Contact me via email or phone. If I don't answer, leave a message and I'll call you back.",
     "contactMe": "Get in Touch"
   },
   "friends": {
