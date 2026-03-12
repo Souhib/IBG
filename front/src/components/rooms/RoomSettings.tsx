@@ -30,6 +30,9 @@ export const RoomSettings = memo(function RoomSettings({
   const [codenamesClueTimer, setCodenamesClueTimer] = useState(0)
   const [codenamesGuessTimer, setCodenamesGuessTimer] = useState(0)
   const [enableMrWhite, setEnableMrWhite] = useState(true)
+  const [wordQuizTurnDuration, setWordQuizTurnDuration] = useState(60)
+  const [wordQuizRounds, setWordQuizRounds] = useState(10)
+  const [wordQuizHintInterval, setWordQuizHintInterval] = useState(10)
 
   useEffect(() => {
     if (settings) {
@@ -38,6 +41,9 @@ export const RoomSettings = memo(function RoomSettings({
       if (settings.codenames_clue_timer !== undefined) setCodenamesClueTimer(settings.codenames_clue_timer as number)
       if (settings.codenames_guess_timer !== undefined) setCodenamesGuessTimer(settings.codenames_guess_timer as number)
       if (settings.enable_mr_white !== undefined) setEnableMrWhite(settings.enable_mr_white as boolean)
+      if (settings.word_quiz_turn_duration !== undefined) setWordQuizTurnDuration(settings.word_quiz_turn_duration as number)
+      if (settings.word_quiz_rounds !== undefined) setWordQuizRounds(settings.word_quiz_rounds as number)
+      if (settings.word_quiz_hint_interval !== undefined) setWordQuizHintInterval(settings.word_quiz_hint_interval as number)
     }
   }, [settings])
 
@@ -52,16 +58,20 @@ export const RoomSettings = memo(function RoomSettings({
         payload.description_timer = descriptionTimer
         payload.voting_timer = votingTimer
         payload.enable_mr_white = enableMrWhite
-      } else {
+      } else if (gameType === "codenames") {
         payload.codenames_clue_timer = codenamesClueTimer
         payload.codenames_guess_timer = codenamesGuessTimer
+      } else if (gameType === "word_quiz") {
+        payload.word_quiz_turn_duration = wordQuizTurnDuration
+        payload.word_quiz_rounds = wordQuizRounds
+        payload.word_quiz_hint_interval = wordQuizHintInterval
       }
       await settingsMutation.mutateAsync({ room_id: roomId, data: payload })
       toast.success(t("room.settingsSaved"))
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to save settings"))
     }
-  }, [roomId, gameType, descriptionTimer, votingTimer, codenamesClueTimer, codenamesGuessTimer, enableMrWhite, t, settingsMutation])
+  }, [roomId, gameType, descriptionTimer, votingTimer, codenamesClueTimer, codenamesGuessTimer, enableMrWhite, wordQuizTurnDuration, wordQuizRounds, wordQuizHintInterval, t, settingsMutation])
 
   return (
     <div className="glass rounded-2xl p-5">
@@ -161,7 +171,7 @@ export const RoomSettings = memo(function RoomSettings({
                 )}
               </div>
             </>
-          ) : (
+          ) : gameType === "codenames" ? (
             <>
               {/* Clue Timer */}
               <div>
@@ -206,6 +216,54 @@ export const RoomSettings = memo(function RoomSettings({
                       )}
                     >
                       {timerLabel(val)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Turn Duration */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-2">
+                  {t("room.wordQuizTurnDuration")}
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {[30, 45, 60, 90, 120, 180].map((val) => (
+                    <button key={val} type="button" onClick={() => setWordQuizTurnDuration(val)}
+                      className={cn("rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                        wordQuizTurnDuration === val ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted/50 hover:bg-muted")}>
+                      {val}s
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Number of Rounds */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-2">
+                  {t("room.wordQuizRounds")}
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {[3, 5, 10, 15, 20].map((val) => (
+                    <button key={val} type="button" onClick={() => setWordQuizRounds(val)}
+                      className={cn("rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                        wordQuizRounds === val ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted/50 hover:bg-muted")}>
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Hint Interval */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-2">
+                  {t("room.wordQuizHintInterval")}
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {[5, 10, 15, 20, 30].map((val) => (
+                    <button key={val} type="button" onClick={() => setWordQuizHintInterval(val)}
+                      className={cn("rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                        wordQuizHintInterval === val ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted/50 hover:bg-muted")}>
+                      {val}s
                     </button>
                   ))}
                 </div>

@@ -10,6 +10,7 @@ import {
   Mail,
   Phone,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react'
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -245,6 +246,45 @@ function AboutPage() {
             </a>
           </div>
         </motion.div>
+      </Section>
+
+      {/* ── Support the Ummah ── */}
+      <Section delay={0.1}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15 text-accent-foreground">
+            <Heart className="h-5 w-5" />
+          </div>
+          <h2 className="text-xl font-extrabold tracking-tight">{t("home.charity.title")}</h2>
+        </div>
+        <p className="text-muted-foreground mb-6">{t("home.charity.subtitle")}</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <a
+            href="https://humanappeal.org.uk/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group glass rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <h3 className="font-extrabold tracking-tight mb-2">Human Appeal</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">{t("home.charity.humanAppealDesc")}</p>
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:gap-3 transition-all duration-200">
+              {t("home.charity.donate")}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </span>
+          </a>
+          <a
+            href="https://ummahcharity.org.uk/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group glass rounded-2xl border border-sky-500/20 hover:border-sky-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <h3 className="font-extrabold tracking-tight mb-2">Ummah Charity</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">{t("home.charity.ummahCharityDesc")}</p>
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-sky-600 dark:text-sky-400 group-hover:gap-3 transition-all duration-200">
+              {t("home.charity.donate")}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </span>
+          </a>
+        </div>
       </Section>
 
       {/* ── Contact ── */}

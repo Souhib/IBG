@@ -69,7 +69,6 @@ export function Footer() {
               {[
                 { to: "/rooms" as const, label: t("nav.rooms") },
                 { to: "/challenges" as const, label: t("nav.challenges") },
-                { to: "/leaderboard" as const, label: t("nav.leaderboard") },
                 { to: "/about" as const, label: t("nav.about") },
               ].map((link) => (
                 <Link
