@@ -59,7 +59,7 @@ function HomePage() {
           <span className="text-sm font-semibold text-primary tracking-wide">{t("home.learnAndPlay")}</span>
         </motion.div>
 
-        <h1 className="text-7xl font-extrabold tracking-tighter gradient-text sm:text-8xl animate-scale-in">
+        <h1 className="text-4xl sm:text-7xl md:text-8xl font-extrabold tracking-tighter gradient-text animate-scale-in">
           {t("home.title")}
         </h1>
 
@@ -77,13 +77,13 @@ function HomePage() {
             <>
               <Link
                 to="/rooms/create"
-                className="rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                className="rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-6 sm:px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
               >
                 {t("home.createRoom")}
               </Link>
               <Link
                 to="/rooms"
-                className="rounded-2xl border border-border/50 bg-secondary/80 px-8 py-3.5 text-sm font-semibold text-secondary-foreground shadow-sm hover:bg-secondary hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+                className="rounded-2xl border border-border/50 bg-secondary/80 px-6 sm:px-8 py-3.5 text-sm font-semibold text-secondary-foreground shadow-sm hover:bg-secondary hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
               >
                 {t("home.joinRoom")}
               </Link>
@@ -92,13 +92,13 @@ function HomePage() {
             <>
               <Link
                 to="/auth/register"
-                className="rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                className="rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-6 sm:px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
               >
                 {t("home.playNow")}
               </Link>
               <Link
                 to="/auth/login"
-                className="rounded-2xl border border-border/50 bg-secondary/80 px-8 py-3.5 text-sm font-semibold text-secondary-foreground shadow-sm hover:bg-secondary hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+                className="rounded-2xl border border-border/50 bg-secondary/80 px-6 sm:px-8 py-3.5 text-sm font-semibold text-secondary-foreground shadow-sm hover:bg-secondary hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
               >
                 {t("nav.login")}
               </Link>

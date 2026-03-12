@@ -85,7 +85,13 @@ export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocke
     socket.on('game_state', (state: Record<string, unknown>) => {
       if (gameIdRef.current && gameTypeRef.current) {
         const keyPrefix = getGameQueryKeyPrefix(gameTypeRef.current, gameIdRef.current)
-        queryClient.setQueriesData({ queryKey: keyPrefix }, state)
+        if (gameTypeRef.current === 'word_quiz') {
+          // Word Quiz needs lang-aware fetch — invalidate to trigger REST refetch
+          // instead of caching English-default hints from Socket.IO
+          queryClient.invalidateQueries({ queryKey: keyPrefix })
+        } else {
+          queryClient.setQueriesData({ queryKey: keyPrefix }, state)
+        }
       }
     })
 

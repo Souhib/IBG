@@ -79,7 +79,7 @@ export const CardCell = memo(function CardCell({
       onClick={() => onGuess(index)}
       disabled={!canGuess || card.revealed || isFinished}
       className={cn(
-        "relative rounded-xl border p-3 text-center text-sm font-semibold transition-all duration-200 min-h-[60px] flex items-center justify-center",
+        "relative rounded-xl border p-1.5 sm:p-3 text-center text-[10px] sm:text-sm font-semibold transition-all duration-200 min-h-[44px] sm:min-h-[60px] flex items-center justify-center",
         bgColor,
         card.revealed && "opacity-80 scale-[0.97]",
         canGuess && !card.revealed && !isFinished && "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97]",

@@ -342,3 +342,15 @@ body {
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
+
+/* Move toasts to top-center on mobile to avoid overlapping game UI */
+@media (max-width: 639px) {
+  [data-sonner-toaster] {
+    --offset: 16px !important;
+    top: var(--offset) !important;
+    bottom: unset !important;
+    left: 50% !important;
+    right: unset !important;
+    transform: translateX(-50%);
+  }
+}

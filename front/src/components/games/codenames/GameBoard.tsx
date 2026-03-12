@@ -44,7 +44,7 @@ export const GameBoard = memo(function GameBoard({
   }, [cardVotes, currentUserId])
 
   return (
-    <div className="grid grid-cols-5 gap-2.5 mb-6" style={{ perspective: "1200px" }}>
+    <div className="grid grid-cols-5 gap-1 sm:gap-2.5 mb-6" style={{ perspective: "1200px" }}>
       {board.map((card, index) => (
         <CardCell
           key={index}
