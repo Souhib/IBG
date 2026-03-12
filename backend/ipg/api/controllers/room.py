@@ -194,7 +194,13 @@ class RoomController:
         return room
 
     async def leave_room(self, room_leave: RoomLeave) -> Room:
-        """Remove a user from a room."""
+        """Remove a user from a room.
+
+        Voluntary leave fully removes the user (deletes RoomUserLink) so they
+        won't see a "rejoin" prompt and are free to create/join other rooms.
+        This reuses _handle_permanent_disconnect which also handles game cleanup,
+        ownership transfer, and room deactivation when empty.
+        """
         try:
             db_room = (
                 await self.session.exec(
@@ -209,37 +215,18 @@ class RoomController:
         except NoResultFound:
             raise UserNotFoundError(user_id=room_leave.user_id) from None
 
-        if not any(user_room_link.id == db_user.id for user_room_link in db_room.users):
-            raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
-        user_room_link = (
+        link = (
             await self.session.exec(
                 select(RoomUserLink)
                 .where(RoomUserLink.room_id == room_leave.room_id)
                 .where(RoomUserLink.user_id == db_user.id)
-                .where(RoomUserLink.connected == True)  # noqa: E712
             )
         ).first()
-        if not user_room_link:
+        if not link:
             raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
-        user_room_link.connected = False
-        self.session.add(user_room_link)
 
-        if db_room.owner_id == db_user.id:
-            # Check for other connected players to transfer ownership
-            remaining = (
-                await self.session.exec(
-                    select(RoomUserLink)
-                    .where(RoomUserLink.room_id == room_leave.room_id)
-                    .where(RoomUserLink.user_id != db_user.id)
-                    .where(RoomUserLink.connected == True)  # noqa: E712
-                )
-            ).all()
-            if remaining:
-                db_room.owner_id = remaining[0].user_id
-            else:
-                db_room.type = RoomType.INACTIVE
-            self.session.add(db_room)
-        await self.session.commit()
+        await _handle_permanent_disconnect(self.session, link)
+
         room = (
             await self.session.exec(
                 select(Room).where(Room.id == db_room.id).options(selectinload(Room.users), selectinload(Room.games))

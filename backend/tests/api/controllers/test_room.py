@@ -182,29 +182,28 @@ async def test_join_room_already_in_room_rejoins(create_user, create_room, room_
 
 
 async def test_leave_room_success(create_user, create_room, room_controller: RoomController):
-    """Leaving a room sets the joiner's RoomUserLink.connected to False while the room stays ACTIVE."""
+    """Voluntary leave deletes the RoomUserLink entirely while the room stays ACTIVE."""
 
     # Arrange
     owner = await create_user(username="owner", email="owner@test.com")
     joiner = await create_user(username="joiner", email="joiner@test.com")
     room = await create_room(owner=owner, password="5678")
     await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="5678"))
-    # Save IDs before expiring (expire_all makes attribute access trigger sync lazy load)
     room_id = room.id
     joiner_id = joiner.id
-    room_controller.session.expire_all()  # Clear identity map so leave_room re-fetches Room.users
+    room_controller.session.expire_all()
 
     # Act
     updated = await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=joiner_id))
 
-    # Assert — verify via RoomUserLink table directly
+    # Assert — link is deleted, room stays active
     assert updated.type == RoomType.ACTIVE
     link = (
         await room_controller.session.exec(
             select(RoomUserLink).where(RoomUserLink.room_id == room_id).where(RoomUserLink.user_id == joiner_id)
         )
-    ).one()
-    assert link.connected is False
+    ).first()
+    assert link is None
 
 
 async def test_leave_room_owner_deactivates(sample_owner: User, sample_room: Room, room_controller: RoomController):
@@ -513,3 +512,220 @@ async def test_get_room_state_success(sample_owner: User, sample_room: Room, roo
     owner_player = next(p for p in state.players if p.user_id == str(sample_owner.id))
     assert owner_player.is_host is True
     assert owner_player.is_connected is True
+
+
+# === Leave / Rejoin / Ghost Room Prevention ===
+
+
+async def test_voluntary_leave_no_active_room(create_user, create_room, room_controller: RoomController):
+    """After voluntary leave, get_active_room_for_user returns None — no rejoin banner."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    joiner = await create_user(username="joiner", email="joiner@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="1234"))
+    room_id = room.id
+    joiner_id = joiner.id
+    room_controller.session.expire_all()
+
+    # Act
+    await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=joiner_id))
+
+    # Assert — no active room, player is free
+    active = await room_controller.get_active_room_for_user(joiner_id)
+    assert active is None
+
+
+async def test_voluntary_leave_can_join_new_room(create_user, create_room, room_controller: RoomController):
+    """After voluntary leave, player can join a different room without conflict."""
+
+    # Arrange
+    owner1 = await create_user(username="owner1", email="owner1@test.com")
+    owner2 = await create_user(username="owner2", email="owner2@test.com")
+    joiner = await create_user(username="joiner", email="joiner@test.com")
+    room1 = await create_room(owner=owner1, password="1111")
+    room2 = await create_room(owner=owner2, password="2222")
+    await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room1.public_id, password="1111"))
+    room1_id = room1.id
+    room2_id = room2.id
+    room2_public_id = room2.public_id
+    joiner_id = joiner.id
+    room_controller.session.expire_all()
+
+    # Act — leave room1, join room2
+    await room_controller.leave_room(RoomLeave(room_id=room1_id, user_id=joiner_id))
+    await room_controller.join_room(RoomJoin(user_id=joiner_id, public_room_id=room2_public_id, password="2222"))
+
+    # Assert — active room is room2
+    active = await room_controller.get_active_room_for_user(joiner_id)
+    assert active is not None
+    assert active.room_id == str(room2_id)
+    assert active.is_connected is True
+
+
+async def test_voluntary_leave_can_create_new_room(create_user, create_room, room_controller: RoomController):
+    """After voluntary leave, player can create a new room without UserAlreadyInRoomError."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    player = await create_user(username="player", email="player@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=player.id, public_room_id=room.public_id, password="1234"))
+    room_id = room.id
+    player_id = player.id
+    room_controller.session.expire_all()
+
+    # Act — leave, then create own room
+    await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=player_id))
+    new_room = await room_controller.create_room(
+        RoomCreate(status=RoomStatus.ONLINE, password="9999", owner_id=player_id)
+    )
+
+    # Assert
+    assert new_room.owner_id == player_id
+    active = await room_controller.get_active_room_for_user(player_id)
+    assert active is not None
+    assert active.room_id == str(new_room.id)
+
+
+async def test_disconnect_shows_active_room(create_user, create_room, room_controller: RoomController):
+    """A disconnected player (connected=False, link preserved) still sees active room for rejoin."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    joiner = await create_user(username="joiner", email="joiner@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="1234"))
+    joiner_id = joiner.id
+
+    # Simulate disconnect (heartbeat staleness sets connected=False, NOT a voluntary leave)
+    link = (
+        await room_controller.session.exec(
+            select(RoomUserLink).where(RoomUserLink.user_id == joiner_id, RoomUserLink.connected == True)  # noqa: E712
+        )
+    ).one()
+    link.connected = False
+    room_controller.session.add(link)
+    await room_controller.session.commit()
+
+    # Assert — active room returned with is_connected=False (rejoin banner should show)
+    active = await room_controller.get_active_room_for_user(joiner_id)
+    assert active is not None
+    assert active.room_id == str(room.id)
+    assert active.is_connected is False
+
+
+async def test_disconnect_then_rejoin(create_user, create_room, room_controller: RoomController):
+    """A disconnected player can rejoin the same room and become connected again."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    joiner = await create_user(username="joiner", email="joiner@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="1234"))
+    joiner_id = joiner.id
+    public_id = room.public_id
+
+    # Simulate disconnect
+    link = (
+        await room_controller.session.exec(
+            select(RoomUserLink).where(RoomUserLink.user_id == joiner_id, RoomUserLink.connected == True)  # noqa: E712
+        )
+    ).one()
+    link.connected = False
+    room_controller.session.add(link)
+    await room_controller.session.commit()
+
+    # Act — rejoin
+    await room_controller.join_room(RoomJoin(user_id=joiner_id, public_room_id=public_id, password="1234"))
+
+    # Assert — connected again
+    active = await room_controller.get_active_room_for_user(joiner_id)
+    assert active is not None
+    assert active.is_connected is True
+
+
+async def test_disconnect_leave_via_banner_frees_player(create_user, create_room, room_controller: RoomController):
+    """A disconnected player who clicks 'Leave' on the rejoin banner is fully freed."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    joiner = await create_user(username="joiner", email="joiner@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="1234"))
+    room_id = room.id
+    joiner_id = joiner.id
+
+    # Simulate disconnect
+    link = (
+        await room_controller.session.exec(
+            select(RoomUserLink).where(RoomUserLink.user_id == joiner_id, RoomUserLink.connected == True)  # noqa: E712
+        )
+    ).one()
+    link.connected = False
+    room_controller.session.add(link)
+    await room_controller.session.commit()
+    room_controller.session.expire_all()
+
+    # Act — player clicks "Leave" on the rejoin banner
+    await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=joiner_id))
+
+    # Assert — fully freed, no active room
+    active = await room_controller.get_active_room_for_user(joiner_id)
+    assert active is None
+
+    # Can create a new room
+    new_room = await room_controller.create_room(
+        RoomCreate(status=RoomStatus.ONLINE, password="5555", owner_id=joiner_id)
+    )
+    assert new_room.owner_id == joiner_id
+
+
+async def test_voluntary_leave_can_rejoin_via_code(create_user, create_room, room_controller: RoomController):
+    """After voluntary leave, player can still rejoin the same room using the room code."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    joiner = await create_user(username="joiner", email="joiner@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=joiner.id, public_room_id=room.public_id, password="1234"))
+    room_id = room.id
+    joiner_id = joiner.id
+    public_id = room.public_id
+    room_controller.session.expire_all()
+
+    # Act — leave, then rejoin with room code
+    await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=joiner_id))
+    await room_controller.join_room(RoomJoin(user_id=joiner_id, public_room_id=public_id, password="1234"))
+
+    # Assert — back in the room
+    active = await room_controller.get_active_room_for_user(joiner_id)
+    assert active is not None
+    assert active.room_id == str(room_id)
+    assert active.is_connected is True
+
+
+async def test_no_ghost_room_after_all_leave(create_user, create_room, room_controller: RoomController):
+    """When all players voluntarily leave, the room becomes INACTIVE — no ghost room."""
+
+    # Arrange
+    owner = await create_user(username="owner", email="owner@test.com")
+    player2 = await create_user(username="player2", email="player2@test.com")
+    room = await create_room(owner=owner, password="1234")
+    await room_controller.join_room(RoomJoin(user_id=player2.id, public_room_id=room.public_id, password="1234"))
+    room_id = room.id
+    owner_id = owner.id
+    player2_id = player2.id
+    room_controller.session.expire_all()
+
+    # Act — both leave
+    await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=player2_id))
+    room_controller.session.expire_all()
+    await room_controller.leave_room(RoomLeave(room_id=room_id, user_id=owner_id))
+
+    # Assert — room is INACTIVE, no active room for either
+    db_room = (await room_controller.session.exec(select(Room).where(Room.id == room_id))).one()
+    assert db_room.type == RoomType.INACTIVE
+    assert await room_controller.get_active_room_for_user(owner_id) is None
+    assert await room_controller.get_active_room_for_user(player2_id) is None
