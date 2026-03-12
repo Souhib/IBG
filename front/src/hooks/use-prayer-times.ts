@@ -57,7 +57,14 @@ export function usePrayerTimes(
   useEffect(() => {
     const interval = setInterval(() => {
       const currentKey = getDateKey(new Date())
-      setDateKey((prev) => (prev !== currentKey ? currentKey : prev))
+      setDateKey((prev) => {
+        if (prev !== currentKey) {
+          // Date changed — force recompute of next prayer
+          setNextPrayerVersion((v) => v + 1)
+          return currentKey
+        }
+        return prev
+      })
     }, 30_000)
     return () => clearInterval(interval)
   }, [])
@@ -67,6 +74,15 @@ export function usePrayerTimes(
     const coords = new Coordinates(coordinates.lat, coordinates.lng)
     const params = CalculationMethod.MuslimWorldLeague()
     return new PrayerTimes(coords, new Date(), params)
+  }, [coordinates, dateKey])
+
+  const tomorrowPrayerTimes = useMemo(() => {
+    if (!coordinates) return null
+    const coords = new Coordinates(coordinates.lat, coordinates.lng)
+    const params = CalculationMethod.MuslimWorldLeague()
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return new PrayerTimes(coords, tomorrow, params)
   }, [coordinates, dateKey])
 
   const sunnahTimes = useMemo(() => {
@@ -93,8 +109,16 @@ export function usePrayerTimes(
     for (const p of prayers) {
       if (p.time > current) return p
     }
-    return prayers[0] // wrap to next day's Fajr
-  }, [prayers])
+    // All today's prayers have passed — return tomorrow's Fajr
+    if (tomorrowPrayerTimes) {
+      return {
+        name: "Fajr",
+        key: "fajr",
+        time: tomorrowPrayerTimes.timeForPrayer(Prayer.Fajr) as Date,
+      }
+    }
+    return null
+  }, [prayers, tomorrowPrayerTimes])
 
   const nextPrayer = useMemo(() => findNextPrayer(), [findNextPrayer, nextPrayerVersion])
 
