@@ -348,6 +348,13 @@ async def test_normalize_answer_static():
     assert normalize("Al-Aqsa") == "al aqsa"
     assert normalize("Al Aqsa") == "al aqsa"
     assert normalize("al-aqsa") == "al aqsa"
+    # Latin diacritics are stripped so "Aid" matches "Aïd", "Medine" matches "Médine"
+    assert normalize("Aïd") == "aid"
+    assert normalize("Aid") == "aid"
+    assert normalize("Médine") == "medine"
+    assert normalize("Medine") == "medine"
+    assert normalize("Moïse") == "moise"
+    assert normalize("Noé") == "noe"
 
 
 @pytest.mark.asyncio

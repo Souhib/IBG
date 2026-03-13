@@ -69,7 +69,11 @@ class WordQuizGameController:
         """Normalize an answer for comparison: strip diacritics, lowercase, collapse whitespace, remove hyphens."""
         text = answer.strip()
         text = _ARABIC_DIACRITICS.sub("", text)
-        # NFC normalization recomposes characters (e.g., alef + hamza → alef-with-hamza)
+        # NFD decomposition splits accented Latin chars: ï → i + combining diaeresis, é → e + combining acute
+        text = unicodedata.normalize("NFD", text)
+        # Strip only Latin combining diacritical marks (U+0300–U+036F), preserving Arabic combining chars
+        text = re.sub(r"[\u0300-\u036f]", "", text)
+        # NFC recompose remaining characters (Arabic: alef + hamza → alef-with-hamza)
         text = unicodedata.normalize("NFC", text)
         text = text.lower()
         # Remove hyphens so "Al-Aqsa" matches "Al Aqsa" and vice versa
