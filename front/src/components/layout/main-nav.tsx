@@ -286,7 +286,9 @@ export function MainNav() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-xl px-4 py-3 space-y-1 animate-slide-up">
+        <>
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobileOpen(false)} />
+        <div className="md:hidden relative z-50 border-t border-border/50 bg-background/95 backdrop-blur-xl px-4 py-3 space-y-1 animate-slide-up">
           {isAuthenticated && (
             <>
               {[
@@ -351,6 +353,7 @@ export function MainNav() {
             </div>
           )}
         </div>
+        </>
       )}
     </nav>
   )

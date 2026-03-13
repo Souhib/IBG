@@ -237,33 +237,35 @@ function RoomLobbyPage() {
 
   const minPlayers = gameType === "codenames" ? 4 : gameType === "word_quiz" ? 1 : 3
 
-  const copyToClipboard = useCallback((text: string, label: string) => {
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(
-        () => {
-          setCopied(label)
-          toast.success(t("toast.copied", { label }))
-          setTimeout(() => setCopied(""), 1500)
-        },
-        () => fallbackCopy(text, label),
-      )
-    } else {
-      fallbackCopy(text, label)
+  const copyToClipboard = useCallback((text: string, key: string, label: string) => {
+    const onSuccess = () => {
+      setCopied(key)
+      toast.success(t("toast.copied", { label }))
+      setTimeout(() => setCopied(""), 1500)
     }
-  }, [t])
-
-  const fallbackCopy = useCallback((text: string, label: string) => {
-    const textarea = document.createElement("textarea")
-    textarea.value = text
-    textarea.style.position = "fixed"
-    textarea.style.opacity = "0"
-    document.body.appendChild(textarea)
-    textarea.select()
-    document.execCommand("copy")
-    document.body.removeChild(textarea)
-    setCopied(label)
-    toast.success(t("toast.copied", { label }))
-    setTimeout(() => setCopied(""), 1500)
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(onSuccess, () => {
+        const textarea = document.createElement("textarea")
+        textarea.value = text
+        textarea.style.position = "fixed"
+        textarea.style.opacity = "0"
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand("copy")
+        document.body.removeChild(textarea)
+        onSuccess()
+      })
+    } else {
+      const textarea = document.createElement("textarea")
+      textarea.value = text
+      textarea.style.position = "fixed"
+      textarea.style.opacity = "0"
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand("copy")
+      document.body.removeChild(textarea)
+      onSuccess()
+    }
   }, [t])
 
   if (isLoading && !roomData) {
@@ -302,17 +304,17 @@ function RoomLobbyPage() {
       {roomData && (
         <div className="glass rounded-2xl p-6 mb-6 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-muted-foreground">Room Code</span>
+            <span className="text-sm text-muted-foreground">{t("room.roomCode")}</span>
             <button
               type="button"
-              onClick={() => copyToClipboard(roomData.public_id, "Room Code")}
+              onClick={() => copyToClipboard(roomData.public_id, "code", t("room.roomCode"))}
               className={cn(
                 "flex items-center gap-2.5 rounded-xl px-4 py-2 font-mono text-2xl font-extrabold transition-all duration-200",
-                copied === "Room Code" ? "bg-primary/10 text-primary shadow-md shadow-primary/10" : "bg-muted/50 hover:bg-muted/80",
+                copied === "code" ? "bg-primary/10 text-primary shadow-md shadow-primary/10" : "bg-muted/50 hover:bg-muted/80",
               )}
             >
               <span className="tracking-[0.3em] tabular-nums">{roomData.public_id}</span>
-              {copied === "Room Code" ? (
+              {copied === "code" ? (
                 <Check className="h-4 w-4 text-primary" />
               ) : (
                 <Copy className="h-4 w-4 text-muted-foreground" />
@@ -320,18 +322,18 @@ function RoomLobbyPage() {
             </button>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-border/30">
-            <span className="text-sm text-muted-foreground">Password</span>
+            <span className="text-sm text-muted-foreground">{t("room.password")}</span>
             <button
               type="button"
-              onClick={() => copyToClipboard(roomData.password, "Password")}
+              onClick={() => copyToClipboard(roomData.password, "pw", t("room.password"))}
               className={cn(
                 "flex items-center gap-2.5 rounded-xl px-4 py-2 font-mono text-xl font-extrabold transition-all duration-200",
-                copied === "Password" ? "bg-primary/10 text-primary shadow-md shadow-primary/10" : "bg-muted/50 hover:bg-muted/80",
+                copied === "pw" ? "bg-primary/10 text-primary shadow-md shadow-primary/10" : "bg-muted/50 hover:bg-muted/80",
               )}
             >
               <KeyRound className="h-4 w-4 text-muted-foreground" />
               <span className="tracking-[0.3em] tabular-nums">{roomData.password}</span>
-              {copied === "Password" ? (
+              {copied === "pw" ? (
                 <Check className="h-4 w-4 text-primary" />
               ) : (
                 <Copy className="h-4 w-4 text-muted-foreground" />
@@ -442,7 +444,7 @@ function RoomLobbyPage() {
       {isHost && !isSpectator && (
         <div className="mt-4 space-y-4">
           <div className="glass rounded-2xl p-5">
-            <h3 className="text-sm font-extrabold tracking-tight mb-3">Game Type</h3>
+            <h3 className="text-sm font-extrabold tracking-tight mb-3">{t("room.gameType")}</h3>
             <div className="flex gap-2">
               <button
                 type="button"
