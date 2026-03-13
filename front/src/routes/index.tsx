@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { motion } from "motion/react"
 import { BookOpen, ExternalLink, Grid2x2, Heart, HelpCircle, Shield, Users } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 
 const charities = [
@@ -236,6 +237,7 @@ function HomePage() {
               href={charity.url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent("charity-click", { org: charity.name.toLowerCase().replace(" ", "-") })}
               className={`group flex flex-col glass rounded-2xl border ${charity.borderColor} p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
             >
               <div className={`inline-flex w-fit rounded-xl bg-gradient-to-br ${charity.color} p-3 mb-4`}>

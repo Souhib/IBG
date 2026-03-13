@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router"
 import { BookOpen, ExternalLink, Github, Heart, Linkedin, Mail, User } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { motion, useReducedMotion } from "motion/react"
+import { trackEvent } from "@/lib/analytics"
 
 function IslamicPattern() {
   return (
@@ -92,6 +93,7 @@ export function Footer() {
                 href="https://humanappeal.fr/"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackEvent("charity-click", { org: "human-appeal" })}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-all duration-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:translate-x-0.5 w-fit"
               >
                 Human Appeal
@@ -101,6 +103,7 @@ export function Footer() {
                 href="https://ummahcharity.org/"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackEvent("charity-click", { org: "ummah-charity" })}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-all duration-200 hover:text-sky-600 dark:hover:text-sky-400 hover:translate-x-0.5 w-fit"
               >
                 Ummah Charity
@@ -164,6 +167,7 @@ export function Footer() {
                   target={link.href.startsWith("http") ? "_blank" : undefined}
                   rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
                   aria-label={link.label}
+                  onClick={() => trackEvent("social-click", { platform: link.label.toLowerCase() })}
                   className="flex h-9 w-9 items-center justify-center rounded-xl glass text-muted-foreground transition-all duration-200 hover:text-primary hover:shadow-md hover:shadow-primary/10 hover:-translate-y-0.5"
                 >
                   <link.icon className="h-3.5 w-3.5" />

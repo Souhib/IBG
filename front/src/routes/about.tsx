@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { trackEvent } from '@/lib/analytics'
 
 export const Route = createFileRoute('/about')({
   component: AboutPage,
@@ -262,6 +263,7 @@ function AboutPage() {
             href="https://humanappeal.fr/"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent("charity-click", { org: "human-appeal" })}
             className="group glass rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
           >
             <h3 className="font-extrabold tracking-tight mb-2">Human Appeal</h3>
@@ -275,6 +277,7 @@ function AboutPage() {
             href="https://ummahcharity.org/"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent("charity-click", { org: "ummah-charity" })}
             className="group glass rounded-2xl border border-sky-500/20 hover:border-sky-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
           >
             <h3 className="font-extrabold tracking-tight mb-2">Ummah Charity</h3>
@@ -318,6 +321,7 @@ function AboutPage() {
               href={link.href}
               target={link.href.startsWith('http') ? '_blank' : undefined}
               rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              onClick={() => trackEvent("social-click", { platform: link.label.toLowerCase() })}
               whileHover={{ scale: 1.06, y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 400, damping: 17 }}
