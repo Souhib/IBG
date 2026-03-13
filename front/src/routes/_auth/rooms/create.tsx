@@ -125,7 +125,7 @@ function CreateRoomPage() {
                       </svg>
                     </div>
                   )}
-                  <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">{config.icon}</div>
+                  <div className="text-2xl sm:text-3xl h-8 sm:h-10 flex items-center justify-center mb-2 sm:mb-3">{config.icon}</div>
                   <div className={`text-xs sm:text-base font-extrabold tracking-tight break-words flex-1 flex items-center ${selected ? "text-primary" : ""}`}>{t(`games.${config.nameKey}.name`)}</div>
                   <div className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs text-muted-foreground font-mono tabular-nums">{config.players} {t("room.players")}</div>
                 </button>
