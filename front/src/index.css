@@ -343,14 +343,11 @@ body {
   animation: shimmer 2s linear infinite;
 }
 
-/* Move toasts to top-center on mobile to avoid overlapping game UI */
-@media (max-width: 639px) {
-  [data-sonner-toaster] {
-    --offset: 16px !important;
-    top: var(--offset) !important;
-    bottom: unset !important;
-    left: 50% !important;
-    right: unset !important;
-    transform: translateX(-50%);
+/* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+@media screen and (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
