@@ -26,6 +26,7 @@ import { GameOverScreen } from "@/components/games/undercover/GameOverScreen"
 import { RoleRevealPhase } from "@/components/games/undercover/RoleRevealPhase"
 import { VotingPhase } from "@/components/games/undercover/VotingPhase"
 import { useSocket } from "@/hooks/use-socket"
+import { trackEvent } from "@/lib/analytics"
 import { deriveUndercoverPhase, derivePlayerList, deriveVotedPlayers } from "@/lib/game-state"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
@@ -251,6 +252,7 @@ function UndercoverGamePage() {
     // Detect game over transition (winner goes null → value)
     const currentWinner = serverState.winner || null
     if (currentWinner && !previousWinnerRef.current && !showGameOverTransition) {
+      trackEvent("game-over", { game: "undercover", winner: currentWinner })
       setShowGameOverTransition(true)
       gameOverTransitionTimerRef.current = setTimeout(() => {
         setShowGameOverTransition(false)

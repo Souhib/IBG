@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router"
 import { BookOpen, Check, ChevronDown, Flame, LogOut, Menu, Moon, Sun, User, Users, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 import { useTheme } from "@/providers/ThemeProvider"
 import { cn } from "@/lib/utils"
@@ -18,7 +19,9 @@ function ThemeToggle() {
       : theme
 
   const toggle = () => {
-    setTheme(effectiveTheme === "light" ? "dark" : "light")
+    const newTheme = effectiveTheme === "light" ? "dark" : "light"
+    trackEvent("theme-change", { theme: newTheme })
+    setTheme(newTheme)
   }
 
   const Icon = effectiveTheme === "dark" ? Sun : Moon
@@ -67,6 +70,7 @@ function LanguageSwitcher() {
   const changeLanguage = (langCode: string) => {
     const lang = LANGUAGES.find((l) => l.code === langCode)
     if (!lang) return
+    trackEvent("language-change", { lang: lang.code })
     i18n.changeLanguage(lang.code)
     localStorage.setItem("ipg-language", lang.code)
     document.documentElement.dir = lang.dir

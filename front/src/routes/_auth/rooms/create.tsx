@@ -6,6 +6,7 @@ import { motion } from "motion/react"
 import { toast } from "sonner"
 import { getApiErrorMessage } from "@/api/client"
 import { useCreateRoomApiV1RoomsPost, useGetActiveRoomApiV1RoomsActiveGet, useLeaveRoomApiV1RoomsLeavePatch } from "@/api/generated"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 
 export const Route = createFileRoute("/_auth/rooms/create")({
@@ -37,6 +38,7 @@ function CreateRoomPage() {
     mutation: {
       onSuccess: (data) => {
         const room = data as { id: string }
+        trackEvent("room-create", { game: gameType })
         toast.success(t("toast.roomCreated"))
         navigate({ to: "/rooms/$roomId", params: { roomId: room.id } })
       },

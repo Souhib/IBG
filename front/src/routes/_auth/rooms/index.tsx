@@ -6,6 +6,7 @@ import { motion } from "motion/react"
 import { toast } from "sonner"
 import { getApiErrorMessage } from "@/api/client"
 import { useJoinRoomApiV1RoomsJoinPatch, useGetActiveRoomApiV1RoomsActiveGet, useLeaveRoomApiV1RoomsLeavePatch } from "@/api/generated"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 
 export const Route = createFileRoute("/_auth/rooms/")({
@@ -70,6 +71,7 @@ function RoomsPage() {
       onSuccess: (data) => {
         const d = data as { id?: string }
         if (d.id) {
+          trackEvent("room-join")
           navigate({ to: "/rooms/$roomId", params: { roomId: d.id } })
         }
       },
