@@ -14,4 +14,7 @@ export const roomSettingsRequestSchema = z.object({
   codenames_guess_timer: z.optional(z.union([z.int(), z.null()])),
   enable_mr_white: z.optional(z.union([z.boolean(), z.null()])),
   custom_word_packs: z.optional(z.union([z.array(z.string()), z.null()])),
+  word_quiz_turn_duration: z.optional(z.union([z.int(), z.null()])),
+  word_quiz_rounds: z.optional(z.union([z.int(), z.null()])),
+  word_quiz_hint_interval: z.optional(z.union([z.int(), z.null()])),
 });

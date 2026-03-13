@@ -179,6 +179,11 @@ export type { ForgotPasswordRequest } from "./ForgotPasswordRequest.ts";
 export type { FriendActionResponse } from "./FriendActionResponse.ts";
 export type { FriendEntry } from "./FriendEntry.ts";
 export type { FriendRequestBody } from "./FriendRequestBody.ts";
+export type {
+  FriendshipStatusEnumEnumKey,
+  FriendshipStatusEnum,
+} from "./FriendshipStatusEnum.ts";
+export type { FriendshipStatusResponse } from "./FriendshipStatusResponse.ts";
 export type { Game } from "./Game.ts";
 export type { GameCreate } from "./GameCreate.ts";
 export type { GameDurationStats } from "./GameDurationStats.ts";
@@ -254,6 +259,14 @@ export type {
   GetFriendsApiV1FriendsGetQueryResponse,
   GetFriendsApiV1FriendsGetQuery,
 } from "./GetFriendsApiV1FriendsGet.ts";
+export type {
+  GetFriendshipStatusApiV1FriendsStatusUserIdGetPathParams,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGet200,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGet404,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGet422,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGetQueryResponse,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGetQuery,
+} from "./GetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
 export type {
   GetGameHistoryApiV1StatsUsersUserIdHistoryGetPathParams,
   GetGameHistoryApiV1StatsUsersUserIdHistoryGetQueryParams,
@@ -833,6 +846,7 @@ export type { WordQuizGameState } from "./WordQuizGameState.ts";
 export type { WordQuizPlayerState } from "./WordQuizPlayerState.ts";
 export type { WordQuizRoundResult } from "./WordQuizRoundResult.ts";
 export type { WordQuizTimerConfig } from "./WordQuizTimerConfig.ts";
+export { friendshipStatusEnumEnum } from "./FriendshipStatusEnum.ts";
 export { gameStatusEnum } from "./GameStatus.ts";
 export { gameTypeEnum } from "./GameType.ts";
 export { roomStatusEnum } from "./RoomStatus.ts";

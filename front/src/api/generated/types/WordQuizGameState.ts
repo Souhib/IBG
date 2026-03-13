@@ -76,6 +76,7 @@ export type WordQuizGameState = {
    */
   round_results: WordQuizRoundResult[];
   correct_answer?: string | null;
+  explanation?: string | null;
   winner?: string | null;
   /**
    * @type array

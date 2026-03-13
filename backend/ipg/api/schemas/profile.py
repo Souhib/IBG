@@ -12,6 +12,7 @@ class PublicProfile(BaseModel):
     username: str
     bio: str | None
     total_games_played: int
-    total_games_won: int
-    win_rate: float
-    current_win_streak: int
+    favorite_game: str | None
+    undercover_games_played: int
+    codenames_games_played: int
+    wordquiz_games_played: int

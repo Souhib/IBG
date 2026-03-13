@@ -22,16 +22,17 @@ export type PublicProfile = {
    * @type integer
    */
   total_games_played: number;
+  favorite_game: string | null;
   /**
    * @type integer
    */
-  total_games_won: number;
-  /**
-   * @type number
-   */
-  win_rate: number;
+  undercover_games_played: number;
   /**
    * @type integer
    */
-  current_win_streak: number;
+  codenames_games_played: number;
+  /**
+   * @type integer
+   */
+  wordquiz_games_played: number;
 };

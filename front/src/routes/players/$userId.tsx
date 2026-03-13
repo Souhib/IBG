@@ -1,33 +1,34 @@
+import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { Award, BarChart3, Gamepad2, Swords, UserPlus } from "lucide-react"
+import { Award, BarChart3, Check, Clock, Gamepad2, Heart, UserMinus, UserPlus } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { getApiErrorMessage } from "@/api/client"
 import {
   useGetPublicProfileApiV1ProfilesUsersUserIdGet,
-  useGetHeadToHeadApiV1StatsUsersUserIdVsOpponentIdGet,
+  useGetFriendshipStatusApiV1FriendsStatusUserIdGet,
   useSendFriendRequestApiV1FriendsRequestPost,
+  useRemoveFriendApiV1FriendsFriendshipIdDelete,
+  getFriendshipStatusApiV1FriendsStatusUserIdGetQueryKey,
 } from "@/api/generated"
+import type { PublicProfile } from "@/api/generated"
 import { useAuth } from "@/providers/AuthProvider"
-
-interface PublicProfile {
-  user_id: string
-  username: string
-  bio: string | null
-  total_games_played: number
-  total_games_won: number
-  win_rate: number
-  current_win_streak: number
-}
 
 export const Route = createFileRoute("/players/$userId")({
   component: PlayerProfilePage,
 })
 
+const GAME_NAME_KEYS: Record<string, string> = {
+  undercover: "games.undercover.name",
+  codenames: "games.codenames.name",
+  word_quiz: "games.wordQuiz.name",
+}
+
 function PlayerProfilePage() {
   const { userId } = Route.useParams()
   const { t } = useTranslation()
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const isOwnProfile = user?.id === userId
 
@@ -37,19 +38,37 @@ function PlayerProfilePage() {
 
   const error = queryError ? getApiErrorMessage(queryError, t("common.error")) : null
 
-  const { data: h2h } = useGetHeadToHeadApiV1StatsUsersUserIdVsOpponentIdGet(
-    { user_id: user?.id ?? "", opponent_id: userId },
+  const { data: friendshipStatus } = useGetFriendshipStatusApiV1FriendsStatusUserIdGet(
+    { user_id: userId },
     { query: { enabled: !!user?.id && !isOwnProfile } },
-  ) as { data: { user_wins: number; opponent_wins: number; draws: number; total_games: number } | undefined }
+  )
 
   const sendRequestMutation = useSendFriendRequestApiV1FriendsRequestPost()
-  const isSendingRequest = sendRequestMutation.isPending
+  const removeFriendMutation = useRemoveFriendApiV1FriendsFriendshipIdDelete()
+
+  const invalidateFriendshipStatus = () => {
+    queryClient.invalidateQueries({
+      queryKey: getFriendshipStatusApiV1FriendsStatusUserIdGetQueryKey({ user_id: userId }),
+    })
+  }
 
   const handleAddFriend = async () => {
-    if (isSendingRequest) return
+    if (sendRequestMutation.isPending) return
     try {
       await sendRequestMutation.mutateAsync({ data: { addressee_id: userId } })
       toast.success(t("friends.requestSent"))
+      invalidateFriendshipStatus()
+    } catch (err) {
+      toast.error(getApiErrorMessage(err))
+    }
+  }
+
+  const handleRemoveFriend = async () => {
+    if (removeFriendMutation.isPending || !friendshipStatus?.friendship_id) return
+    try {
+      await removeFriendMutation.mutateAsync({ friendship_id: friendshipStatus.friendship_id })
+      toast.success(t("friends.friendRemoved"))
+      invalidateFriendshipStatus()
     } catch (err) {
       toast.error(getApiErrorMessage(err))
     }
@@ -73,6 +92,8 @@ function PlayerProfilePage() {
     )
   }
 
+  const status = friendshipStatus?.status
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       {/* Profile Header */}
@@ -93,26 +114,58 @@ function PlayerProfilePage() {
             )}
           </div>
           {!isOwnProfile && user && (
-            <button
-              type="button"
-              onClick={handleAddFriend}
-              disabled={isSendingRequest}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
-            >
-              <UserPlus className="h-4 w-4" />
-              {t("friends.addFriend")}
-            </button>
+            <>
+              {status === "none" && (
+                <button
+                  type="button"
+                  onClick={handleAddFriend}
+                  disabled={sendRequestMutation.isPending}
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  {t("friends.addFriend")}
+                </button>
+              )}
+              {status === "pending_sent" && (
+                <span className="flex items-center gap-2 rounded-2xl bg-muted px-5 py-2.5 text-sm font-semibold text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  {t("stats.pending")}
+                </span>
+              )}
+              {status === "pending_received" && (
+                <button
+                  type="button"
+                  onClick={handleAddFriend}
+                  disabled={sendRequestMutation.isPending}
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
+                >
+                  <Check className="h-4 w-4" />
+                  {t("friends.accept")}
+                </button>
+              )}
+              {status === "accepted" && (
+                <button
+                  type="button"
+                  onClick={handleRemoveFriend}
+                  disabled={removeFriendMutation.isPending}
+                  className="flex items-center gap-2 rounded-2xl bg-destructive/10 px-5 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/20 transition-all duration-200 disabled:opacity-50"
+                >
+                  <UserMinus className="h-4 w-4" />
+                  {t("friends.removeFriend")}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/* Stats Summary */}
-      <div className="grid gap-4 sm:grid-cols-4 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         {[
           { value: profile.total_games_played, label: t("stats.gamesPlayed"), delay: 0 },
-          { value: profile.total_games_won, label: t("stats.gamesWon"), delay: 0.05 },
-          { value: `${profile.win_rate}%`, label: t("stats.winRate"), delay: 0.1 },
-          { value: profile.current_win_streak, label: t("stats.currentStreak"), delay: 0.15 },
+          { value: profile.undercover_games_played, label: t("stats.undercoverPlayed"), delay: 0.05 },
+          { value: profile.codenames_games_played, label: t("stats.codenamesPlayed"), delay: 0.1 },
+          { value: profile.wordquiz_games_played, label: t("stats.wordquizPlayed"), delay: 0.15 },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -124,32 +177,20 @@ function PlayerProfilePage() {
         ))}
       </div>
 
-      {/* Head-to-Head */}
-      {!isOwnProfile && h2h && h2h.total_games > 0 && (
-        <div className="glass rounded-2xl border border-border/30 p-7 mb-8 animate-slide-up">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="rounded-2xl bg-primary/10 p-2.5">
-              <Swords className="h-5 w-5 text-primary" />
+      {/* Favorite Game */}
+      {profile.favorite_game && (
+        <div className="glass rounded-2xl border border-border/30 p-6 mb-8 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-accent/10 p-2.5">
+              <Heart className="h-5 w-5 text-accent" />
             </div>
-            <h2 className="font-extrabold tracking-tight text-lg">{t("stats.headToHead")}</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="glass rounded-2xl border border-border/30 p-4">
-              <p className="text-3xl font-extrabold font-mono tabular-nums text-primary">{h2h.user_wins}</p>
-              <p className="text-xs text-muted-foreground mt-1 font-medium">{t("stats.yourWins")}</p>
-            </div>
-            <div className="glass rounded-2xl border border-border/30 p-4">
-              <p className="text-3xl font-extrabold font-mono tabular-nums text-muted-foreground">{h2h.draws}</p>
-              <p className="text-xs text-muted-foreground mt-1 font-medium">{t("stats.draws")}</p>
-            </div>
-            <div className="glass rounded-2xl border border-border/30 p-4">
-              <p className="text-3xl font-extrabold font-mono tabular-nums text-destructive">{h2h.opponent_wins}</p>
-              <p className="text-xs text-muted-foreground mt-1 font-medium">{t("stats.theirWins")}</p>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">{t("stats.favoriteGame")}</p>
+              <p className="text-lg font-extrabold tracking-tight">
+                {t(GAME_NAME_KEYS[profile.favorite_game] ?? profile.favorite_game)}
+              </p>
             </div>
           </div>
-          <p className="mt-4 text-center text-xs text-muted-foreground font-mono tabular-nums">
-            {t("stats.totalGames", { count: h2h.total_games })}
-          </p>
         </div>
       )}
 

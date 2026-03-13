@@ -15,4 +15,7 @@ export type RoomSettingsRequest = {
   codenames_guess_timer?: number | null;
   enable_mr_white?: boolean | null;
   custom_word_packs?: string[] | null;
+  word_quiz_turn_duration?: number | null;
+  word_quiz_rounds?: number | null;
+  word_quiz_hint_interval?: number | null;
 };

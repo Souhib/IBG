@@ -37,6 +37,8 @@ export type { GetDurationStatsApiV1StatsUsersUserIdDurationGetQueryKey } from ".
 export type { GetDurationStatsApiV1StatsUsersUserIdDurationGetSuspenseQueryKey } from "./useGetDurationStatsApiV1StatsUsersUserIdDurationGetSuspense.ts";
 export type { GetFriendsApiV1FriendsGetQueryKey } from "./useGetFriendsApiV1FriendsGet.ts";
 export type { GetFriendsApiV1FriendsGetSuspenseQueryKey } from "./useGetFriendsApiV1FriendsGetSuspense.ts";
+export type { GetFriendshipStatusApiV1FriendsStatusUserIdGetQueryKey } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export type { GetFriendshipStatusApiV1FriendsStatusUserIdGetSuspenseQueryKey } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
 export type { GetGameHistoryApiV1StatsUsersUserIdHistoryGetQueryKey } from "./useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
 export type { GetGameHistoryApiV1StatsUsersUserIdHistoryGetSuspenseQueryKey } from "./useGetGameHistoryApiV1StatsUsersUserIdHistoryGetSuspense.ts";
 export type { GetGamesByUserApiV1GamesUserUserIdGetQueryKey } from "./useGetGamesByUserApiV1GamesUserUserIdGet.ts";
@@ -282,6 +284,14 @@ export { getFriendsApiV1FriendsGetSuspenseQueryKey } from "./useGetFriendsApiV1F
 export { getFriendsApiV1FriendsGetSuspense } from "./useGetFriendsApiV1FriendsGetSuspense.ts";
 export { getFriendsApiV1FriendsGetSuspenseQueryOptions } from "./useGetFriendsApiV1FriendsGetSuspense.ts";
 export { useGetFriendsApiV1FriendsGetSuspense } from "./useGetFriendsApiV1FriendsGetSuspense.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetQueryKey } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGet } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetQueryOptions } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { useGetFriendshipStatusApiV1FriendsStatusUserIdGet } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetSuspenseQueryKey } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetSuspense } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetSuspenseQueryOptions } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
+export { useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense } from "./useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
 export { getGameHistoryApiV1StatsUsersUserIdHistoryGetQueryKey } from "./useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
 export { getGameHistoryApiV1StatsUsersUserIdHistoryGet } from "./useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
 export { getGameHistoryApiV1StatsUsersUserIdHistoryGetQueryOptions } from "./useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";

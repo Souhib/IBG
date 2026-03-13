@@ -12,7 +12,8 @@ export const publicProfileSchema = z.object({
   username: z.string(),
   bio: z.union([z.string(), z.null()]),
   total_games_played: z.int(),
-  total_games_won: z.int(),
-  win_rate: z.number(),
-  current_win_streak: z.int(),
+  favorite_game: z.union([z.string(), z.null()]),
+  undercover_games_played: z.int(),
+  codenames_games_played: z.int(),
+  wordquiz_games_played: z.int(),
 });

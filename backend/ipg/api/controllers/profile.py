@@ -24,17 +24,31 @@ class ProfileController:
         stats = (await self.session.exec(select(UserStats).where(UserStats.user_id == user_id))).first()
 
         played = stats.total_games_played if stats else 0
-        won = stats.total_games_won if stats else 0
-        win_rate = round((won / played * 100), 1) if played > 0 else 0.0
+        uc_played = stats.undercover_games_played if stats else 0
+        cn_played = stats.codenames_games_played if stats else 0
+        wq_played = max(0, played - uc_played - cn_played)
+
+        # Determine favorite game type from per-game stats
+        favorite_game: str | None = None
+        if stats:
+            game_counts = {
+                "undercover": uc_played,
+                "codenames": cn_played,
+                "word_quiz": wq_played,
+            }
+            max_count = max(game_counts.values())
+            if max_count > 0:
+                favorite_game = max(game_counts, key=lambda k: game_counts[k])
 
         return PublicProfile(
             user_id=user.id,
             username=user.username,
             bio=user.bio,
             total_games_played=played,
-            total_games_won=won,
-            win_rate=win_rate,
-            current_win_streak=stats.current_win_streak if stats else 0,
+            favorite_game=favorite_game,
+            undercover_games_played=uc_played,
+            codenames_games_played=cn_played,
+            wordquiz_games_played=wq_played,
         )
 
     async def update_bio(self, user_id: UUID, bio: str | None) -> User:

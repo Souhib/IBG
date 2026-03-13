@@ -32,6 +32,7 @@ export const wordQuizGameStateSchema = z.object({
     return z.array(wordQuizRoundResultSchema);
   },
   correct_answer: z.optional(z.union([z.string(), z.null()])),
+  explanation: z.optional(z.union([z.string(), z.null()])),
   winner: z.optional(z.union([z.string(), z.null()])),
   get leaderboard() {
     return z.array(wordQuizPlayerStateSchema);

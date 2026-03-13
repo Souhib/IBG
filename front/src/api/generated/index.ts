@@ -37,6 +37,8 @@ export type { GetDurationStatsApiV1StatsUsersUserIdDurationGetQueryKey } from ".
 export type { GetDurationStatsApiV1StatsUsersUserIdDurationGetSuspenseQueryKey } from "./hooks/useGetDurationStatsApiV1StatsUsersUserIdDurationGetSuspense.ts";
 export type { GetFriendsApiV1FriendsGetQueryKey } from "./hooks/useGetFriendsApiV1FriendsGet.ts";
 export type { GetFriendsApiV1FriendsGetSuspenseQueryKey } from "./hooks/useGetFriendsApiV1FriendsGetSuspense.ts";
+export type { GetFriendshipStatusApiV1FriendsStatusUserIdGetQueryKey } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export type { GetFriendshipStatusApiV1FriendsStatusUserIdGetSuspenseQueryKey } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
 export type { GetGameHistoryApiV1StatsUsersUserIdHistoryGetQueryKey } from "./hooks/useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
 export type { GetGameHistoryApiV1StatsUsersUserIdHistoryGetSuspenseQueryKey } from "./hooks/useGetGameHistoryApiV1StatsUsersUserIdHistoryGetSuspense.ts";
 export type { GetGamesByUserApiV1GamesUserUserIdGetQueryKey } from "./hooks/useGetGamesByUserApiV1GamesUserUserIdGet.ts";
@@ -307,6 +309,11 @@ export type { ForgotPasswordRequest } from "./types/ForgotPasswordRequest.ts";
 export type { FriendActionResponse } from "./types/FriendActionResponse.ts";
 export type { FriendEntry } from "./types/FriendEntry.ts";
 export type { FriendRequestBody } from "./types/FriendRequestBody.ts";
+export type {
+  FriendshipStatusEnumEnumKey,
+  FriendshipStatusEnum,
+} from "./types/FriendshipStatusEnum.ts";
+export type { FriendshipStatusResponse } from "./types/FriendshipStatusResponse.ts";
 export type { Game } from "./types/Game.ts";
 export type { GameCreate } from "./types/GameCreate.ts";
 export type { GameDurationStats } from "./types/GameDurationStats.ts";
@@ -382,6 +389,14 @@ export type {
   GetFriendsApiV1FriendsGetQueryResponse,
   GetFriendsApiV1FriendsGetQuery,
 } from "./types/GetFriendsApiV1FriendsGet.ts";
+export type {
+  GetFriendshipStatusApiV1FriendsStatusUserIdGetPathParams,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGet200,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGet404,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGet422,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGetQueryResponse,
+  GetFriendshipStatusApiV1FriendsStatusUserIdGetQuery,
+} from "./types/GetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
 export type {
   GetGameHistoryApiV1StatsUsersUserIdHistoryGetPathParams,
   GetGameHistoryApiV1StatsUsersUserIdHistoryGetQueryParams,
@@ -1117,6 +1132,14 @@ export { getFriendsApiV1FriendsGetSuspenseQueryKey } from "./hooks/useGetFriends
 export { getFriendsApiV1FriendsGetSuspense } from "./hooks/useGetFriendsApiV1FriendsGetSuspense.ts";
 export { getFriendsApiV1FriendsGetSuspenseQueryOptions } from "./hooks/useGetFriendsApiV1FriendsGetSuspense.ts";
 export { useGetFriendsApiV1FriendsGetSuspense } from "./hooks/useGetFriendsApiV1FriendsGetSuspense.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetQueryKey } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGet } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetQueryOptions } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { useGetFriendshipStatusApiV1FriendsStatusUserIdGet } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGet.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetSuspenseQueryKey } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetSuspense } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
+export { getFriendshipStatusApiV1FriendsStatusUserIdGetSuspenseQueryOptions } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
+export { useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense } from "./hooks/useGetFriendshipStatusApiV1FriendsStatusUserIdGetSuspense.ts";
 export { getGameHistoryApiV1StatsUsersUserIdHistoryGetQueryKey } from "./hooks/useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
 export { getGameHistoryApiV1StatsUsersUserIdHistoryGet } from "./hooks/useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
 export { getGameHistoryApiV1StatsUsersUserIdHistoryGetQueryOptions } from "./hooks/useGetGameHistoryApiV1StatsUsersUserIdHistoryGet.ts";
@@ -1635,6 +1658,8 @@ export { forgotPasswordRequestSchema } from "./schemas/forgotPasswordRequestSche
 export { friendActionResponseSchema } from "./schemas/friendActionResponseSchema.ts";
 export { friendEntrySchema } from "./schemas/friendEntrySchema.ts";
 export { friendRequestBodySchema } from "./schemas/friendRequestBodySchema.ts";
+export { friendshipStatusEnumSchema } from "./schemas/friendshipStatusEnumSchema.ts";
+export { friendshipStatusResponseSchema } from "./schemas/friendshipStatusResponseSchema.ts";
 export { gameCreateSchema } from "./schemas/gameCreateSchema.ts";
 export { gameDurationStatsSchema } from "./schemas/gameDurationStatsSchema.ts";
 export { gameHistoryEntrySchema } from "./schemas/gameHistoryEntrySchema.ts";
@@ -1700,6 +1725,13 @@ export {
   getFriendsApiV1FriendsGet404Schema,
   getFriendsApiV1FriendsGetQueryResponseSchema,
 } from "./schemas/getFriendsApiV1FriendsGetSchema.ts";
+export {
+  getFriendshipStatusApiV1FriendsStatusUserIdGetPathParamsSchema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGet200Schema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGet404Schema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGet422Schema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGetQueryResponseSchema,
+} from "./schemas/getFriendshipStatusApiV1FriendsStatusUserIdGetSchema.ts";
 export {
   getGameHistoryApiV1StatsUsersUserIdHistoryGetPathParamsSchema,
   getGameHistoryApiV1StatsUsersUserIdHistoryGetQueryParamsSchema,
@@ -2215,6 +2247,7 @@ export { wordQuizPlayerStateSchema } from "./schemas/wordQuizPlayerStateSchema.t
 export { wordQuizRoundResultSchema } from "./schemas/wordQuizRoundResultSchema.ts";
 export { wordQuizTimerConfigSchema } from "./schemas/wordQuizTimerConfigSchema.ts";
 export { wordSchema } from "./schemas/wordSchema.ts";
+export { friendshipStatusEnumEnum } from "./types/FriendshipStatusEnum.ts";
 export { gameStatusEnum } from "./types/GameStatus.ts";
 export { gameTypeEnum } from "./types/GameType.ts";
 export { roomStatusEnum } from "./types/RoomStatus.ts";

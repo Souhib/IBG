@@ -160,6 +160,8 @@ export { forgotPasswordRequestSchema } from "./forgotPasswordRequestSchema.ts";
 export { friendActionResponseSchema } from "./friendActionResponseSchema.ts";
 export { friendEntrySchema } from "./friendEntrySchema.ts";
 export { friendRequestBodySchema } from "./friendRequestBodySchema.ts";
+export { friendshipStatusEnumSchema } from "./friendshipStatusEnumSchema.ts";
+export { friendshipStatusResponseSchema } from "./friendshipStatusResponseSchema.ts";
 export { gameCreateSchema } from "./gameCreateSchema.ts";
 export { gameDurationStatsSchema } from "./gameDurationStatsSchema.ts";
 export { gameHistoryEntrySchema } from "./gameHistoryEntrySchema.ts";
@@ -225,6 +227,13 @@ export {
   getFriendsApiV1FriendsGet404Schema,
   getFriendsApiV1FriendsGetQueryResponseSchema,
 } from "./getFriendsApiV1FriendsGetSchema.ts";
+export {
+  getFriendshipStatusApiV1FriendsStatusUserIdGetPathParamsSchema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGet200Schema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGet404Schema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGet422Schema,
+  getFriendshipStatusApiV1FriendsStatusUserIdGetQueryResponseSchema,
+} from "./getFriendshipStatusApiV1FriendsStatusUserIdGetSchema.ts";
 export {
   getGameHistoryApiV1StatsUsersUserIdHistoryGetPathParamsSchema,
   getGameHistoryApiV1StatsUsersUserIdHistoryGetQueryParamsSchema,

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from ipg.api.controllers.friend import FriendController
 from ipg.api.models.table import User
-from ipg.api.schemas.friend import FriendActionResponse, FriendEntry, FriendRequestBody
+from ipg.api.schemas.friend import FriendActionResponse, FriendEntry, FriendRequestBody, FriendshipStatusResponse
 from ipg.dependencies import get_current_user, get_friend_controller
 
 router = APIRouter(
@@ -34,6 +34,17 @@ async def get_pending_requests(
 ) -> Sequence[FriendEntry]:
     """Get pending friend requests sent to the current user."""
     return await friend_controller.get_pending_requests(current_user.id)
+
+
+@router.get("/status/{user_id}", response_model=FriendshipStatusResponse)
+async def get_friendship_status(
+    *,
+    user_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    friend_controller: Annotated[FriendController, Depends(get_friend_controller)],
+) -> FriendshipStatusResponse:
+    """Check friendship status with a specific user."""
+    return await friend_controller.get_friendship_status(current_user.id, user_id)
 
 
 @router.post("/request", status_code=201)

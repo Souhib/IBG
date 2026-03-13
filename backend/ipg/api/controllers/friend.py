@@ -9,7 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ipg.api.models.friendship import Friendship, FriendshipStatus
 from ipg.api.models.table import User
 from ipg.api.schemas.error import BaseError, UserNotFoundError
-from ipg.api.schemas.friend import FriendEntry
+from ipg.api.schemas.friend import FriendEntry, FriendshipStatusEnum, FriendshipStatusResponse
 
 
 class FriendController:
@@ -179,6 +179,32 @@ class FriendController:
                     )
                 )
         return entries
+
+    async def get_friendship_status(self, current_user_id: UUID, other_user_id: UUID) -> FriendshipStatusResponse:
+        """Check friendship status between current user and another user."""
+        existing = (
+            await self.session.exec(
+                select(Friendship).where(
+                    or_(
+                        (Friendship.requester_id == current_user_id) & (Friendship.addressee_id == other_user_id),
+                        (Friendship.requester_id == other_user_id) & (Friendship.addressee_id == current_user_id),
+                    )
+                )
+            )
+        ).first()
+
+        if not existing:
+            return FriendshipStatusResponse(status=FriendshipStatusEnum.NONE)
+
+        fid = str(existing.id)
+        if existing.status == FriendshipStatus.ACCEPTED:
+            return FriendshipStatusResponse(status=FriendshipStatusEnum.ACCEPTED, friendship_id=fid)
+        if existing.status == FriendshipStatus.BLOCKED:
+            return FriendshipStatusResponse(status=FriendshipStatusEnum.BLOCKED, friendship_id=fid)
+        # Pending — distinguish direction
+        if existing.requester_id == current_user_id:
+            return FriendshipStatusResponse(status=FriendshipStatusEnum.PENDING_SENT, friendship_id=fid)
+        return FriendshipStatusResponse(status=FriendshipStatusEnum.PENDING_RECEIVED, friendship_id=fid)
 
     async def _get_friendship(self, friendship_id: UUID) -> Friendship:
         """Get a friendship by ID or raise."""
