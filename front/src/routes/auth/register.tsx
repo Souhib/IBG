@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { getApiErrorMessage } from "@/api/client"
 import { useRegisterApiV1AuthRegisterPost } from "@/api/generated"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 
 export const Route = createFileRoute("/auth/register")({
@@ -23,6 +24,7 @@ function RegisterPage() {
     mutation: {
       onSuccess: (data) => {
         const d = data as unknown as { access_token: string; refresh_token: string; token_type: string; user?: { id: string; username: string; email: string; is_active: boolean; is_admin: boolean } }
+        trackEvent("signup")
         login(d.access_token, d.refresh_token, 900, d.user || undefined)
         navigate({ to: "/" })
       },

@@ -26,6 +26,7 @@ import { GameBoard } from "@/components/games/codenames/GameBoard"
 import { GameOverScreen } from "@/components/games/codenames/GameOverScreen"
 import { ScorePanel } from "@/components/games/codenames/ScorePanel"
 import { useSocket } from "@/hooks/use-socket"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
 import { retrieveRoomIdForGame } from "@/lib/room-session"
@@ -177,6 +178,7 @@ function CodenamesGamePage() {
     if (!serverState) return
     const currentStatus = serverState.status
     if (currentStatus === "finished" && previousStatusRef.current && previousStatusRef.current !== "finished" && !showGameOverTransition) {
+      trackEvent("game-over", { game: "codenames", winner: serverState.winner || "" })
       setShowGameOverTransition(true)
       gameOverTransitionTimerRef.current = setTimeout(() => {
         setShowGameOverTransition(false)

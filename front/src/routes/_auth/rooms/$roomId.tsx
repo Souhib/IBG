@@ -18,6 +18,7 @@ import { ChatPanel } from "@/components/rooms/ChatPanel"
 import { InviteFriendModal } from "@/components/rooms/InviteFriendModal"
 import { RoomSettings } from "@/components/rooms/RoomSettings"
 import { useSocket } from "@/hooks/use-socket"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 import { cn } from "@/lib/utils"
 import { storeRoomIdForGame } from "@/lib/room-session"
@@ -199,6 +200,7 @@ function RoomLobbyPage() {
 
   const handleStartGame = () => {
     if (!roomData || isStartingGame) return
+    trackEvent("game-start", { game: gameType, players: players.length })
     if (gameType === "codenames") {
       startCodenamesMutation.mutate({ room_id: roomData.id })
     } else if (gameType === "word_quiz") {

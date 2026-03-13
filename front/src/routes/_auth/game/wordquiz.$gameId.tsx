@@ -24,6 +24,7 @@ import { PlayerScoreboard } from "@/components/games/wordquiz/PlayerScoreboard"
 import { RoundResults } from "@/components/games/wordquiz/RoundResults"
 import { WordQuizGameOver } from "@/components/games/wordquiz/WordQuizGameOver"
 import { useSocket } from "@/hooks/use-socket"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 import { retrieveRoomIdForGame } from "@/lib/room-session"
 
@@ -139,6 +140,7 @@ function WordQuizGamePage() {
     if (!state) return
     const currentWinner = state.winner || null
     if (currentWinner && !previousWinnerRef.current && !showGameOverTransition) {
+      trackEvent("game-over", { game: "word_quiz" })
       setShowGameOverTransition(true)
       setTimeout(() => setShowGameOverTransition(false), 3000)
     }

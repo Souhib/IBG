@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { getApiErrorMessage } from "@/api/client"
 import { useLoginApiV1AuthLoginPost } from "@/api/generated"
+import { trackEvent } from "@/lib/analytics"
 import { useAuth } from "@/providers/AuthProvider"
 
 export const Route = createFileRoute("/auth/login")({
@@ -22,6 +23,7 @@ function LoginPage() {
     mutation: {
       onSuccess: (data) => {
         const d = data as { access_token: string; refresh_token: string; token_type: string; user: { id: string; username: string; email: string } }
+        trackEvent("login")
         login(d.access_token, d.refresh_token, 900, {
           id: d.user.id,
           username: d.user.username,
