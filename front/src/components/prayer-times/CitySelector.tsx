@@ -1,7 +1,6 @@
 import { MapPin, Search, Loader2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useMapsLibrary } from "@vis.gl/react-google-maps"
 
 export interface CityCoordinates {
   city: string
@@ -36,7 +35,6 @@ export function storeCity(data: CityCoordinates) {
 }
 
 async function fetchTimezone(lat: number, lng: number): Promise<string | undefined> {
-  // Try Open-Meteo first (free, no API key required)
   try {
     const res = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&timezone=auto&forecast_days=1`,
@@ -44,21 +42,7 @@ async function fetchTimezone(lat: number, lng: number): Promise<string | undefin
     const data = await res.json()
     if (data.timezone) return data.timezone as string
   } catch {
-    // Open-Meteo unavailable, try fallback
-  }
-
-  // Fallback to Google Timezone API
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined
-  if (!apiKey) return undefined
-  try {
-    const timestamp = Math.floor(Date.now() / 1000)
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${timestamp}&key=${apiKey}`,
-    )
-    const data = await res.json()
-    if (data.status === "OK") return data.timeZoneId as string
-  } catch {
-    // Google Timezone API not enabled or network error
+    // Open-Meteo unavailable
   }
   return undefined
 }
@@ -137,26 +121,9 @@ export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Google Maps (optional)
-  const places = useMapsLibrary("places")
-  const hasGoogleMaps = !!places
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null)
-  const placesService = useRef<google.maps.places.PlacesService | null>(null)
-
-  // Google predictions
-  const [googlePredictions, setGooglePredictions] = useState<google.maps.places.AutocompletePrediction[]>([])
-
-  // Free fallback predictions
-  const [freePredictions, setFreePredictions] = useState<OpenMeteoGeoResult[]>([])
+  const [predictions, setPredictions] = useState<OpenMeteoGeoResult[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (!places) return
-    autocompleteService.current = new places.AutocompleteService()
-    const div = document.createElement("div")
-    placesService.current = new places.PlacesService(div)
-  }, [places])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -173,61 +140,22 @@ export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {
     (input: string) => {
       setQuery(input)
       if (input.length < 2) {
-        setGooglePredictions([])
-        setFreePredictions([])
+        setPredictions([])
         setShowDropdown(false)
         return
       }
 
-      if (hasGoogleMaps && autocompleteService.current) {
-        autocompleteService.current.getPlacePredictions(
-          { input, types: ["(cities)"] },
-          (results: google.maps.places.AutocompletePrediction[] | null) => {
-            setGooglePredictions(results || [])
-            setShowDropdown(true)
-          },
-        )
-      } else {
-        // Debounced free search
-        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
-        searchTimeoutRef.current = setTimeout(async () => {
-          const results = await searchCitiesFree(input)
-          setFreePredictions(results)
-          setShowDropdown(true)
-        }, 300)
-      }
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+      searchTimeoutRef.current = setTimeout(async () => {
+        const results = await searchCitiesFree(input)
+        setPredictions(results)
+        setShowDropdown(true)
+      }, 300)
     },
-    [hasGoogleMaps],
+    [],
   )
 
-  const selectGooglePrediction = useCallback(
-    (prediction: google.maps.places.AutocompletePrediction) => {
-      if (!placesService.current) return
-      placesService.current.getDetails(
-        { placeId: prediction.place_id, fields: ["geometry", "name"] },
-        async (place: google.maps.places.PlaceResult | null) => {
-          if (!place?.geometry?.location) return
-          const lat = place.geometry.location.lat()
-          const lng = place.geometry.location.lng()
-          const timezone = await fetchTimezone(lat, lng)
-          const data: CityCoordinates = {
-            city: prediction.structured_formatting.main_text,
-            lat,
-            lng,
-            timezone,
-          }
-          storeCity(data)
-          setSelectedCity(data.city)
-          setQuery("")
-          setShowDropdown(false)
-          onSelect(data)
-        },
-      )
-    },
-    [onSelect],
-  )
-
-  const selectFreePrediction = useCallback(
+  const selectPrediction = useCallback(
     async (result: OpenMeteoGeoResult) => {
       const timezone = await fetchTimezone(result.latitude, result.longitude)
       const data: CityCoordinates = {
@@ -240,7 +168,7 @@ export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {
       setSelectedCity(data.city)
       setQuery("")
       setShowDropdown(false)
-      setFreePredictions([])
+      setPredictions([])
       onSelect(data)
     },
     [onSelect],
@@ -253,24 +181,7 @@ export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }),
       )
       const { latitude: lat, longitude: lng } = position.coords
-
-      let cityName = "My Location"
-
-      if (hasGoogleMaps) {
-        // Use Google reverse geocoding
-        const geocoder = new google.maps.Geocoder()
-        const result = await geocoder.geocode({ location: { lat, lng } })
-        for (const comp of result.results[0]?.address_components ?? []) {
-          if (comp.types.includes("locality")) {
-            cityName = comp.long_name
-            break
-          }
-        }
-      } else {
-        // Use free Nominatim reverse geocoding
-        cityName = await reverseGeocodeFree(lat, lng)
-      }
-
+      const cityName = await reverseGeocodeFree(lat, lng)
       const timezone = await fetchTimezone(lat, lng)
       const data: CityCoordinates = { city: cityName, lat, lng, timezone }
       storeCity(data)
@@ -281,7 +192,7 @@ export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {
     } finally {
       setDetecting(false)
     }
-  }, [onSelect, hasGoogleMaps])
+  }, [onSelect])
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -322,34 +233,17 @@ export function CitySelector({ onSelect, initialCity }: CitySelectorProps) {
               type="text"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              onFocus={() => (googlePredictions.length > 0 || freePredictions.length > 0) && setShowDropdown(true)}
+              onFocus={() => predictions.length > 0 && setShowDropdown(true)}
               placeholder={t("prayer.searchCity")}
               className="w-full rounded-md border bg-background py-1.5 pl-8 pr-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            {showDropdown && hasGoogleMaps && googlePredictions.length > 0 && (
+            {showDropdown && predictions.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 rounded-md border bg-popover shadow-lg z-50 max-h-48 overflow-auto">
-                {googlePredictions.map((p) => (
-                  <button
-                    key={p.place_id}
-                    type="button"
-                    onClick={() => selectGooglePrediction(p)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                  >
-                    <span className="font-medium">{p.structured_formatting.main_text}</span>
-                    <span className="text-muted-foreground ml-1 text-xs">
-                      {p.structured_formatting.secondary_text}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {showDropdown && !hasGoogleMaps && freePredictions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 rounded-md border bg-popover shadow-lg z-50 max-h-48 overflow-auto">
-                {freePredictions.map((r) => (
+                {predictions.map((r) => (
                   <button
                     key={r.id}
                     type="button"
-                    onClick={() => selectFreePrediction(r)}
+                    onClick={() => selectPrediction(r)}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
                   >
                     <span className="font-medium">{r.name}</span>

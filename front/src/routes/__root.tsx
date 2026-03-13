@@ -8,7 +8,7 @@ import { MainNav } from "@/components/layout/main-nav"
 import { NotFound } from "@/components/NotFound"
 import { Toaster } from "sonner"
 import { AuthProvider, QueryProvider, ThemeProvider } from "@/providers"
-import { GoogleMapsProvider } from "@/providers/GoogleMapsProvider"
+
 import { LanguageWelcomeModal } from "@/components/language/LanguageWelcomeModal"
 
 const TanStackRouterDevtools =
@@ -40,7 +40,6 @@ function RootLayout() {
     <ThemeProvider defaultTheme="system">
       <QueryProvider>
         <AuthProvider>
-          <GoogleMapsProvider>
             <div className="min-h-screen bg-background text-foreground flex flex-col">
               <a
                 href="#main-content"
@@ -80,7 +79,6 @@ function RootLayout() {
             <Suspense>
               <TanStackRouterDevtools position="bottom-right" />
             </Suspense>
-          </GoogleMapsProvider>
         </AuthProvider>
       </QueryProvider>
     </ThemeProvider>
