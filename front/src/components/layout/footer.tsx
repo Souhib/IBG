@@ -89,7 +89,7 @@ export function Footer() {
             </h3>
             <nav className="flex flex-col gap-3">
               <a
-                href="https://humanappeal.org.uk/donate"
+                href="https://humanappeal.fr/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-all duration-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:translate-x-0.5 w-fit"
@@ -98,7 +98,7 @@ export function Footer() {
                 <ExternalLink className="h-3 w-3" />
               </a>
               <a
-                href="https://ummahcharity.org.uk/donate"
+                href="https://ummahcharity.org/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-all duration-200 hover:text-sky-600 dark:hover:text-sky-400 hover:translate-x-0.5 w-fit"

@@ -7,7 +7,7 @@ import { useAuth } from "@/providers/AuthProvider"
 const charities = [
   {
     name: "Human Appeal",
-    url: "https://humanappeal.org.uk/donate",
+    url: "https://humanappeal.fr/",
     description: "home.charity.humanAppealDesc",
     color: "from-emerald-500/15 to-teal-500/15",
     borderColor: "border-emerald-500/20 hover:border-emerald-500/40",
@@ -16,7 +16,7 @@ const charities = [
   },
   {
     name: "Ummah Charity",
-    url: "https://ummahcharity.org.uk/donate",
+    url: "https://ummahcharity.org/",
     description: "home.charity.ummahCharityDesc",
     color: "from-sky-500/15 to-indigo-500/15",
     borderColor: "border-sky-500/20 hover:border-sky-500/40",

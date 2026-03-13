@@ -259,7 +259,7 @@ function AboutPage() {
         <p className="text-muted-foreground mb-6">{t("home.charity.subtitle")}</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <a
-            href="https://humanappeal.org.uk/donate"
+            href="https://humanappeal.fr/"
             target="_blank"
             rel="noopener noreferrer"
             className="group glass rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
@@ -272,7 +272,7 @@ function AboutPage() {
             </span>
           </a>
           <a
-            href="https://ummahcharity.org.uk/donate"
+            href="https://ummahcharity.org/"
             target="_blank"
             rel="noopener noreferrer"
             className="group glass rounded-2xl border border-sky-500/20 hover:border-sky-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
