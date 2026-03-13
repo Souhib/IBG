@@ -66,7 +66,7 @@ function RootLayout() {
               </main>
               <Footer />
               <Toaster
-                position="bottom-right"
+                position="top-center"
                 richColors
                 closeButton
                 expand

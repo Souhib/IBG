@@ -31,6 +31,7 @@ export const AnswerInput = memo(function AnswerInput({ onSubmit, disabled, answe
           setInput("")
         }
         if (!result.correct) {
+          setInput("")
           setTimeout(() => setLastResult(null), 1500)
         }
       }
@@ -64,8 +65,11 @@ export const AnswerInput = memo(function AnswerInput({ onSubmit, disabled, answe
           onChange={(e) => setInput(e.target.value)}
           placeholder={t("game.wordQuiz.typeYourAnswer")}
           disabled={disabled}
+          enterKeyHint="send"
+          autoComplete="off"
+          autoCorrect="off"
           className={cn(
-            "w-full rounded-xl border-2 bg-background px-4 py-3 text-sm pr-12 transition-all duration-200 outline-none",
+            "w-full rounded-xl border-2 bg-background px-4 py-3 text-base pr-12 transition-all duration-200 outline-none",
             lastResult === "wrong"
               ? "border-destructive/50 animate-shake"
               : "border-border/30 focus:border-primary/50 focus:ring-2 focus:ring-primary/20",
