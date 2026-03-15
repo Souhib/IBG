@@ -60,17 +60,25 @@ function RoomLobbyPage() {
   const previousPlayerIdsRef = useRef<Map<string, string>>(new Map())
   const [showInviteModal, setShowInviteModal] = useState(false)
 
-  // Socket.IO for real-time updates (replaces polling)
-  useSocket({ roomId, enabled: !!user })
+  // Socket.IO for real-time updates
+  const handleKicked = useCallback(() => {
+    toast.error(t("youWereKicked"))
+    navigate({ to: "/rooms" })
+  }, [navigate, t])
 
-  // Poll room state every 2 seconds (Socket.IO delivers real-time updates,
-  // but polling is the fallback when events are missed under load)
+  const { connected: socketConnected } = useSocket({
+    roomId,
+    enabled: !!user,
+    onKicked: handleKicked,
+  })
+
+  // Poll room state as fallback when Socket.IO is disconnected
   const { data: rawRoomData, isLoading, error: queryError } = useGetRoomStateApiV1RoomsRoomIdStateGet(
     { room_id: roomId },
     {
       query: {
         refetchOnWindowFocus: true,
-        refetchInterval: 2000,
+        refetchInterval: socketConnected ? false : 2_000,
         enabled: !!user,
       },
     },

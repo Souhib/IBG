@@ -99,7 +99,7 @@ Socket.IO is a **notification layer**, not a game engine. The flow is:
 - `notify_game_changed` sends **per-user state** (because Codenames role visibility differs per player).
 - Socket.IO handlers are thin wrappers, NOT new controllers. They reuse `RoomController.get_room_state()`, `UndercoverGameController.get_state()`, `CodenamesGameController.get_board()`.
 - Broadcasts go to Socket.IO rooms (`room:{room_id}`, `game:{game_id}`), NEVER to individual SIDs (except for per-user game state).
-- Socket.IO `disconnect` does NOT trigger any game/room cleanup. Only explicit kick or `last_seen_at` staleness handles disconnect.
+- Socket.IO `disconnect` marks the user as disconnected in DB (starts grace period). A background `disconnect_checker_loop` runs every 5s to mark stale heartbeats and permanently remove users past the 60s grace period. Multi-tab connections are deduplicated via `_user_sids` dict. `join_game` validates user membership in the room and game ownership via DB queries. `you_were_kicked` event is emitted to `user:{user_id}` when the host kicks a player.
 
 ### Game State in PostgreSQL
 

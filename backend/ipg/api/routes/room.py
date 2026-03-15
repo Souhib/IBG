@@ -21,7 +21,7 @@ from ipg.api.schemas.room import (
     RoomState,
     UpdateRoomSettingsResponse,
 )
-from ipg.api.ws.notify import fire_notify_room_changed
+from ipg.api.ws.notify import fire_notify_room_changed, fire_notify_user_kicked
 from ipg.dependencies import get_current_user, get_room_controller
 
 router = APIRouter(
@@ -127,6 +127,7 @@ async def kick_player(
 ) -> KickPlayerResponse:
     """Kick a player from the room. Host only."""
     result = await room_controller.kick_player(room_id, current_user.id, body.user_id)
+    fire_notify_user_kicked(str(body.user_id), str(room_id))
     fire_notify_room_changed(str(room_id))
     return result
 

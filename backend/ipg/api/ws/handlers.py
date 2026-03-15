@@ -1,8 +1,15 @@
+from uuid import UUID
+
 from loguru import logger
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ipg.api.controllers.auth import AuthController
+from ipg.api.controllers.disconnect import mark_user_disconnected, update_heartbeat
+from ipg.api.models.relationship import RoomUserLink
+from ipg.api.models.table import Game
 from ipg.api.schemas.error import InvalidTokenError, TokenExpiredError
+from ipg.api.ws.notify import fire_notify_room_changed
 from ipg.api.ws.server import sio
 from ipg.api.ws.state import fetch_game_state, fetch_room_state
 from ipg.database import get_engine
@@ -10,10 +17,13 @@ from ipg.settings import Settings
 
 _settings = Settings()  # type: ignore
 
+# Track user→sid mapping for multi-tab deduplication
+_user_sids: dict[str, str] = {}
+
 
 @sio.event
 async def connect(sid, environ, auth):  # noqa: ARG001
-    """Authenticate user and join room on connection."""
+    """Authenticate user, join room, update heartbeat, and deduplicate connections."""
     if not auth or not auth.get("token") or not auth.get("room_id"):
         raise ConnectionRefusedError("Missing auth token or room_id")
 
@@ -33,6 +43,18 @@ async def connect(sid, environ, auth):  # noqa: ARG001
         logger.debug("Socket.IO auth failed for sid={}: {}", sid, e)
         raise ConnectionRefusedError("Invalid or expired token") from e
 
+    # Multi-tab deduplication: disconnect previous SID for this user in same room
+    user_room_key = f"{user_id}:{room_id}"
+    old_sid = _user_sids.get(user_room_key)
+    if old_sid and old_sid != sid:
+        try:
+            await sio.disconnect(old_sid)
+            logger.debug("Disconnected old SID {} for user {} (new SID {})", old_sid, user_id, sid)
+        except Exception:
+            pass  # Old SID may already be gone
+
+    _user_sids[user_room_key] = sid
+
     # Store session data
     await sio.save_session(sid, {"user_id": user_id, "room_id": room_id})
 
@@ -40,6 +62,14 @@ async def connect(sid, environ, auth):  # noqa: ARG001
     sio.enter_room(sid, f"room:{room_id}")
     sio.enter_room(sid, f"user:{user_id}")
     logger.debug("Socket.IO connect: sid={} user={} room={}", sid, user_id, room_id)
+
+    # Update heartbeat in DB — mark user as connected with fresh last_seen_at
+    try:
+        engine = await get_engine()
+        async with AsyncSession(engine) as session:
+            await update_heartbeat(session, user_id, room_id)
+    except Exception:
+        logger.opt(exception=True).warning("Failed to update heartbeat on connect for sid={}", sid)
 
     # Send initial room state to this client only
     try:
@@ -58,8 +88,34 @@ async def join_game(sid, data):
     game_id = data["game_id"]
     session_data = await sio.get_session(sid)
     user_id = session_data.get("user_id")
+    room_id = session_data.get("room_id")
 
     if not user_id:
+        return
+
+    # Validate: user must be in the room and game must belong to that room
+    try:
+        engine = await get_engine()
+        async with AsyncSession(engine) as session:
+            # Check user is in the room
+            link = (
+                await session.exec(
+                    select(RoomUserLink)
+                    .where(RoomUserLink.room_id == UUID(room_id))
+                    .where(RoomUserLink.user_id == UUID(user_id))
+                )
+            ).first()
+            if not link:
+                logger.warning("join_game rejected: user {} not in room {}", user_id, room_id)
+                return
+
+            # Check game belongs to this room
+            game = (await session.exec(select(Game).where(Game.id == UUID(game_id)))).first()
+            if not game or str(game.room_id) != room_id:
+                logger.warning("join_game rejected: game {} not in room {}", game_id, room_id)
+                return
+    except Exception:
+        logger.opt(exception=True).warning("join_game validation failed for sid={}", sid)
         return
 
     # Store game_id in session and join game room
@@ -79,7 +135,25 @@ async def join_game(sid, data):
 
 @sio.event
 async def disconnect(sid):
-    """Log disconnect. No game/room cleanup — last_seen_at staleness handles it."""
+    """Mark user as disconnected in DB and clean up SID tracking."""
     session_data = await sio.get_session(sid)
     user_id = session_data.get("user_id", "unknown")
-    logger.debug("Socket.IO disconnect: sid={} user={}", sid, user_id)
+    room_id = session_data.get("room_id")
+    logger.debug("Socket.IO disconnect: sid={} user={} room={}", sid, user_id, room_id)
+
+    # Clean up SID tracking
+    if room_id:
+        user_room_key = f"{user_id}:{room_id}"
+        if _user_sids.get(user_room_key) == sid:
+            _user_sids.pop(user_room_key, None)
+
+    # Mark user as disconnected in DB (starts grace period)
+    if room_id and user_id != "unknown":
+        try:
+            engine = await get_engine()
+            async with AsyncSession(engine) as session:
+                await mark_user_disconnected(session, user_id, room_id)
+            # Notify room so other players see the disconnection
+            fire_notify_room_changed(room_id)
+        except Exception:
+            logger.opt(exception=True).warning("Failed to mark user {} as disconnected", user_id)

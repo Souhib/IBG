@@ -22,15 +22,16 @@ async def test_get_public_profile_with_no_stats(profile_controller: ProfileContr
     assert profile.username == "nostats"
     assert profile.bio is None
     assert profile.total_games_played == 0
-    assert profile.total_games_won == 0
-    assert profile.win_rate == 0.0
-    assert profile.current_win_streak == 0
+    assert profile.favorite_game is None
+    assert profile.undercover_games_played == 0
+    assert profile.codenames_games_played == 0
+    assert profile.wordquiz_games_played == 0
 
 
 async def test_get_public_profile_with_stats(
     profile_controller: ProfileController, stats_controller: StatsController, create_user
 ):
-    """A user with stats returns the correct played, won, and win_rate values."""
+    """A user with stats returns the correct per-game played counts."""
 
     # Arrange
     user = await create_user(username="withstats", email="withstats@test.com")
@@ -44,9 +45,10 @@ async def test_get_public_profile_with_stats(
     assert profile.user_id == user.id
     assert profile.username == "withstats"
     assert profile.total_games_played == 2
-    assert profile.total_games_won == 1
-    assert profile.win_rate == 50.0
-    assert profile.current_win_streak == 0
+    assert profile.undercover_games_played == 2
+    assert profile.codenames_games_played == 0
+    assert profile.wordquiz_games_played == 0
+    assert profile.favorite_game == "undercover"
 
 
 async def test_get_public_profile_with_bio(profile_controller: ProfileController, create_user):
@@ -74,24 +76,26 @@ async def test_get_public_profile_user_not_found(profile_controller: ProfileCont
         await profile_controller.get_public_profile(random_id)
 
 
-async def test_get_public_profile_win_rate_calculation(
+async def test_get_public_profile_multiple_game_types(
     profile_controller: ProfileController, stats_controller: StatsController, create_user
 ):
-    """Win rate is correctly rounded: 2 wins out of 3 games yields 66.7."""
+    """Profile correctly shows per-game stats and favorite game across multiple game types."""
 
     # Arrange
-    user = await create_user(username="winrate", email="winrate@test.com")
+    user = await create_user(username="multigame", email="multigame@test.com")
     await stats_controller.update_stats_after_game(user.id, "undercover", won=True, role="civilian")
-    await stats_controller.update_stats_after_game(user.id, "undercover", won=True, role="civilian")
-    await stats_controller.update_stats_after_game(user.id, "undercover", won=False, role="civilian")
+    await stats_controller.update_stats_after_game(user.id, "codenames", won=True, role="operative")
+    await stats_controller.update_stats_after_game(user.id, "codenames", won=False, role="spymaster")
 
     # Act
     profile = await profile_controller.get_public_profile(user.id)
 
     # Assert
     assert profile.total_games_played == 3
-    assert profile.total_games_won == 2
-    assert profile.win_rate == 66.7
+    assert profile.undercover_games_played == 1
+    assert profile.codenames_games_played == 2
+    assert profile.wordquiz_games_played == 0
+    assert profile.favorite_game == "codenames"
 
 
 async def test_update_bio_success(profile_controller: ProfileController, session: AsyncSession, create_user):

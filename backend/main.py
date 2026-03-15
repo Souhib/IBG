@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -19,7 +20,20 @@ async def lifespan(app: FastAPI):
     )
     engine = await create_app_engine(settings)
     await create_db_and_tables(engine)
+
+    # Start background disconnect checker loop
+    from ipg.api.controllers.disconnect import disconnect_checker_loop
+    from ipg.api.ws.notify import fire_notify_room_changed
+
+    checker_task = asyncio.create_task(disconnect_checker_loop(engine, on_room_changed=fire_notify_room_changed))
+
     yield
+
+    checker_task.cancel()
+    try:
+        await checker_task
+    except asyncio.CancelledError:
+        pass
     await engine.dispose()
 
 

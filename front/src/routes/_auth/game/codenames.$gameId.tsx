@@ -109,7 +109,7 @@ function CodenamesGamePage() {
     {
       query: {
         refetchOnWindowFocus: true,
-        refetchInterval: socketConnected ? 3_000 : 2_000,
+        refetchInterval: socketConnected ? false : 2_000,
         refetchIntervalInBackground: true,
         enabled: !!user,
       },

@@ -31,7 +31,7 @@ export const RoomSettings = memo(function RoomSettings({
   const [codenamesGuessTimer, setCodenamesGuessTimer] = useState(0)
   const [enableMrWhite, setEnableMrWhite] = useState(true)
   const [wordQuizTurnDuration, setWordQuizTurnDuration] = useState(60)
-  const [wordQuizRounds, setWordQuizRounds] = useState(10)
+  const [wordQuizRounds, setWordQuizRounds] = useState(7)
   const [wordQuizHintInterval, setWordQuizHintInterval] = useState(10)
 
   useEffect(() => {
@@ -244,7 +244,7 @@ export const RoomSettings = memo(function RoomSettings({
                   {t("room.wordQuizRounds")}
                 </label>
                 <div className="flex gap-1.5 flex-wrap">
-                  {[3, 5, 10, 15, 20].map((val) => (
+                  {[3, 5, 7, 10, 15, 20].map((val) => (
                     <button key={val} type="button" onClick={() => setWordQuizRounds(val)}
                       className={cn("rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200",
                         wordQuizRounds === val ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted/50 hover:bg-muted")}>

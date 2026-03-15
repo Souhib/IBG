@@ -12,6 +12,7 @@ interface UseSocketOptions {
   gameId?: string | null
   gameType?: 'undercover' | 'codenames' | 'word_quiz'
   enabled?: boolean
+  onKicked?: (roomId: string) => void
 }
 
 function getGameQueryKeyPrefix(gameType: string, gameId: string) {
@@ -34,12 +35,15 @@ function getGameQueryKeyPrefix(gameType: string, gameId: string) {
  *
  * Mutations still go through REST. Socket.IO is notification-only.
  */
-export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocketOptions): { connected: boolean } {
+export function useSocket({ roomId, gameId, gameType, enabled = true, onKicked }: UseSocketOptions): { connected: boolean } {
   const queryClient = useQueryClient()
   const socketRef = useRef<Socket | null>(null)
   const gameIdRef = useRef<string | null | undefined>(null)
   const gameTypeRef = useRef<string | undefined>(gameType)
   const [connected, setConnected] = useState(false)
+
+  const onKickedRef = useRef(onKicked)
+  onKickedRef.current = onKicked
 
   // Keep gameType ref in sync
   gameTypeRef.current = gameType
@@ -105,6 +109,10 @@ export function useSocket({ roomId, gameId, gameType, enabled = true }: UseSocke
 
     socket.on('connect', handleConnect)
     socket.on('disconnect', handleDisconnect)
+
+    socket.on('you_were_kicked', (data: { room_id: string }) => {
+      onKickedRef.current?.(data.room_id)
+    })
 
     socket.on('connect_error', (err: Error) => {
       console.error('Socket.IO connection error:', err.message)

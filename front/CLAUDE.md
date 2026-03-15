@@ -108,7 +108,7 @@ function MyComponent() {
 ### Real-time Updates (Socket.IO Primary, Conditional Polling Fallback)
 Socket.IO is the primary real-time transport. The room lobby stores `roomId` in SessionStorage before navigating to game pages (`storeRoomIdForGame`), so Socket.IO connects immediately on mount via a lazy `useState` initializer (`retrieveRoomIdForGame`). Fallback: if no stored roomId (e.g., page refresh), the first REST poll provides it.
 
-`useSocket` returns `{ connected }`. Game pages use `refetchInterval: socketConnected ? false : 2_000` — **zero polling when Socket.IO is connected**, fast 2s polling as fallback when disconnected. The room lobby polls every **2 seconds** unconditionally. All UI state is derived from the server response via `useMemo`, not accumulated from events.
+`useSocket` returns `{ connected }`. All pages (game pages and room lobby) use `refetchInterval: socketConnected ? false : 2_000` — **zero polling when Socket.IO is connected**, fast 2s polling as fallback when disconnected. `useSocket` also accepts an `onKicked` callback for handling `you_were_kicked` events from the server. All UI state is derived from the server response via `useMemo`, not accumulated from events.
 
 Phase transitions detected by comparing refs to previous state (`previousPhaseRef`, `previousRoundRef`).
 

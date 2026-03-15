@@ -79,7 +79,6 @@ services:
       JWT_SECRET_KEY: e2e-secret-key
       CORS_ORIGINS: "http://localhost:3049"
       LOG_LEVEL: WARNING
-      HEARTBEAT_STALE_SECONDS: "10"
       RATE_LIMIT_ENABLED: "false"
       # Single worker — avoids inter-worker Socket.IO pub/sub overhead via Redis
       UVICORN_WORKERS: "1"

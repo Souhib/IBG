@@ -40,6 +40,21 @@ async def _get_room_id_for_game(game_id: str) -> str | None:
         return None
 
 
+def fire_notify_user_kicked(user_id: str, room_id: str) -> None:
+    """Notify a specific user that they were kicked from a room."""
+    task = asyncio.create_task(_notify_user_kicked(user_id, room_id))
+    _pending_tasks.add(task)
+    task.add_done_callback(_pending_tasks.discard)
+
+
+async def _notify_user_kicked(user_id: str, room_id: str) -> None:
+    """Send 'you_were_kicked' event to the user's personal Socket.IO room."""
+    try:
+        await sio.emit("you_were_kicked", {"room_id": room_id}, to=f"user:{user_id}")
+    except Exception:
+        logger.opt(exception=True).warning("Failed to notify kicked user={} room={}", user_id, room_id)
+
+
 async def notify_room_changed(room_id: str) -> None:
     """Broadcast fresh room state to all clients in the room. Best-effort."""
     try:

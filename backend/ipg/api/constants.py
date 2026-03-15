@@ -31,11 +31,16 @@ DEFAULT_CODENAMES_GUESS_TIMER_SECONDS = 0
 WORD_QUIZ_MIN_PLAYERS = 1
 DEFAULT_WORD_QUIZ_TURN_DURATION = 60
 DEFAULT_WORD_QUIZ_HINT_INTERVAL = 10
-DEFAULT_WORD_QUIZ_ROUNDS = 10
+DEFAULT_WORD_QUIZ_ROUNDS = 7
 DEFAULT_WORD_QUIZ_MAX_HINTS = 6
 
 # Timer tolerance (seconds) — how early a timer-expired request is accepted
 TIMER_EXPIRATION_TOLERANCE_SECONDS = 2
+
+# Connection lifecycle constants (seconds)
+HEARTBEAT_STALE_SECONDS = 20  # Mark disconnected after 20s without heartbeat
+GRACE_PERIOD_SECONDS = 60  # Permanently remove after 60s of being disconnected
+DISCONNECT_CHECK_INTERVAL_SECONDS = 5  # How often the checker loop runs
 
 # Auth constants
 ACCESS_TOKEN_EXPIRE_MINUTES = 15

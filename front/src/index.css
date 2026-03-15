@@ -214,6 +214,7 @@ body {
 [dir="rtl"] {
   text-align: right;
   font-family: "IBM Plex Sans Arabic", "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 110%;
 }
 
 [dir="rtl"] .rtl-flip {

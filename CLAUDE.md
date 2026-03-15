@@ -340,7 +340,7 @@ await session.commit()
 
 ### Frontend — Socket.IO + TanStack Query
 
-**Socket.IO pushes state into TanStack Query cache via `queryClient.setQueryData()`.** The `useSocket` hook connects to Socket.IO, receives `room_state` and `game_state` events, and writes them directly into the query cache. It returns `{ connected }` so consumers can disable polling when connected. Game pages use `refetchInterval: socketConnected ? false : 2_000` — zero polling when Socket.IO is up, fast 2s fallback when disconnected. Room lobby keeps `refetchInterval: 2000` unconditionally.
+**Socket.IO pushes state into TanStack Query cache via `queryClient.setQueryData()`.** The `useSocket` hook connects to Socket.IO, receives `room_state` and `game_state` events, and writes them directly into the query cache. It returns `{ connected }` so consumers can disable polling when connected. All pages (game pages and room lobby) use `refetchInterval: socketConnected ? false : 2_000` — zero polling when Socket.IO is up, fast 2s fallback when disconnected.
 
 **Game pages get roomId from SessionStorage for instant Socket.IO connection.** The room lobby stores `roomId` via `storeRoomIdForGame()` before navigating. Game pages read it via `retrieveRoomIdForGame()` in a lazy `useState` initializer, avoiding the ~2s delay of waiting for the first REST poll. Falls back to REST-provided roomId on page refresh.
 

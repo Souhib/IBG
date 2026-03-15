@@ -264,10 +264,10 @@ function AboutPage() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent("charity-click", { org: "human-appeal" })}
-            className="group glass rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            className="group flex flex-col glass rounded-2xl border border-emerald-500/20 hover:border-emerald-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
           >
             <h3 className="font-extrabold tracking-tight mb-2">Human Appeal</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">{t("home.charity.humanAppealDesc")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{t("home.charity.humanAppealDesc")}</p>
             <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:gap-3 transition-all duration-200">
               {t("home.charity.donate")}
               <ExternalLink className="h-3.5 w-3.5" />
@@ -278,10 +278,10 @@ function AboutPage() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent("charity-click", { org: "ummah-charity" })}
-            className="group glass rounded-2xl border border-sky-500/20 hover:border-sky-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            className="group flex flex-col glass rounded-2xl border border-sky-500/20 hover:border-sky-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
           >
             <h3 className="font-extrabold tracking-tight mb-2">Ummah Charity</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">{t("home.charity.ummahCharityDesc")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{t("home.charity.ummahCharityDesc")}</p>
             <span className="inline-flex items-center gap-2 text-sm font-semibold text-sky-600 dark:text-sky-400 group-hover:gap-3 transition-all duration-200">
               {t("home.charity.donate")}
               <ExternalLink className="h-3.5 w-3.5" />

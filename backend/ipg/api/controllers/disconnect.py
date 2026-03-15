@@ -1,10 +1,15 @@
+import asyncio
+from collections.abc import Callable
 from datetime import datetime
+from uuid import UUID
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ipg.api.constants import DISCONNECT_CHECK_INTERVAL_SECONDS, GRACE_PERIOD_SECONDS, HEARTBEAT_STALE_SECONDS
 from ipg.api.controllers.codenames_helpers import CodenamesGameStatus
 from ipg.api.controllers.game_lock import get_game_lock
 from ipg.api.models.game import GameStatus
@@ -12,6 +17,124 @@ from ipg.api.models.relationship import RoomUserLink
 from ipg.api.models.room import RoomType
 from ipg.api.models.table import Game, Room
 from ipg.api.models.undercover import UndercoverRole
+
+
+async def _mark_stale_users(session: AsyncSession) -> set[str]:
+    """Mark connected users with stale heartbeats as disconnected. Returns affected room IDs."""
+    now = datetime.now()
+    stale_threshold = datetime.fromtimestamp(now.timestamp() - HEARTBEAT_STALE_SECONDS)
+
+    newly_stale = (
+        await session.exec(
+            select(RoomUserLink)
+            .where(RoomUserLink.connected == True)  # noqa: E712
+            .where(RoomUserLink.last_seen_at != None)  # noqa: E711
+            .where(RoomUserLink.last_seen_at < stale_threshold)
+        )
+    ).all()
+
+    # Also catch users who never sent a heartbeat (last_seen_at is NULL)
+    # but have been in the room longer than the stale threshold.
+    # This handles cases where Socket.IO never connected (e.g., page load interrupted,
+    # WebSocket blocked by firewall, or navigation race conditions).
+    never_heartbeat = (
+        await session.exec(
+            select(RoomUserLink)
+            .where(RoomUserLink.connected == True)  # noqa: E712
+            .where(RoomUserLink.last_seen_at == None)  # noqa: E711
+            .where(RoomUserLink.joined_at < stale_threshold)
+        )
+    ).all()
+
+    room_ids: set[str] = set()
+    for link in [*newly_stale, *never_heartbeat]:
+        link.connected = False
+        link.disconnected_at = now
+        session.add(link)
+        if link.room_id:
+            room_ids.add(str(link.room_id))
+        logger.info("Marking user {} as disconnected in room {} (stale heartbeat)", link.user_id, link.room_id)
+
+    if newly_stale or never_heartbeat:
+        await session.commit()
+    return room_ids
+
+
+async def _remove_expired_users(session: AsyncSession) -> set[str]:
+    """Permanently remove users whose grace period has expired. Returns affected room IDs."""
+    grace_threshold = datetime.fromtimestamp(datetime.now().timestamp() - GRACE_PERIOD_SECONDS)
+
+    expired = (
+        await session.exec(
+            select(RoomUserLink)
+            .where(RoomUserLink.connected == False)  # noqa: E712
+            .where(RoomUserLink.disconnected_at != None)  # noqa: E711
+            .where(RoomUserLink.disconnected_at < grace_threshold)
+        )
+    ).all()
+
+    room_ids: set[str] = set()
+    for link in expired:
+        if link.room_id:
+            room_ids.add(str(link.room_id))
+        await _handle_permanent_disconnect(session, link)
+    return room_ids
+
+
+async def disconnect_checker_loop(engine: AsyncEngine, on_room_changed: Callable[[str], None] | None = None) -> None:
+    """Background task that checks for stale heartbeats periodically."""
+    while True:
+        try:
+            async with AsyncSession(engine, expire_on_commit=False) as session:
+                stale_rooms = await _mark_stale_users(session)
+                expired_rooms = await _remove_expired_users(session)
+
+                if on_room_changed:
+                    for rid in stale_rooms | expired_rooms:
+                        on_room_changed(rid)
+
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Error in disconnect checker loop")
+
+        await asyncio.sleep(DISCONNECT_CHECK_INTERVAL_SECONDS)
+
+
+async def mark_user_disconnected(session: AsyncSession, user_id: str, room_id: str) -> None:
+    """Mark a user as disconnected (but not permanently removed). Called on Socket.IO disconnect."""
+    link = (
+        await session.exec(
+            select(RoomUserLink)
+            .where(RoomUserLink.room_id == UUID(room_id))
+            .where(RoomUserLink.user_id == UUID(user_id))
+            .where(RoomUserLink.connected == True)  # noqa: E712
+        )
+    ).first()
+    if link:
+        link.connected = False
+        link.disconnected_at = datetime.now()
+        session.add(link)
+        await session.commit()
+        logger.info("Socket.IO disconnect: marked user {} as disconnected in room {}", user_id, room_id)
+
+
+async def update_heartbeat(session: AsyncSession, user_id: str, room_id: str) -> None:
+    """Update heartbeat for a user. Called on Socket.IO connect."""
+    link = (
+        await session.exec(
+            select(RoomUserLink)
+            .where(RoomUserLink.room_id == UUID(room_id))
+            .where(RoomUserLink.user_id == UUID(user_id))
+        )
+    ).first()
+    if link:
+        link.last_seen_at = datetime.now()
+        link.connected = True
+        if link.disconnected_at is not None:
+            link.disconnected_at = None
+        session.add(link)
+        await session.commit()
 
 
 async def _handle_permanent_disconnect(session: AsyncSession, link: RoomUserLink) -> None:
@@ -51,7 +174,7 @@ async def _handle_permanent_disconnect(session: AsyncSession, link: RoomUserLink
         session.add(room)
 
     await session.commit()
-    logger.info(f"Permanently disconnected user {user_id} from room {room_id}")
+    logger.info("Permanently disconnected user {} from room {}", user_id, room_id)
 
 
 async def _handle_game_disconnect(session: AsyncSession, game: Game, user_id: str, room: Room) -> None:
@@ -64,6 +187,8 @@ async def _handle_game_disconnect(session: AsyncSession, game: Game, user_id: st
         await _handle_undercover_disconnect(session, game, user_id, room)
     elif game.type.value == "codenames":
         await _handle_codenames_disconnect(session, game, user_id, room)
+    elif game.type.value == "word_quiz":
+        await _handle_wordquiz_disconnect(session, game, user_id, room)
 
 
 async def _handle_undercover_disconnect(session: AsyncSession, game: Game, user_id: str, room: Room) -> None:
@@ -152,6 +277,38 @@ async def _handle_codenames_disconnect(session: AsyncSession, game: Game, user_i
             else:
                 state["winner"] = "red"
             game.game_status = GameStatus.FINISHED
+            game.end_time = datetime.now()
+            room.active_game_id = None
+            session.add(room)
+
+        game.live_state = state
+        flag_modified(game, "live_state")
+        session.add(game)
+        await session.commit()
+
+
+async def _handle_wordquiz_disconnect(session: AsyncSession, game: Game, user_id: str, room: Room) -> None:
+    """Handle Word Quiz game disconnect: remove player, end if no players left."""
+    async with get_game_lock(str(game.id), session):
+        game = (await session.exec(select(Game).where(Game.id == game.id))).first()
+        if not game or not game.live_state:
+            return
+        state = game.live_state
+
+        player = next((p for p in state["players"] if p["user_id"] == user_id), None)
+        if not player:
+            return
+
+        # Remove player from game
+        state["players"] = [p for p in state["players"] if p["user_id"] != user_id]
+
+        # Remove their answer if any
+        state.get("answers", {}).pop(user_id, None)
+
+        if not state["players"]:
+            # No players left — cancel game
+            state["game_over"] = True
+            game.game_status = GameStatus.CANCELLED
             game.end_time = datetime.now()
             room.active_game_id = None
             session.add(room)

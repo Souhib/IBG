@@ -281,6 +281,28 @@ class RoomController:
         """Get room state for all players."""
         room = await self.get_room_by_id(room_id)
 
+        # Update heartbeat for the requesting user
+        if update_heartbeat:
+            link = (
+                await self.session.exec(
+                    select(RoomUserLink).where(RoomUserLink.room_id == room_id).where(RoomUserLink.user_id == user_id)
+                )
+            ).first()
+            if link:
+                needs_update = (
+                    link.disconnected_at is not None
+                    or not link.connected
+                    or not link.last_seen_at
+                    or (datetime.now() - link.last_seen_at).total_seconds() > 10
+                )
+                if needs_update:
+                    link.last_seen_at = datetime.now()
+                    link.connected = True
+                    if link.disconnected_at is not None:
+                        link.disconnected_at = None
+                    self.session.add(link)
+                    await self.session.commit()
+
         # Get connected users in the room (bulk fetch to avoid N+1)
         all_links = (
             await self.session.exec(
