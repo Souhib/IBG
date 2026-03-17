@@ -132,11 +132,11 @@ docker compose -f docker-compose.dokploy.yml up -d
 | Frontend | React 19, TanStack Router/Query, Tailwind v4, shadcn/ui |
 | Real-time | Socket.IO (python-socketio + socket.io-client) — notification layer over REST |
 | Infra | PgBouncer (connection pooling), Redis (Socket.IO pub/sub only) |
-| Monitoring | Uptime Kuma (`kuma.majlisna.app`), Dozzle (`dozzle.majlisna.app`) |
+| Monitoring | Umami (`analytics.majlisna.app`), GlitchTip (`glitchtip.majlisna.app`), Uptime Kuma (`kuma.majlisna.app`), Dozzle (`dozzle.majlisna.app`) |
 | Security | Trivy (CI vulnerability scanning) |
 | API Codegen | Kubb (OpenAPI -> React Query hooks) |
 | i18n | i18next (English + Arabic + French) |
-| Testing | pytest (backend), Vitest (frontend) |
+| Testing | pytest (backend, 587+ tests), Vitest (frontend, 166 tests), Playwright (E2E, 145 tests) |
 | CI/CD | GitHub Actions |
 | Deployment | Docker + Dokploy (Oracle VPS) |
 | Domain | `majlisna.app` (Cloudflare DNS + proxy) |
@@ -393,6 +393,8 @@ Cloudflare handles DNS (proxied/orange cloud) and SSL termination (Flexible mode
 **Redis is ephemeral and non-critical.** Redis is only used for Socket.IO cross-worker pub/sub. If Redis is down, the app works but Socket.IO won't broadcast across workers. The CI pipeline treats Redis health as a non-blocking warning. If Redis crash-loops due to corrupt `dump.rdb`, delete the RDB file from the Docker volume and recreate the container.
 
 **Monitoring tools** are deployed alongside the app:
+- **Umami** (`analytics.majlisna.app`, port 31200): Privacy-focused web analytics. Own PostgreSQL database.
+- **GlitchTip** (`glitchtip.majlisna.app`, port 31300): Error tracking and alerting (open-source Sentry alternative). Own PostgreSQL + Redis + Celery worker.
 - **Dozzle** (`dozzle.majlisna.app`, port 31400): Real-time Docker log viewer. Zero storage, streams from Docker API. Use for quick debugging.
 - **Uptime Kuma** (`kuma.majlisna.app`, port 31500): Uptime monitoring with alerting. Monitors endpoints, sends notifications on failures.
 - **Trivy**: CI-only vulnerability scanner. Runs filesystem scan on PRs and container image scan post-build on deploy. Non-blocking (exit-code 0).

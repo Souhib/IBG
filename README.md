@@ -1,36 +1,157 @@
-# IPG (Islamic Party Games)
+# Majlisna (Islamic Party Games)
 
 A real-time multiplayer platform for Islamized versions of popular party games. Learn about Islamic words, prophets, and concepts while playing with friends.
 
 ## Overview
 
-IPG brings together classic social deduction and word games, reimagined with Islamic terminology and themes. Players join rooms, get assigned roles, and compete in real-time.
+Majlisna brings together classic social deduction, word games, and quizzes, reimagined with Islamic terminology and themes. Players join rooms, get assigned roles, and compete in real-time.
 
 ### Key Features
 
-- **Real-time Multiplayer**: REST polling with instant state synchronization across all players
-- **Two Games**: Undercover (social deduction, 3-12 players) and Codenames (team word game, 4-10 players)
+- **Real-time Multiplayer**: Socket.IO for instant state synchronization, with REST API polling fallback
+- **Four Games**: Undercover (3-12 players), Codenames (4-10 players), Word Quiz (1+ players), MCQ Quiz (1+ players)
 - **Islamic Terminology**: All game words drawn from Islamic concepts, prophets, places, and terms
-- **Room System**: Create/join password-protected rooms, invite friends, manage game settings
+- **Room System**: Create/join password-protected rooms, invite friends, share room links, manage game settings
+- **Spectator Mode**: Watch games in progress without participating
 - **Player Statistics**: Track wins, games played, achievements, and leaderboard rankings
-- **Achievements**: Unlock badges for milestones (first win, win streaks, role-specific feats)
-- **Internationalization**: English and Arabic (RTL) with full bidirectional support
+- **Achievements & Challenges**: Unlock badges for milestones and complete daily/weekly challenges
+- **Internationalization**: English, French, and Arabic (RTL) with full bidirectional support
 - **Light/Dark Mode**: Emerald green + gold themed UI with automatic dark mode
+- **PWA**: Installable as a web app with offline navigation shell
+
+## Architecture
+
+![Majlisna Production Architecture](docs/architecture.png)
 
 ### Tech Stack
 
 | Component | Technology |
 |-----------|------------|
 | **Backend** | Python 3.12, FastAPI, SQLModel, SQLAlchemy (async) |
-| **Database** | PostgreSQL (prod), SQLite (dev) |
+| **Database** | PostgreSQL 16 (prod), SQLite (dev) |
+| **Connection Pooling** | PgBouncer (transaction mode) |
 | **Auth** | JWT (python-jose, bcrypt) |
 | **Frontend** | React 19, TypeScript, TanStack Router/Query, Tailwind v4, shadcn/ui |
-| **Real-time** | TanStack Query polling (2s interval) |
+| **Real-time** | Socket.IO (python-socketio + socket.io-client) |
+| **Caching** | Redis 7 (Socket.IO pub/sub + TTL cache) |
 | **API Codegen** | Kubb (OpenAPI -> React Query hooks) |
-| **i18n** | i18next (English + Arabic with RTL) |
-| **Testing** | pytest (backend), Vitest (frontend), Playwright (E2E) |
+| **i18n** | i18next (English + French + Arabic with RTL) |
+| **Testing** | pytest (backend, 587 tests), Vitest (frontend, 166 tests), Playwright (E2E, 145 tests) |
 | **CI/CD** | GitHub Actions (self-hosted runner on VPS) |
 | **Deployment** | Docker + Dokploy (Oracle Cloud VPS) |
+| **Domain** | `majlisna.app` (Cloudflare DNS + proxy) |
+| **Reverse Proxy** | Traefik (managed by Dokploy) |
+| **Security** | Trivy (CI vulnerability scanning) |
+| **Monitoring** | Umami (analytics), GlitchTip (errors), Dozzle (logs), Uptime Kuma (uptime) |
+
+### Monorepo Structure
+
+```
+IPG/
+├── backend/                    # FastAPI (REST + Socket.IO)
+│   ├── ipg/
+│   │   ├── api/               # REST API + WebSocket
+│   │   │   ├── controllers/   # Business logic + game logic
+│   │   │   ├── models/        # SQLModel DB tables
+│   │   │   ├── schemas/       # Pydantic request/response models
+│   │   │   ├── routes/        # FastAPI routers (thin, delegate to controllers)
+│   │   │   ├── ws/            # Socket.IO server, handlers, notify, state
+│   │   │   ├── services/      # External integrations
+│   │   │   ├── constants.py   # All magic values
+│   │   │   └── middleware.py  # Security, request ID, logging (pure ASGI)
+│   │   ├── app.py             # FastAPI app factory
+│   │   ├── database.py        # Async SQLAlchemy engine
+│   │   ├── dependencies.py    # DI with Annotated + Depends
+│   │   └── settings.py        # Multi-env pydantic-settings
+│   ├── tests/                 # pytest suite (587+ tests)
+│   ├── scripts/               # Fake data generation + seed data
+│   └── main.py                # Entry point
+├── front/                     # React 19 SPA
+│   ├── src/
+│   │   ├── api/               # ky HTTP client + Kubb generated hooks
+│   │   ├── components/        # UI components (shadcn/ui)
+│   │   │   └── games/         # Game-specific + shared components
+│   │   ├── hooks/             # Custom hooks (useSocket, etc.)
+│   │   ├── i18n/              # English + French + Arabic translations
+│   │   ├── lib/               # Utilities (cn, auth)
+│   │   ├── providers/         # Auth, Query, Theme, Socket providers
+│   │   └── routes/            # TanStack Router (file-based)
+│   └── vite.config.ts
+├── e2e/                       # Playwright E2E tests (145 tests)
+│   ├── tests/
+│   │   ├── auth/              # Login, register, token refresh
+│   │   ├── rooms/             # Room CRUD, join/leave, share links
+│   │   ├── undercover/        # Full game flows, multi-round
+│   │   ├── codenames/         # Full game flows
+│   │   ├── cross-flow/        # Cross-game interactions
+│   │   ├── profile/           # User profile, stats
+│   │   └── smoke/             # Health checks
+│   ├── helpers/               # Shared test utilities
+│   └── playwright.config.ts
+├── docs/                      # Architecture diagrams
+├── docker-compose.yml          # Local development
+├── docker-compose.dokploy.yml  # Production (Dokploy on Oracle VPS)
+└── .github/workflows/          # CI/CD pipelines
+```
+
+### Backend Design
+
+- **Route -> Controller -> Model**: No business logic in routes — routes delegate everything to controllers
+- **BaseGameController**: All 4 game controllers inherit shared methods (`_get_game`, `_check_is_host`, `_update_heartbeat_throttled`, `_check_spectator`, `_resolve_multilingual`)
+- **Async Everything**: All database operations and external calls are async
+- **Dependency Injection**: FastAPI's `Depends()` with `Annotated` type hints
+- **REST + Socket.IO**: Mutations go through REST API. Socket.IO pushes state updates to clients after mutations. PostgreSQL is the only source of truth.
+- **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state
+
+### Deployment
+
+| Environment | Infrastructure | Backend | Frontend |
+|-------------|---------------|---------|----------|
+| **Production** | Oracle Cloud VPS + Docker + Dokploy | `:33648` | `:30819` |
+| **E2E Testing** | Docker Compose (isolated stack) | `localhost:5049` | `localhost:3049` |
+| **Local Dev** | Docker Compose or bare metal | `localhost:5111` | `localhost:3000` |
+
+### CI/CD
+
+A GitHub Actions workflow on push to `main` (self-hosted runner on the VPS):
+
+1. **Detect changes** — Path-based diff determines which components changed
+2. **Rsync** — Syncs code to the Dokploy compose directory
+3. **Build** — Selectively rebuilds changed services
+4. **Trivy scan** — Vulnerability scanning on backend image
+5. **Deploy** — Rolls out via docker-compose
+6. **Health check** — Polls `GET /health`
+7. **Cleanup** — Prunes old Docker images
+
+## Games
+
+### Undercover (3-12 players)
+
+Social deduction game where each player receives an Islamic term. The undercover agent receives a *different but related* term and must blend in during discussion rounds. Civilians vote to find and eliminate the undercover.
+
+**Roles:** Civilian, Undercover, Mr. White (not in 3-player games)
+**Flow:** Discuss -> Vote -> Eliminate -> Repeat until a team wins
+**Data:** 95 words, 67 term pairs
+
+### Codenames (4-10 players)
+
+Two teams (Red and Blue) compete to identify their agents on a 5x5 board of Islamic terms. Each team has a Spymaster who gives one-word clues and Operatives who guess.
+
+**Roles:** Spymaster, Operative
+**Flow:** Spymaster gives clue -> Operatives guess -> Turn passes -> Repeat
+**Data:** 203 words across 9 themed packs
+
+### Word Quiz (1+ players)
+
+Guess the Islamic term from progressive hints. 6 hints revealed over time, from vague to specific. The faster you answer, the more points you earn.
+
+**Data:** 189 trilingual words (EN/FR/AR)
+
+### MCQ Quiz (1+ players)
+
+Test your Islamic knowledge with multiple choice questions. Configurable timer and round count.
+
+**Data:** 500 trilingual questions across 8 categories
 
 ## Quick Start
 
@@ -51,7 +172,7 @@ echo "IPG_ENV=development" > .env
 uv run python main.py
 ```
 
-API available at `http://localhost:5000`
+API available at `http://localhost:5111`
 
 ### Frontend
 
@@ -96,108 +217,6 @@ PYTHONPATH=. uv run python scripts/generate_fake_data.py --delete
 | User | `user@test.com` | `user1234` |
 | Player | `player@test.com` | `player123` |
 
-## Games
-
-### Undercover (3-12 players)
-
-Social deduction game where each player receives an Islamic term. The undercover agent receives a *different but related* term and must blend in during discussion rounds. Civilians vote to find and eliminate the undercover.
-
-**Roles:**
-- **Civilian** — Receives the majority word, tries to identify the undercover
-- **Undercover** — Receives a similar but different word, tries to stay hidden
-- **Mr. White** — Receives no word at all, bluffs entirely (not present in 3-player games)
-
-**Flow:** Discuss -> Vote -> Eliminate -> Repeat until a team wins
-
-### Codenames (4-10 players)
-
-Two teams (Red and Blue) compete to identify their agents on a 5x5 board of Islamic terms. Each team has a Spymaster who gives one-word clues and a number, and Operatives who guess which cards match.
-
-**Roles:**
-- **Spymaster** — Sees the key card, gives clues
-- **Operative** — Guesses cards based on the Spymaster's clue
-
-**Flow:** Spymaster gives clue -> Operatives guess -> Turn passes -> Repeat until a team wins
-
-## Architecture
-
-![Majlisna Production Architecture](docs/architecture.png)
-
-### Monorepo Structure
-
-```
-IPG/
-├── backend/                    # FastAPI (pure REST)
-│   ├── ipg/
-│   │   ├── api/               # REST API
-│   │   │   ├── controllers/   # Business logic
-│   │   │   ├── models/        # SQLModel DB tables
-│   │   │   ├── schemas/       # Pydantic request/response models
-│   │   │   ├── routes/        # FastAPI routers (thin, delegate to controllers)
-│   │   │   ├── services/      # External integrations
-│   │   │   ├── constants.py   # All magic values
-│   │   │   └── middleware.py  # Security, request ID, logging (pure ASGI)
-│   │   ├── app.py             # FastAPI app factory
-│   │   ├── database.py        # Async SQLAlchemy engine
-│   │   ├── dependencies.py    # DI with Annotated + Depends
-│   │   └── settings.py        # Multi-env pydantic-settings
-│   ├── tests/                 # pytest suite (425+ tests)
-│   ├── scripts/               # Fake data generation
-│   └── main.py                # Entry point
-├── front/                     # React 19 SPA
-│   ├── src/
-│   │   ├── api/               # ky HTTP client + Kubb generated hooks
-│   │   ├── components/        # UI components (shadcn/ui)
-│   │   ├── hooks/             # Custom hooks
-│   │   ├── i18n/              # English + Arabic translations
-│   │   ├── lib/               # Utilities (cn, auth)
-│   │   ├── providers/         # Auth, Query, Theme providers
-│   │   └── routes/            # TanStack Router (file-based)
-│   └── vite.config.ts
-├── e2e/                       # Playwright E2E tests (125+ tests)
-│   ├── tests/
-│   │   ├── auth/              # Login, register, token refresh
-│   │   ├── rooms/             # Room CRUD, join/leave
-│   │   ├── undercover/        # Full game flows, multi-round
-│   │   ├── codenames/         # Full game flows
-│   │   ├── cross-flow/        # Cross-game interactions
-│   │   ├── profile/           # User profile, stats
-│   │   └── smoke/             # Health checks
-│   ├── helpers/               # Shared test utilities
-│   └── playwright.config.ts
-├── docker-compose.yml          # Local development
-├── docker-compose.dokploy.yml  # Production (Dokploy on Oracle VPS)
-└── .github/workflows/          # CI/CD pipelines
-```
-
-### Backend Design
-
-- **Route -> Controller -> Model**: No business logic in routes — routes delegate everything to controllers
-- **Async Everything**: All database operations and external calls are async
-- **Dependency Injection**: FastAPI's `Depends()` with `Annotated` type hints
-- **Pure REST + Polling**: REST API for all operations, TanStack Query polling for real-time updates
-- **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state
-
-### Deployment Environments
-
-| Environment | Infrastructure | Backend | Frontend |
-|-------------|---------------|---------|----------|
-| **Production** | Oracle Cloud VPS + Docker + Dokploy | `:33648` | `:30819` |
-| **E2E Testing** | Docker Compose (isolated stack) | `localhost:5049` | `localhost:3049` |
-| **Local Dev** | Docker Compose or bare metal | `localhost:5000` | `localhost:3000` |
-
-### CI/CD
-
-A GitHub Actions workflow on push to `main` (self-hosted runner on the VPS):
-
-1. **Detect changes** — Path-based diff determines which components changed (backend/frontend)
-2. **Rsync** — Syncs code to the Dokploy compose directory on the VPS
-3. **Build & Deploy** — Selectively rebuilds only changed services (`docker compose up --build --no-deps`)
-4. **Health check** — Polls `GET /health` (6 attempts, 60s total)
-5. **Cleanup** — Prunes old Docker images
-
-On pull requests, lint and test checks run (informational, non-blocking).
-
 ## Development
 
 ### Backend
@@ -205,11 +224,11 @@ On pull requests, lint and test checks run (informational, non-blocking).
 ```bash
 cd backend
 
-uv run python main.py                    # Start server on :5000
+uv run python main.py                    # Start server on :5111
 uv run poe lint                          # Ruff lint
 uv run poe format                        # Ruff format
 uv run poe check                         # All checks (lint + format + type)
-uv run poe test                          # pytest with coverage
+uv run pytest --use-postgres             # Run tests with PostgreSQL
 uv run poe test-fast                     # Stop on first failure
 ```
 
@@ -222,7 +241,6 @@ bun dev                                  # Dev server on :3000
 bun run generate                         # Generate API client (backend must be running)
 bun run lint                             # oxlint
 bun run typecheck                        # TypeScript strict
-bun run format                           # oxfmt
 bun run test                             # Vitest
 bun run test:coverage                    # With coverage
 ```
@@ -235,7 +253,7 @@ cd e2e
 # Start the E2E Docker stack
 bun run docker:up
 
-# Run full suite (125+ tests, ~20 min)
+# Run full suite (145 tests)
 bun run test
 
 # Run specific test suites
@@ -246,9 +264,6 @@ bun run test:undercover
 bun run test:codenames
 bun run test:cross-flow
 bun run test:profile
-
-# Run in parallel (2 shards with account pools)
-bun run test:parallel
 
 # View HTML report
 bun run report
@@ -270,9 +285,20 @@ The backend uses `IPG_ENV` to select which `.env.{env}` file to load:
 
 ## API Documentation
 
-- **Scalar UI**: `http://localhost:5000/scalar`
-- **OpenAPI JSON**: `http://localhost:5000/openapi.json`
-- **Health check**: `http://localhost:5000/health`
+- **Scalar UI**: `http://localhost:5111/scalar`
+- **OpenAPI JSON**: `http://localhost:5111/openapi.json`
+- **Health check**: `http://localhost:5111/health`
+
+## Production URLs
+
+- **Frontend**: https://majlisna.app
+- **Backend API**: https://majlisna.app/api/v1/
+- **Health check**: https://majlisna.app/health
+- **API docs**: https://majlisna.app/scalar
+- **Analytics**: https://analytics.majlisna.app
+- **Error tracking**: https://glitchtip.majlisna.app
+- **Logs**: https://dozzle.majlisna.app
+- **Uptime**: https://kuma.majlisna.app
 
 ## Git Conventions
 
