@@ -50,6 +50,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    ports:
+      - "127.0.0.1:6432:6432"
     networks:
       - internal
     restart: always
