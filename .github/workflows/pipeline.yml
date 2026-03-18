@@ -235,7 +235,7 @@ jobs:
 
       - name: Ensure monitoring tools are running
         working-directory: ${{ env.DEPLOY_DIR }}
-        run: docker compose -f docker-compose.dokploy.yml up -d --force-recreate dozzle uptime-kuma beszel beszel-agent watchtower crowdsec
+        run: docker compose -f docker-compose.dokploy.yml up -d --force-recreate dozzle uptime-kuma beszel beszel-agent watchtower crowdsec || true
 
       - name: Health check
         if: needs.changes.outputs.backend == 'true'
