@@ -60,6 +60,7 @@ function RoomLobbyPage() {
   const queryClient = useQueryClient()
   const navigatingToGameRef = useRef(false)
   const previousPlayerIdsRef = useRef<Map<string, string>>(new Map())
+  const isLeavingRef = useRef(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   // Chat messages from Socket.IO
@@ -83,13 +84,14 @@ function RoomLobbyPage() {
   })
 
   // Poll room state as fallback when Socket.IO is disconnected
-  const { data: rawRoomData, isLoading, error: queryError } = useGetRoomStateApiV1RoomsRoomIdStateGet(
+  const { data: rawRoomData, isLoading, error: queryError, failureCount } = useGetRoomStateApiV1RoomsRoomIdStateGet(
     { room_id: roomId },
     {
       query: {
         refetchOnWindowFocus: true,
         refetchInterval: socketConnected ? false : 2_000,
         enabled: !!user,
+        retry: 2,
       },
     },
   )
@@ -266,6 +268,7 @@ function RoomLobbyPage() {
   const leaveMutation = useLeaveRoomApiV1RoomsLeavePatch()
 
   const handleLeaveRoom = async () => {
+    isLeavingRef.current = true
     if (!user || !roomData) {
       navigate({ to: "/rooms" })
       return
@@ -279,9 +282,9 @@ function RoomLobbyPage() {
     navigate({ to: "/rooms" })
   }
 
-  // Detect being kicked: if current user was in the list but disappears
+  // Detect being kicked: if current user was in the list but disappears (and didn't leave voluntarily)
   useEffect(() => {
-    if (!user || !roomData) return
+    if (!user || !roomData || isLeavingRef.current) return
     const wasInRoom = previousPlayerIdsRef.current.has(user.id)
     const isInRoom = allUsers.some((u) => u.id === user.id)
     if (wasInRoom && !isInRoom) {
@@ -343,7 +346,7 @@ function RoomLobbyPage() {
     )
   }
 
-  if (queryError && !roomData) {
+  if (queryError && !roomData && failureCount > 2) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
         <div className="glass rounded-2xl p-6 text-center text-destructive border-destructive/30">
