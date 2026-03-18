@@ -198,7 +198,7 @@ jobs:
       - name: Ensure infrastructure is running
         if: needs.changes.outputs.backend == 'true'
         working-directory: ${{ env.DEPLOY_DIR }}
-        run: docker compose -f docker-compose.dokploy.yml up -d --force-recreate db pgbouncer redis
+        run: docker compose -f docker-compose.dokploy.yml up -d db pgbouncer redis || true
 
       - name: Wait for PgBouncer health
         if: needs.changes.outputs.backend == 'true'
@@ -226,16 +226,16 @@ jobs:
       - name: Deploy backend
         if: needs.changes.outputs.backend == 'true'
         working-directory: ${{ env.DEPLOY_DIR }}
-        run: docker compose -f docker-compose.dokploy.yml up -d --no-deps --force-recreate backend
+        run: docker compose -f docker-compose.dokploy.yml up -d --no-deps backend
 
       - name: Deploy frontend
         if: needs.changes.outputs.frontend == 'true'
         working-directory: ${{ env.DEPLOY_DIR }}
-        run: docker compose -f docker-compose.dokploy.yml up -d --no-deps --force-recreate frontend
+        run: docker compose -f docker-compose.dokploy.yml up -d --no-deps frontend
 
       - name: Ensure monitoring tools are running
         working-directory: ${{ env.DEPLOY_DIR }}
-        run: docker compose -f docker-compose.dokploy.yml up -d --force-recreate dozzle uptime-kuma beszel beszel-agent watchtower crowdsec || true
+        run: docker compose -f docker-compose.dokploy.yml up -d dozzle uptime-kuma beszel beszel-agent watchtower crowdsec || true
 
       - name: Health check
         if: needs.changes.outputs.backend == 'true'
