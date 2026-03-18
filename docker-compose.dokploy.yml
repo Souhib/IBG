@@ -271,7 +271,7 @@ services:
       glitchtip-redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8000/_health/"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/_health/')\""]
       interval: 30s
       timeout: 5s
       start_period: 30s
@@ -325,7 +325,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8080/healthcheck"]
+      test: ["CMD", "/dozzle", "healthcheck"]
       interval: 30s
       timeout: 5s
       start_period: 5s
@@ -409,7 +409,7 @@ services:
 
   watchtower:
     container_name: majlisna-watchtower
-    image: containrrr/watchtower:1.7.1
+    image: containrrr/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
