@@ -23,7 +23,7 @@ function useFirstVisit() {
 const languages = [
   { code: "en", fullName: "English", flag: "\u{1F1EC}\u{1F1E7}", dir: "ltr" },
   { code: "fr", fullName: "Fran\u00E7ais", flag: "\u{1F1EB}\u{1F1F7}", dir: "ltr" },
-  { code: "ar", fullName: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629", flag: "\u{1F1E6}\u{1F1EA}", dir: "rtl" },
+  { code: "ar", fullName: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629", flag: "\u{1F1F5}\u{1F1F8}", dir: "rtl" },
 ] as const
 
 type LanguageCode = (typeof languages)[number]["code"]
