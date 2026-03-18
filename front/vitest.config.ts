@@ -15,5 +15,10 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    server: {
+      deps: {
+        inline: ['zod'],
+      },
+    },
   },
 })
