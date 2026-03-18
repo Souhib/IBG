@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { BookOpen, ExternalLink, Github, Heart, Linkedin, Mail, User } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 import { motion, useReducedMotion } from "motion/react"
 import { trackEvent } from "@/lib/analytics"
 
@@ -180,10 +180,10 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center gap-3 border-t border-border/30 pt-6 sm:flex-row sm:justify-between">
           <p className="text-xs text-muted-foreground/60">
-            &copy; {new Date().getFullYear()} IPG &mdash; Islamic Party Games
+            {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
           <p className="flex items-center gap-1 text-xs text-muted-foreground/60">
-            Made with <Heart className="h-3 w-3 text-destructive/60" aria-label="love" /> for the Ummah
+            <Trans i18nKey="footer.madeWithLove" components={{ heart: <Heart className="h-3 w-3 text-destructive/60" aria-label="love" /> }} />
           </p>
         </div>
       </div>

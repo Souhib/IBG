@@ -44,7 +44,7 @@ IPG/
 ├── e2e/                       # Playwright E2E tests
 ├── docker-compose.yml         # Local dev (PostgreSQL)
 ├── docker-compose.dokploy.yml # Production (Oracle VPS, Traefik labels)
-└── .github/workflows/         # CI/CD (auto-deploy on push to main)
+└── .github/workflows/         # CI (lint/test on ubuntu-latest; Dokploy handles CD)
 ```
 
 ### Component Documentation
@@ -391,9 +391,11 @@ page.locator('text=Discuss and vote')
 
 ### Infrastructure
 
-**GitHub Actions owns CI + deploy.** On push to `main`, the pipeline detects changed components, runs CI checks (lint, format, test) in parallel, and only deploys if all checks pass. Deploy uses a single `docker compose up -d` — Compose is idempotent and handles creating/recreating/leaving containers as needed. Two self-hosted runners (`majlisna-1`, `majlisna-2`) on the VPS enable backend + frontend CI to run in parallel. **Dokploy is for monitoring/logs/manual redeploy only** — its autodeploy trigger is disabled to avoid conflicts with GitHub Actions.
+**GitHub Actions = CI only** (on `ubuntu-latest`). On push to `main` or PR, the pipeline detects changed components and runs CI checks (lint, format, test) in parallel. No deploy job — CI is informational on push, blocking on PRs. Backend tests use SQLite (no `--use-postgres` in CI). No self-hosted runners needed for CI.
 
-**CI is a real quality gate.** No `continue-on-error` on any CI step. Backend tests run with `--use-postgres`. Deploy job uses `if: always() && !failure() && !cancelled()` so it runs when CI is skipped (no changes) but blocks on failures.
+**Dokploy = CD.** Dokploy autodeploy is enabled — it pulls from `main` on every push, builds images, and runs `docker compose up -d`. Deploy does NOT wait for CI. This eliminates container conflicts (Dokploy owns all containers) and removes the need for rsync, health checks, orphan adoption, and image pruning in the pipeline.
+
+**CI is a real quality gate for PRs.** No `continue-on-error` on any CI step. `cancel-in-progress: true` since there's no deploy to protect.
 
 **E2E docker-compose is separate from production.** `docker-compose.e2e.yml` runs the backend with `IPG_ENV=development` and a dedicated PostgreSQL. Never mix E2E and production compose files.
 
@@ -406,7 +408,7 @@ page.locator('text=Discuss and vote')
 
 Cloudflare handles DNS (proxied/orange cloud) and SSL termination (Flexible mode — HTTPS to Cloudflare, HTTP to origin). Traefik on the server routes requests via Docker compose labels. `VITE_API_URL` is baked at frontend build time — rebuild frontend when changing it.
 
-**Production server**: Oracle VPS at `<SERVER_IP>`, accessible via SSH as `ubuntu`. Deploy directory: `/etc/dokploy/compose/<REDACTED_DOKPLOY_ID>/code` (synced via rsync, not a git repo). Repo clone at `<REDACTED_SERVER_PATH>`.
+**Production server**: Oracle VPS at `<SERVER_IP>`, accessible via SSH as `ubuntu`. Dokploy compose project is named "IBG" (`<REDACTED_DOKPLOY_ID>`), connected to `Souhib/IBG` GitHub repo, branch `main`, compose path `./docker-compose.dokploy.yml`. Repo clone at `<REDACTED_SERVER_PATH>`.
 
 **Redis is ephemeral and non-critical.** Redis is only used for Socket.IO cross-worker pub/sub. If Redis is down, the app works but Socket.IO won't broadcast across workers. The CI pipeline treats Redis health as a non-blocking warning. If Redis crash-loops due to corrupt `dump.rdb`, delete the RDB file from the Docker volume and recreate the container.
 

@@ -554,5 +554,9 @@
     "changeCity": "Changer",
     "tahajjudHadith": "Notre Seigneur descend chaque nuit au ciel le plus proche lorsqu'il reste le dernier tiers de la nuit",
     "tahajjudSource": "Bukhari 1145"
+  },
+  "footer": {
+    "madeWithLove": "Fait avec <heart/> pour la Oumma",
+    "copyright": "\u00a9 {{year}} IPG \u2014 Jeux de société islamiques"
   }
 }

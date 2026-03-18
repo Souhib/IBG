@@ -563,5 +563,9 @@
       "gameNotFound": "Game not found.",
       "resourceNotFound": "Resource not found."
     }
+  },
+  "footer": {
+    "madeWithLove": "Made with <heart/> for the Ummah",
+    "copyright": "\u00a9 {{year}} IPG \u2014 Islamic Party Games"
   }
 }
