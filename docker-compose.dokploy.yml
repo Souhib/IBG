@@ -370,6 +370,8 @@ services:
   beszel:
     container_name: majlisna-beszel
     image: henrygd/beszel:0.9.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - beszel_data:/beszel_data
     healthcheck:
@@ -394,7 +396,8 @@ services:
     environment:
       PORT: 45876
       KEY: ${BESZEL_AGENT_KEY:-}
-    network_mode: host
+    networks:
+      - dokploy-network
     logging: *default-logging
     restart: always
 
