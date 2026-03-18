@@ -79,6 +79,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create test env file
+        run: |
+          echo "IPG_ENV=development" > .env
+          cp .env.development .env.development 2>/dev/null || cat > .env.development << 'ENVEOF'
+          DATABASE_URL=sqlite+aiosqlite:///:memory:
+          ENVIRONMENT=development
+          JWT_SECRET_KEY=dev-secret-key-change-in-production
+          JWT_ENCRYPTION_ALGORITHM=HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES=15
+          REFRESH_TOKEN_EXPIRE_DAYS=7
+          FRONTEND_URL=http://localhost:3000
+          PORT=5111
+          CORS_ORIGINS=*
+          ENVEOF
+
       - name: Install dependencies
         run: uv sync --frozen --all-extras
 
