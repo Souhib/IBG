@@ -148,6 +148,7 @@ class CodenamesGameController(BaseGameController):
 
     async def give_clue(self, game_id: UUID, user_id: UUID, clue_word: str, clue_number: int) -> GiveClueResponse:
         """Process a spymaster giving a clue."""
+        logger.info("Codenames clue: game={} user={} word={} number={}", game_id, user_id, clue_word, clue_number)
         async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
@@ -210,6 +211,7 @@ class CodenamesGameController(BaseGameController):
 
     async def guess_card(self, game_id: UUID, user_id: UUID, card_index: int) -> GuessCardResponse:
         """Process an operative voting for a card (or instant reveal if solo operative)."""
+        logger.info("Codenames guess: game={} user={} card={}", game_id, user_id, card_index)
         async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
@@ -614,6 +616,7 @@ class CodenamesGameController(BaseGameController):
                             ],
                         }
                     )
+                logger.info("Stats updated: game=codenames user={}", user_id)
             except Exception:
                 logger.exception("Failed to update stats/achievements for user {user_id}", user_id=user_id)
         return newly_unlocked_all

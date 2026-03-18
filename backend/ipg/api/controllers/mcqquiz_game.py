@@ -181,6 +181,7 @@ class McqQuizGameController(BaseGameController):
 
     async def submit_answer(self, game_id: UUID, user_id: UUID, choice_index: int) -> McqSubmitAnswerResponse:
         """Submit an answer for the current round. One attempt only."""
+        logger.info("McqQuiz answer: game={} user={}", game_id, user_id)
         async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
@@ -456,5 +457,6 @@ class McqQuizGameController(BaseGameController):
                 await self._stats_controller.update_stats_after_game(
                     user_id=user_id, game_type="mcq_quiz", won=won, role="player"
                 )
+                logger.info("Stats updated: game=mcq_quiz user={}", user_id)
             except Exception:
                 logger.exception("Failed to update stats for user {user_id}", user_id=user_id)

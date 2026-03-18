@@ -63,7 +63,7 @@ class EmailService:
                     "html": html,
                 }
             )
-            logger.info("Email sent to {to}: {subject}", to=to_email, subject=subject)
+            logger.debug("Email sent to {to}: {subject}", to=to_email, subject=subject)
             return True
         except Exception:
             logger.exception("Failed to send email to {to}", to=to_email)

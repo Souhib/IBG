@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.attributes import flag_modified
@@ -194,6 +195,7 @@ class RoomController:
                 select(Room).where(Room.id == db_room.id).options(selectinload(Room.users), selectinload(Room.games))
             )
         ).one()
+        logger.info("Room join: user={} room={}", room_join.user_id, db_room.id)
         return room
 
     async def leave_room(self, room_leave: RoomLeave) -> Room:
@@ -229,6 +231,7 @@ class RoomController:
             raise UserNotInRoomError(user_id=db_user.id, room_id=room_leave.room_id)  # type: ignore
 
         await _handle_permanent_disconnect(self.session, link)
+        logger.info("Room leave: user={} room={}", room_leave.user_id, room_leave.room_id)
 
         room = (
             await self.session.exec(
@@ -278,6 +281,7 @@ class RoomController:
                 select(Room).where(Room.id == db_room.id).options(selectinload(Room.users), selectinload(Room.games))
             )
         ).one()
+        logger.info("Room spectator join: user={} room={}", user_id, room_id)
         return room
 
     async def get_room_state(self, room_id: UUID, user_id: UUID, update_heartbeat: bool = True) -> RoomState:

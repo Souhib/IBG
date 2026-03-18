@@ -184,7 +184,7 @@ class AuthController:
         user = await self.get_user_by_email(email)
         if not user:
             # Don't reveal whether user exists — return silently
-            logger.info("Password reset requested for non-existent email: {email}", email=email)
+            logger.debug("Password reset requested for unknown email")
             return True
 
         token = secrets.token_urlsafe(32)

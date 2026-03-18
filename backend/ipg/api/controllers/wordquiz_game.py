@@ -309,6 +309,7 @@ class WordQuizGameController(BaseGameController):
 
     async def submit_answer(self, game_id: UUID, user_id: UUID, answer: str) -> SubmitAnswerResponse:
         """Submit an answer for the current round."""
+        logger.info("WordQuiz answer: game={} user={}", game_id, user_id)
         async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
@@ -579,5 +580,6 @@ class WordQuizGameController(BaseGameController):
                 await self._stats_controller.update_stats_after_game(
                     user_id=user_id, game_type="word_quiz", won=won, role="player"
                 )
+                logger.info("Stats updated: game=word_quiz user={}", user_id)
             except Exception:
                 logger.exception("Failed to update stats for user {user_id}", user_id=user_id)

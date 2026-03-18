@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useRef } from "react"
+import { getApiErrorMessage } from "@/api/client"
 import { useJoinRoomApiV1RoomsJoinPatch } from "@/api/generated"
 import { useAuth } from "@/providers/AuthProvider"
 import { toast } from "sonner"
@@ -40,8 +41,8 @@ function JoinByLink() {
             navigate({ to: "/rooms/$roomId", params: { roomId: r.id } })
           }
         },
-        onError: () => {
-          toast.error(t("room.joinFailed"))
+        onError: (err) => {
+          toast.error(getApiErrorMessage(err, t("room.joinFailed")))
           navigate({ to: "/rooms" })
         },
       },

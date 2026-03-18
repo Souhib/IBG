@@ -254,6 +254,7 @@ class UndercoverGameController(BaseGameController):
 
     async def submit_description(self, game_id: UUID, user_id: UUID, word: str) -> SubmitDescriptionResponse:
         """Submit a single-word description for the current turn."""
+        logger.info("Undercover description: game={} user={}", game_id, user_id)
         async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
@@ -309,6 +310,7 @@ class UndercoverGameController(BaseGameController):
 
     async def submit_vote(self, game_id: UUID, user_id: UUID, voted_for: UUID) -> SubmitVoteResponse:  # noqa: C901
         """Submit a vote for a player."""
+        logger.info("Undercover vote: game={} user={} target={}", game_id, user_id, voted_for)
         async with get_game_lock(str(game_id), self.session):
             game = await self._get_game(game_id)
             state = game.live_state
@@ -694,6 +696,7 @@ class UndercoverGameController(BaseGameController):
                             ],
                         }
                     )
+                logger.info("Stats updated: game=undercover user={}", user_id)
             except Exception:
                 logger.exception("Failed to update stats/achievements for user {user_id}", user_id=user_id)
         return newly_unlocked_all
