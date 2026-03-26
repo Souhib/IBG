@@ -654,10 +654,36 @@ export async function apiUpdateRoomSettings(
     codenames_guess_timer?: number;
     word_quiz_turn_duration?: number;
     mcq_quiz_turn_duration?: number;
+    mcq_quiz_rounds?: number;
   },
   token: string,
 ): Promise<Record<string, unknown>> {
   return patchJSON(`/api/v1/rooms/${roomId}/settings`, settings, token);
+}
+
+// ─── Spectator API ─────────────────────────────────────────
+
+export async function apiJoinRoomAsSpectator(
+  roomId: string,
+  token: string,
+): Promise<RoomResponse> {
+  return patchJSON<RoomResponse>(
+    "/api/v1/rooms/join-spectator",
+    { room_id: roomId },
+    token,
+  );
+}
+
+// ─── Share Link API ────────────────────────────────────────
+
+export async function apiGetShareLink(
+  roomId: string,
+  token: string,
+): Promise<{ public_id: string; password: string }> {
+  return getJSON<{ public_id: string; password: string }>(
+    `/api/v1/rooms/${roomId}/share-link`,
+    token,
+  );
 }
 
 // ─── Health Checks ──────────────────────────────────────────

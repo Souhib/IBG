@@ -53,6 +53,8 @@ export default defineConfig({
         "**/challenges/**",
         "**/friends/**",
         "**/accessibility/**",
+        "**/spectator/**",
+        "**/i18n/**",
       ],
     },
     {
