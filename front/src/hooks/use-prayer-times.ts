@@ -53,20 +53,33 @@ export function usePrayerTimes(
   const [nextPrayerVersion, setNextPrayerVersion] = useState(0)
   const lastCountdownRef = useRef("")
 
-  // Check for midnight crossing every 30s
+  // Check for midnight crossing every 30s + on tab refocus
   useEffect(() => {
-    const interval = setInterval(() => {
+    const checkDateChange = () => {
       const currentKey = getDateKey(new Date())
       setDateKey((prev) => {
         if (prev !== currentKey) {
-          // Date changed — force recompute of next prayer
           setNextPrayerVersion((v) => v + 1)
           return currentKey
         }
         return prev
       })
-    }, 30_000)
-    return () => clearInterval(interval)
+    }
+    const interval = setInterval(checkDateChange, 30_000)
+
+    // When tab comes back from background, recompute immediately
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkDateChange()
+        setNextPrayerVersion((v) => v + 1)
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", handleVisibility)
+    }
   }, [])
 
   const prayerTimes = useMemo(() => {
@@ -124,14 +137,18 @@ export function usePrayerTimes(
 
   useEffect(() => {
     if (!nextPrayer) return
+    // Reset the guard so a fresh countdown can trigger recompute when it hits 0
+    lastCountdownRef.current = ""
     const interval = setInterval(() => {
       const current = new Date()
       const diff = nextPrayer.time.getTime() - current.getTime()
       const formatted = formatCountdown(diff > 0 ? diff : 0)
 
       // When countdown hits 0, trigger recompute of nextPrayer
+      // and force dateKey update in case we crossed midnight
       if (diff <= 0 && lastCountdownRef.current !== "00:00:00") {
         setNextPrayerVersion((v) => v + 1)
+        setDateKey(getDateKey(new Date()))
       }
       lastCountdownRef.current = formatted
       setCountdown(formatted)
