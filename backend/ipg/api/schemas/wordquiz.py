@@ -69,6 +69,7 @@ class WordQuizGameState(BaseModel):
     round_phase: str  # "playing" | "results" | "game_over"
     hints_revealed: int
     hints: list[str]
+    difficulty: str | None = None  # "easy" | "medium" | "hard"
     turn_duration_seconds: int
     hint_interval_seconds: int
     round_started_at: str | None = None

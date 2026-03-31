@@ -58,9 +58,10 @@ class McqQuizGameController(BaseGameController):
             room_settings = getattr(db_room, "settings", None) or {}
             total_rounds = room_settings.get("mcq_quiz_rounds", DEFAULT_MCQ_QUIZ_ROUNDS)
             turn_duration = room_settings.get("mcq_quiz_turn_duration", DEFAULT_MCQ_QUIZ_TURN_DURATION)
+            difficulty = room_settings.get("mcq_quiz_difficulty")  # None/"mixed"/"easy"/"medium"/"hard"
 
             # Pick all questions upfront
-            random_questions = await self._mcqquiz_controller.get_random_questions(total_rounds)
+            random_questions = await self._mcqquiz_controller.get_random_questions(total_rounds, difficulty=difficulty)
             if not random_questions:
                 raise NoMcqQuestionsAvailableError()
 
@@ -86,6 +87,7 @@ class McqQuizGameController(BaseGameController):
                     "question_fr": first_question.question_fr,
                     "choices": first_question.choices,
                     "correct_answer_index": first_question.correct_answer_index,
+                    "difficulty": first_question.difficulty,
                 },
                 "explanation": first_question.explanation,
                 "round_started_at": datetime.now(UTC).isoformat(),
@@ -105,6 +107,7 @@ class McqQuizGameController(BaseGameController):
                     game_configurations={
                         "total_rounds": total_rounds,
                         "turn_duration": turn_duration,
+                        "difficulty": difficulty,
                     },
                 )
             )
@@ -164,6 +167,7 @@ class McqQuizGameController(BaseGameController):
             total_rounds=state["total_rounds"],
             round_phase=state["round_phase"],
             question=question_text,
+            difficulty=state.get("current_question", {}).get("difficulty"),
             choices=choices,
             correct_answer_index=correct_answer_index,
             explanation=explanation,
@@ -377,6 +381,7 @@ class McqQuizGameController(BaseGameController):
                 "question_fr": q.question_fr,
                 "choices": q.choices,
                 "correct_answer_index": q.correct_answer_index,
+                "difficulty": q.difficulty,
             }
             state["explanation"] = q.explanation
             state["round_started_at"] = datetime.now(UTC).isoformat()

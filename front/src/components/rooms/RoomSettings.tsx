@@ -35,6 +35,8 @@ export const RoomSettings = memo(function RoomSettings({
   const [wordQuizHintInterval, setWordQuizHintInterval] = useState(10)
   const [mcqQuizTurnDuration, setMcqQuizTurnDuration] = useState(15)
   const [mcqQuizRounds, setMcqQuizRounds] = useState(10)
+  const [wordQuizDifficulty, setWordQuizDifficulty] = useState("mixed")
+  const [mcqQuizDifficulty, setMcqQuizDifficulty] = useState("mixed")
 
   useEffect(() => {
     if (settings) {
@@ -48,6 +50,8 @@ export const RoomSettings = memo(function RoomSettings({
       if (settings.word_quiz_hint_interval !== undefined) setWordQuizHintInterval(settings.word_quiz_hint_interval as number)
       if (settings.mcq_quiz_turn_duration !== undefined) setMcqQuizTurnDuration(settings.mcq_quiz_turn_duration as number)
       if (settings.mcq_quiz_rounds !== undefined) setMcqQuizRounds(settings.mcq_quiz_rounds as number)
+      if (settings.word_quiz_difficulty !== undefined) setWordQuizDifficulty(settings.word_quiz_difficulty as string)
+      if (settings.mcq_quiz_difficulty !== undefined) setMcqQuizDifficulty(settings.mcq_quiz_difficulty as string)
     }
   }, [settings])
 
@@ -69,16 +73,18 @@ export const RoomSettings = memo(function RoomSettings({
         payload.word_quiz_turn_duration = wordQuizTurnDuration
         payload.word_quiz_rounds = wordQuizRounds
         payload.word_quiz_hint_interval = wordQuizHintInterval
+        payload.word_quiz_difficulty = wordQuizDifficulty
       } else if (gameType === "mcq_quiz") {
         payload.mcq_quiz_turn_duration = mcqQuizTurnDuration
         payload.mcq_quiz_rounds = mcqQuizRounds
+        payload.mcq_quiz_difficulty = mcqQuizDifficulty
       }
       await settingsMutation.mutateAsync({ room_id: roomId, data: payload })
       toast.success(t("room.settingsSaved"))
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to save settings"))
     }
-  }, [roomId, gameType, descriptionTimer, votingTimer, codenamesClueTimer, codenamesGuessTimer, enableMrWhite, wordQuizTurnDuration, wordQuizRounds, wordQuizHintInterval, mcqQuizTurnDuration, mcqQuizRounds, t, settingsMutation])
+  }, [roomId, gameType, descriptionTimer, votingTimer, codenamesClueTimer, codenamesGuessTimer, enableMrWhite, wordQuizTurnDuration, wordQuizRounds, wordQuizHintInterval, wordQuizDifficulty, mcqQuizTurnDuration, mcqQuizRounds, mcqQuizDifficulty, t, settingsMutation])
 
   return (
     <div className="glass rounded-2xl p-5">
@@ -230,6 +236,21 @@ export const RoomSettings = memo(function RoomSettings({
             </>
           ) : gameType === "word_quiz" ? (
             <>
+              {/* Difficulty */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-2">
+                  {t("room.difficulty")}
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(["mixed", "easy", "medium", "hard"] as const).map((val) => (
+                    <button key={val} type="button" onClick={() => setWordQuizDifficulty(val)}
+                      className={cn("rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                        wordQuizDifficulty === val ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
+                      {t(`room.difficulty${val.charAt(0).toUpperCase() + val.slice(1)}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {/* Turn Duration */}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-2">
@@ -278,6 +299,21 @@ export const RoomSettings = memo(function RoomSettings({
             </>
           ) : (
             <>
+              {/* Difficulty */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-2">
+                  {t("room.difficulty")}
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(["mixed", "easy", "medium", "hard"] as const).map((val) => (
+                    <button key={val} type="button" onClick={() => setMcqQuizDifficulty(val)}
+                      className={cn("rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                        mcqQuizDifficulty === val ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
+                      {t(`room.difficulty${val.charAt(0).toUpperCase() + val.slice(1)}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {/* MCQ Quiz — Time per question */}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-2">

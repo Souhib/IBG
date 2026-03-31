@@ -34,6 +34,7 @@ class McqQuizGameState(BaseModel):
     total_rounds: int
     round_phase: str  # "playing" | "results" | "game_over"
     question: str
+    difficulty: str | None = None  # "easy" | "medium" | "hard"
     choices: list[str]  # 4 items resolved to lang
     correct_answer_index: int | None = None  # only in results/game_over
     explanation: str | None = None  # only in results/game_over

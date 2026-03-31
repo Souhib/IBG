@@ -127,9 +127,10 @@ class WordQuizGameController(BaseGameController):
             total_rounds = room_settings.get("word_quiz_rounds", DEFAULT_WORD_QUIZ_ROUNDS)
             turn_duration = room_settings.get("word_quiz_turn_duration", DEFAULT_WORD_QUIZ_TURN_DURATION)
             hint_interval = room_settings.get("word_quiz_hint_interval", DEFAULT_WORD_QUIZ_HINT_INTERVAL)
+            difficulty = room_settings.get("word_quiz_difficulty")  # None/"mixed"/"easy"/"medium"/"hard"
 
             # Pick first word
-            random_words = await self._wordquiz_controller.get_random_words(1)
+            random_words = await self._wordquiz_controller.get_random_words(1, difficulty=difficulty)
             if not random_words:
                 raise NoQuizWordsAvailableError()
             first_word = random_words[0]
@@ -154,6 +155,7 @@ class WordQuizGameController(BaseGameController):
                     "word_fr": first_word.word_fr,
                     "accepted_answers": first_word.accepted_answers,
                 },
+                "difficulty": first_word.difficulty,
                 "hints": first_word.hints,
                 "explanation": first_word.explanation,
                 "hints_revealed": 1,
@@ -178,6 +180,7 @@ class WordQuizGameController(BaseGameController):
                         "total_rounds": total_rounds,
                         "turn_duration": turn_duration,
                         "hint_interval": hint_interval,
+                        "difficulty": difficulty,
                     },
                 )
             )
@@ -290,6 +293,7 @@ class WordQuizGameController(BaseGameController):
             round_phase=state["round_phase"],
             hints_revealed=hints_revealed,
             hints=resolved_hints,
+            difficulty=state.get("difficulty"),
             turn_duration_seconds=state.get("turn_duration_seconds", DEFAULT_WORD_QUIZ_TURN_DURATION),
             hint_interval_seconds=state.get("hint_interval_seconds", DEFAULT_WORD_QUIZ_HINT_INTERVAL),
             round_started_at=state.get("round_started_at"),
@@ -488,7 +492,10 @@ class WordQuizGameController(BaseGameController):
         else:
             # Pick new word
             used_ids = state.get("used_word_ids", [])
-            random_words = await self._wordquiz_controller.get_random_words(1, exclude_ids=used_ids)
+            game_difficulty = game.game_configurations.get("difficulty") if game.game_configurations else None
+            random_words = await self._wordquiz_controller.get_random_words(
+                1, exclude_ids=used_ids, difficulty=game_difficulty
+            )
             if not random_words:
                 random_words = await self._wordquiz_controller.get_random_words(1)
             if not random_words:
@@ -503,6 +510,7 @@ class WordQuizGameController(BaseGameController):
                 "word_fr": new_word.word_fr,
                 "accepted_answers": new_word.accepted_answers,
             }
+            state["difficulty"] = new_word.difficulty
             state["hints"] = new_word.hints
             state["explanation"] = new_word.explanation
             state["hints_revealed"] = 1

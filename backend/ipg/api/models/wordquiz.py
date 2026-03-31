@@ -16,6 +16,7 @@ class QuizWord(BaseTable, table=True):
     accepted_answers: dict | None = Field(default=None, sa_column=Column(JSON))
     # {"en": ["Ibrahim", "Abraham"], "ar": ["إبراهيم", "ابراهيم"], "fr": [...]}
     category: str
+    difficulty: str = Field(default="medium", index=True)  # "easy" | "medium" | "hard"
     hints: dict = Field(sa_column=Column(JSON))
     # {"1": {"en": "...", "ar": "...", "fr": "..."}, ..., "6": {...}}
     explanation: dict | None = Field(default=None, sa_column=Column(JSON))

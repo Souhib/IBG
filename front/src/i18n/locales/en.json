@@ -152,6 +152,11 @@
     "wordQuizHintInterval": "Hint Interval (seconds)",
     "mcqQuizTurnDuration": "Time per question (seconds)",
     "mcqQuizRounds": "Number of questions",
+    "difficulty": "Difficulty",
+    "difficultyMixed": "Mixed",
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
     "shareLink": "Share Link",
     "linkCopied": "Room link copied to clipboard!",
     "joiningRoom": "Joining room..."
@@ -279,7 +284,8 @@
       "backToRoom": "Back to Room",
       "waiting": "Waiting for results...",
       "category": "Category",
-      "players": "{{count}} player(s)"
+      "players": "{{count}} player(s)",
+      "difficulty": "{{difficulty}}"
     },
     "mcqQuiz": {
       "chooseAnswer": "MCQ",
@@ -294,7 +300,8 @@
       "finalScores": "Final Scores",
       "winner": "{{username}} wins!",
       "backToRoom": "Back to Room",
-      "players": "{{count}} player(s)"
+      "players": "{{count}} player(s)",
+      "difficulty": "{{difficulty}}"
     }
   },
   "stats": {

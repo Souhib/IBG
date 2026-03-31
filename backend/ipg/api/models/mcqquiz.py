@@ -19,3 +19,4 @@ class McqQuestion(BaseTable, table=True):
     explanation: dict | None = Field(default=None, sa_column=Column(JSON))
     # {"en": "...", "ar": "...", "fr": "..."}
     category: str
+    difficulty: str = Field(default="medium", index=True)  # "easy" | "medium" | "hard"

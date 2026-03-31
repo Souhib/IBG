@@ -69,6 +69,7 @@ interface WordQuizState {
   }[]
   game_over: boolean
   timer_config: { turn_duration_seconds: number; hint_interval_seconds: number } | null
+  difficulty?: string | null
 }
 
 export const Route = createFileRoute("/_auth/game/wordquiz/$gameId")({
@@ -353,7 +354,7 @@ function WordQuizGamePage() {
           {/* Playing Phase */}
           {state.round_phase === "playing" && (
             <>
-              <HintDisplay hints={state.hints} hintsRevealed={effectiveHintsRevealed} maxHints={maxHints} />
+              <HintDisplay hints={state.hints} hintsRevealed={effectiveHintsRevealed} maxHints={maxHints} difficulty={state.difficulty} />
               {!state.is_spectator && (
                 <AnswerInput
                   onSubmit={handleSubmitAnswer}

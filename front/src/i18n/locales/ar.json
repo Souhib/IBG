@@ -152,6 +152,11 @@
     "wordQuizHintInterval": "فترة التلميحات (ثواني)",
     "mcqQuizTurnDuration": "الوقت لكل سؤال (ثواني)",
     "mcqQuizRounds": "عدد الأسئلة",
+    "difficulty": "الصعوبة",
+    "difficultyMixed": "مختلط",
+    "difficultyEasy": "سهل",
+    "difficultyMedium": "متوسط",
+    "difficultyHard": "صعب",
     "shareLink": "مشاركة الرابط",
     "linkCopied": "تم نسخ رابط الغرفة!",
     "joiningRoom": "جاري الانضمام للغرفة..."
@@ -279,7 +284,8 @@
       "backToRoom": "العودة للغرفة",
       "waiting": "في انتظار النتائج...",
       "category": "الفئة",
-      "players": "{{count}} لاعب(ين)"
+      "players": "{{count}} لاعب(ين)",
+      "difficulty": "{{difficulty}}"
     },
     "mcqQuiz": {
       "chooseAnswer": "اختيارات",
@@ -294,7 +300,8 @@
       "finalScores": "النتائج النهائية",
       "winner": "{{username}} فاز!",
       "backToRoom": "العودة للغرفة",
-      "players": "{{count}} لاعب(ين)"
+      "players": "{{count}} لاعب(ين)",
+      "difficulty": "{{difficulty}}"
     }
   },
   "stats": {

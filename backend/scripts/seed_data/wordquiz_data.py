@@ -15,6 +15,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ibrahim / Abraham",
         "accepted_answers": {"en": ["Ibrahim", "Abraham"], "ar": ["إبراهيم", "ابراهيم"], "fr": ["Ibrahim", "Abraham"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A great patriarch", "ar": "أب عظيم", "fr": "Un grand patriarche"},
             "2": {"en": "Known as the friend of Allah", "ar": "خليل الله", "fr": "Connu comme l'ami d'Allah"},
@@ -35,6 +36,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Moussa / Moïse",
         "accepted_answers": {"en": ["Musa", "Moses"], "ar": ["موسى"], "fr": ["Moïse", "Moussa"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "One of the greatest messengers", "ar": "من أولي العزم", "fr": "Un des plus grands messagers"},
             "2": {"en": "Spoke directly to Allah", "ar": "كلّم الله مباشرة", "fr": "A parlé directement à Allah"},
@@ -55,6 +57,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Issa / Jésus",
         "accepted_answers": {"en": ["Isa", "Jesus"], "ar": ["عيسى"], "fr": ["Jésus", "Issa"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Born miraculously", "ar": "ولد معجزة", "fr": "Né miraculeusement"},
             "2": {"en": "His mother is mentioned by name in the Quran", "ar": "أمه مذكورة بالاسم في القرآن", "fr": "Sa mère est mentionnée par nom dans le Coran"},
@@ -75,6 +78,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Nouh / Noé",
         "accepted_answers": {"en": ["Nuh", "Noah"], "ar": ["نوح"], "fr": ["Noé", "Nouh"]},
         "category": "Prophets",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Lived for a very long time", "ar": "عاش طويلاً جداً", "fr": "A vécu très longtemps"},
             "2": {"en": "Built something massive by command of Allah", "ar": "بنى شيئاً عظيماً بأمر الله", "fr": "A construit quelque chose de massif par ordre d'Allah"},
@@ -95,6 +99,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Youssef / Joseph",
         "accepted_answers": {"en": ["Yusuf", "Joseph"], "ar": ["يوسف"], "fr": ["Joseph", "Youssef"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Known for his extraordinary beauty", "ar": "اشتهر بجماله الفائق", "fr": "Connu pour sa beauté extraordinaire"},
             "2": {"en": "Had a dream about celestial bodies", "ar": "رأى حلماً عن أجرام سماوية", "fr": "A eu un rêve sur des corps célestes"},
@@ -115,6 +120,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Daoud / David",
         "accepted_answers": {"en": ["Dawud", "David"], "ar": ["داود", "داوود"], "fr": ["David", "Daoud"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A prophet who was also a king", "ar": "نبي وملك", "fr": "Un prophète qui était aussi roi"},
             "2": {"en": "Given a beautiful voice", "ar": "أُعطي صوتاً جميلاً", "fr": "Doté d'une belle voix"},
@@ -135,6 +141,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Soulayman / Salomon",
         "accepted_answers": {"en": ["Sulayman", "Solomon"], "ar": ["سليمان"], "fr": ["Salomon", "Soulayman"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Given a kingdom unlike any other", "ar": "أُعطي ملكاً لا مثيل له", "fr": "Reçu un royaume sans pareil"},
             "2": {"en": "Could understand the language of animals", "ar": "كان يفهم لغة الحيوانات", "fr": "Pouvait comprendre le langage des animaux"},
@@ -155,6 +162,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ayyoub / Job",
         "accepted_answers": {"en": ["Ayyub", "Job"], "ar": ["أيوب", "ايوب"], "fr": ["Job", "Ayyoub"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Known for extraordinary patience", "ar": "اشتهر بصبره العظيم", "fr": "Connu pour sa patience extraordinaire"},
             "2": {"en": "Lost his wealth and health", "ar": "فقد ماله وصحته", "fr": "A perdu sa richesse et sa santé"},
@@ -175,6 +183,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Younous / Jonas",
         "accepted_answers": {"en": ["Yunus", "Jonah"], "ar": ["يونس"], "fr": ["Jonas", "Younous"]},
         "category": "Prophets",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Left his people in frustration", "ar": "ترك قومه غاضباً", "fr": "A quitté son peuple frustré"},
             "2": {"en": "Boarded a ship", "ar": "ركب سفينة", "fr": "A embarqué sur un navire"},
@@ -195,6 +204,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Mohammed",
         "accepted_answers": {"en": ["Muhammad", "Mohammed", "Mohamed"], "ar": ["محمد"], "fr": ["Mohammed", "Muhammad", "Mohamed"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The final messenger", "ar": "الرسول الأخير", "fr": "Le dernier messager"},
             "2": {"en": "Born in Makkah", "ar": "وُلد في مكة", "fr": "Né à La Mecque"},
@@ -216,6 +226,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Abou Bakr",
         "accepted_answers": {"en": ["Abu Bakr", "Abu Bakr As-Siddiq"], "ar": ["أبو بكر", "ابو بكر"], "fr": ["Abou Bakr"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A very close friend of the Prophet", "ar": "صديق قريب جداً من النبي", "fr": "Un ami très proche du Prophète"},
             "2": {"en": "First among men to accept Islam", "ar": "أول الرجال إسلاماً", "fr": "Premier homme à accepter l'Islam"},
@@ -236,6 +247,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Omar",
         "accepted_answers": {"en": ["Umar", "Omar", "Umar ibn Al-Khattab"], "ar": ["عمر", "عمر بن الخطاب"], "fr": ["Omar"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Known for his strong sense of justice", "ar": "اشتهر بعدله", "fr": "Connu pour son sens de la justice"},
             "2": {"en": "His conversion strengthened the Muslims", "ar": "إسلامه قوّى المسلمين", "fr": "Sa conversion a renforcé les musulmans"},
@@ -256,6 +268,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khadija",
         "accepted_answers": {"en": ["Khadijah", "Khadija"], "ar": ["خديجة"], "fr": ["Khadija", "Khadidja"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A successful businesswoman", "ar": "سيدة أعمال ناجحة", "fr": "Une femme d'affaires prospère"},
             "2": {"en": "First person to accept Islam", "ar": "أول من أسلم", "fr": "Première personne à accepter l'Islam"},
@@ -276,6 +289,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Bilal",
         "accepted_answers": {"en": ["Bilal", "Bilal ibn Rabah"], "ar": ["بلال", "بلال بن رباح"], "fr": ["Bilal"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Of Ethiopian origin", "ar": "من أصل حبشي", "fr": "D'origine éthiopienne"},
             "2": {"en": "Was severely tortured for his faith", "ar": "عُذّب بشدة بسبب إيمانه", "fr": "A été sévèrement torturé pour sa foi"},
@@ -296,6 +310,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ali",
         "accepted_answers": {"en": ["Ali", "Ali ibn Abi Talib"], "ar": ["علي", "علي بن أبي طالب"], "fr": ["Ali"]},
         "category": "Companions",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Raised in the Prophet's household", "ar": "نشأ في بيت النبي", "fr": "Élevé dans la maison du Prophète"},
             "2": {"en": "Known for his bravery and knowledge", "ar": "اشتهر بشجاعته وعلمه", "fr": "Connu pour sa bravoure et son savoir"},
@@ -317,6 +332,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tawhid",
         "accepted_answers": {"en": ["Tawhid", "Tawheed", "Monotheism"], "ar": ["توحيد", "التوحيد"], "fr": ["Tawhid", "Monothéisme"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The most fundamental concept in Islam", "ar": "أهم مفهوم في الإسلام", "fr": "Le concept le plus fondamental en Islam"},
             "2": {"en": "Related to the first pillar of Islam", "ar": "يتعلق بالركن الأول من الإسلام", "fr": "Lié au premier pilier de l'Islam"},
@@ -337,6 +353,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Taqwa",
         "accepted_answers": {"en": ["Taqwa", "God-consciousness"], "ar": ["تقوى", "التقوى"], "fr": ["Taqwa", "Piété"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A quality highly praised in the Quran", "ar": "صفة ممدوحة في القرآن", "fr": "Une qualité très louée dans le Coran"},
             "2": {"en": "Being mindful of the Creator", "ar": "استحضار الخالق", "fr": "Être conscient du Créateur"},
@@ -357,6 +374,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Zakat",
         "accepted_answers": {"en": ["Zakat", "Zakah"], "ar": ["زكاة", "الزكاة"], "fr": ["Zakat", "Aumône légale"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "One of the five pillars of Islam", "ar": "ركن من أركان الإسلام", "fr": "Un des cinq piliers de l'Islam"},
             "2": {"en": "Related to wealth", "ar": "يتعلق بالمال", "fr": "Lié à la richesse"},
@@ -377,6 +395,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hajj",
         "accepted_answers": {"en": ["Hajj", "Haj"], "ar": ["حج", "الحج"], "fr": ["Hajj", "Pèlerinage"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "One of the five pillars of Islam", "ar": "ركن من أركان الإسلام", "fr": "Un des cinq piliers de l'Islam"},
             "2": {"en": "Required once in a lifetime", "ar": "واجب مرة في العمر", "fr": "Requis une fois dans la vie"},
@@ -397,6 +416,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ihsan",
         "accepted_answers": {"en": ["Ihsan", "Excellence"], "ar": ["إحسان", "الإحسان", "احسان"], "fr": ["Ihsan", "Excellence"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The highest level of faith", "ar": "أعلى مستويات الإيمان", "fr": "Le plus haut niveau de foi"},
             "2": {"en": "Part of the Hadith of Jibreel", "ar": "جزء من حديث جبريل", "fr": "Partie du Hadith de Jibreel"},
@@ -418,6 +438,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Fatiha",
         "accepted_answers": {"en": ["Al-Fatiha", "Fatiha", "The Opening"], "ar": ["الفاتحة", "سورة الفاتحة"], "fr": ["Al-Fatiha", "L'Ouverture"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Recited in every salah", "ar": "تُقرأ في كل صلاة", "fr": "Récitée dans chaque salah"},
             "2": {"en": "The most frequently recited surah", "ar": "أكثر سورة تقرأ", "fr": "La sourate la plus récitée"},
@@ -438,6 +459,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ayat Al-Kursi",
         "accepted_answers": {"en": ["Ayat Al-Kursi", "Ayatul Kursi", "Throne Verse"], "ar": ["آية الكرسي", "اية الكرسي"], "fr": ["Ayat Al-Kursi", "Verset du Trône"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The greatest verse in the Quran", "ar": "أعظم آية في القرآن", "fr": "Le plus grand verset du Coran"},
             "2": {"en": "Found in Surah Al-Baqarah", "ar": "في سورة البقرة", "fr": "Se trouve dans Sourate Al-Baqarah"},
@@ -459,6 +481,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hégire",
         "accepted_answers": {"en": ["Hijra", "Hijrah", "Migration"], "ar": ["هجرة", "الهجرة"], "fr": ["Hégire", "Hijra"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A pivotal event that changed Islamic history", "ar": "حدث محوري غيّر تاريخ الإسلام", "fr": "Un événement pivot qui a changé l'histoire islamique"},
             "2": {"en": "Involved a long journey", "ar": "تضمنت رحلة طويلة", "fr": "Impliquait un long voyage"},
@@ -480,6 +503,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ablutions",
         "accepted_answers": {"en": ["Wudu", "Wudhu", "Ablution"], "ar": ["وضوء", "الوضوء"], "fr": ["Ablutions", "Woudou"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Done before an important act of worship", "ar": "يُفعل قبل عبادة مهمة", "fr": "Fait avant un acte d'adoration important"},
             "2": {"en": "Uses water", "ar": "يستخدم الماء", "fr": "Utilise de l'eau"},
@@ -500,6 +524,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Adhan",
         "accepted_answers": {"en": ["Adhan", "Azan", "Azaan"], "ar": ["أذان", "الأذان", "اذان"], "fr": ["Adhan", "Appel à la prière"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Heard five times a day", "ar": "يُسمع خمس مرات يومياً", "fr": "Entendu cinq fois par jour"},
             "2": {"en": "Comes from a high place", "ar": "يأتي من مكان مرتفع", "fr": "Vient d'un endroit élevé"},
@@ -520,6 +545,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Souhour",
         "accepted_answers": {"en": ["Suhoor", "Suhur", "Sahur"], "ar": ["سحور", "السحور"], "fr": ["Souhour", "Suhoor"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Happens during a special month", "ar": "يحدث في شهر خاص", "fr": "Se produit pendant un mois spécial"},
             "2": {"en": "Eaten very early in the morning", "ar": "يُؤكل في وقت مبكر جداً", "fr": "Mangé très tôt le matin"},
@@ -540,6 +566,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Iftar",
         "accepted_answers": {"en": ["Iftar", "Iftaar"], "ar": ["إفطار", "الإفطار", "افطار"], "fr": ["Iftar", "Rupture du jeûne"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A daily tradition during Ramadan", "ar": "تقليد يومي في رمضان", "fr": "Une tradition quotidienne pendant le Ramadan"},
             "2": {"en": "Happens at a specific time of day", "ar": "يحدث في وقت محدد من اليوم", "fr": "Se produit à un moment précis de la journée"},
@@ -560,6 +587,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tarawih",
         "accepted_answers": {"en": ["Taraweeh", "Tarawih", "Taraweeh prayers"], "ar": ["تراويح", "التراويح"], "fr": ["Tarawih", "Taraouih"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A special nightly worship", "ar": "عبادة ليلية خاصة", "fr": "Un culte nocturne spécial"},
             "2": {"en": "Only during one month of the year", "ar": "فقط خلال شهر واحد في السنة", "fr": "Seulement pendant un mois de l'année"},
@@ -581,6 +609,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Adam",
         "accepted_answers": {"en": ["Adam"], "ar": ["آدم", "ادم"], "fr": ["Adam"]},
         "category": "Prophets",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The very first human being", "ar": "أول إنسان على الإطلاق", "fr": "Le tout premier être humain"},
             "2": {"en": "Created from clay", "ar": "خُلق من طين", "fr": "Créé à partir d'argile"},
@@ -601,6 +630,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ismaïl / Ismaël",
         "accepted_answers": {"en": ["Ismail", "Ishmael", "Ismaril"], "ar": ["إسماعيل", "اسماعيل"], "fr": ["Ismaël", "Ismail", "Ismaril"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Born after his parents' long prayer for a child", "ar": "وُلد بعد دعاء طويل من والديه", "fr": "Né après une longue prière de ses parents"},
             "2": {"en": "His mother ran between two hills", "ar": "سعت أمه بين تلتين", "fr": "Sa mère a couru entre deux collines"},
@@ -621,6 +651,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Yacoub / Jacob",
         "accepted_answers": {"en": ["Yaqub", "Yarqub", "Jacob"], "ar": ["يعقوب"], "fr": ["Jacob", "Yacoub", "Yarcoub"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Also known by another name meaning 'Israel'", "ar": "يُعرف أيضاً باسم إسرائيل", "fr": "Aussi connu sous un autre nom signifiant 'Israël'"},
             "2": {"en": "Lost his sight from weeping", "ar": "فقد بصره من كثرة البكاء", "fr": "A perdu la vue à force de pleurer"},
@@ -641,6 +672,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Chouaïb / Jethro",
         "accepted_answers": {"en": ["Shuayb", "Shoaib", "Shurayb", "Jethro"], "ar": ["شعيب"], "fr": ["Chouaïb", "Chouraib", "Shuayb"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Called the orator of the prophets", "ar": "يُلقب بخطيب الأنبياء", "fr": "Appelé l'orateur des prophètes"},
             "2": {"en": "Warned his people against cheating in trade", "ar": "حذّر قومه من الغش في التجارة", "fr": "A averti son peuple contre la triche dans le commerce"},
@@ -661,6 +693,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Salih",
         "accepted_answers": {"en": ["Salih", "Saleh"], "ar": ["صالح"], "fr": ["Salih", "Saleh"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Sent to an ancient Arabian people", "ar": "أُرسل إلى قوم عرب قدماء", "fr": "Envoyé à un ancien peuple arabe"},
             "2": {"en": "His people carved homes in mountains", "ar": "كان قومه ينحتون بيوتاً في الجبال", "fr": "Son peuple sculptait des maisons dans les montagnes"},
@@ -681,6 +714,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Houd",
         "accepted_answers": {"en": ["Hud", "Hood"], "ar": ["هود"], "fr": ["Houd", "Hud"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Sent to a powerful ancient people", "ar": "أُرسل إلى قوم أقوياء قدماء", "fr": "Envoyé à un puissant peuple ancien"},
             "2": {"en": "His people were known for building tall structures", "ar": "اشتهر قومه ببناء المباني العالية", "fr": "Son peuple était connu pour construire de hautes structures"},
@@ -701,6 +735,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Zakaria / Zacharie",
         "accepted_answers": {"en": ["Zakaria", "Zakariyya", "Zechariah"], "ar": ["زكريا", "زكرياء"], "fr": ["Zacharie", "Zakaria"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Made dua for a child in old age", "ar": "دعا الله بولد في شيخوخته", "fr": "A invoqué Allah pour un enfant dans sa vieillesse"},
             "2": {"en": "Was the guardian of a righteous girl", "ar": "كان كفيل فتاة صالحة", "fr": "Était le gardien d'une fille pieuse"},
@@ -721,6 +756,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Idris / Hénoch",
         "accepted_answers": {"en": ["Idris", "Enoch"], "ar": ["إدريس", "ادريس"], "fr": ["Idris", "Énoch"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Mentioned only briefly in the Quran", "ar": "ذُكر بإيجاز في القرآن", "fr": "Mentionné brièvement dans le Coran"},
             "2": {"en": "Described as truthful and patient", "ar": "وُصف بالصدق والصبر", "fr": "Décrit comme véridique et patient"},
@@ -742,6 +778,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Othman",
         "accepted_answers": {"en": ["Uthman", "Othman", "Uthman ibn Affan"], "ar": ["عثمان", "عثمان بن عفان"], "fr": ["Othman", "Uthman"]},
         "category": "Companions",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Known for his generosity and modesty", "ar": "اشتهر بكرمه وحيائه", "fr": "Connu pour sa générosité et sa modestie"},
             "2": {"en": "Married two daughters of the Prophet", "ar": "تزوج ابنتين من بنات النبي", "fr": "A épousé deux filles du Prophète"},
@@ -762,6 +799,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Aïcha",
         "accepted_answers": {"en": ["Aisha", "Aishah"], "ar": ["عائشة", "عايشة"], "fr": ["Aïcha", "Aicha"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Known for her vast knowledge", "ar": "اشتهرت بعلمها الواسع", "fr": "Connue pour son vaste savoir"},
             "2": {"en": "Narrated over 2000 hadiths", "ar": "روت أكثر من 2000 حديث", "fr": "A rapporté plus de 2000 hadiths"},
@@ -782,6 +820,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khalid ibn al-Walid",
         "accepted_answers": {"en": ["Khalid", "Khalid ibn al-Walid"], "ar": ["خالد", "خالد بن الوليد"], "fr": ["Khalid", "Khalid ibn al-Walid"]},
         "category": "Companions",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A brilliant military strategist", "ar": "استراتيجي عسكري عبقري", "fr": "Un brillant stratège militaire"},
             "2": {"en": "Initially fought against Muslims", "ar": "حارب المسلمين في البداية", "fr": "A d'abord combattu contre les musulmans"},
@@ -802,6 +841,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Fatima",
         "accepted_answers": {"en": ["Fatimah", "Fatima"], "ar": ["فاطمة"], "fr": ["Fatima", "Fatimah"]},
         "category": "Companions",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Known as the leader of the women of Paradise", "ar": "سيدة نساء أهل الجنة", "fr": "Connue comme la chef des femmes du Paradis"},
             "2": {"en": "Resembled the Prophet the most in character", "ar": "أكثر من يشبه النبي خُلقاً", "fr": "Ressemblait le plus au Prophète en caractère"},
@@ -822,6 +862,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Salman al-Farisi",
         "accepted_answers": {"en": ["Salman", "Salman al-Farisi"], "ar": ["سلمان", "سلمان الفارسي"], "fr": ["Salman", "Salman al-Farisi"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Traveled across many lands seeking truth", "ar": "سافر عبر بلاد كثيرة باحثاً عن الحق", "fr": "A voyagé à travers de nombreuses terres en quête de vérité"},
             "2": {"en": "Originally from Persia", "ar": "أصله من فارس", "fr": "Originaire de Perse"},
@@ -843,6 +884,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Choura",
         "accepted_answers": {"en": ["Shura", "Consultation"], "ar": ["شورى", "الشورى"], "fr": ["Choura", "Consultation"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A principle of governance in Islam", "ar": "مبدأ حكم في الإسلام", "fr": "Un principe de gouvernance en Islam"},
             "2": {"en": "A surah in the Quran bears this name", "ar": "سورة في القرآن تحمل هذا الاسم", "fr": "Une sourate du Coran porte ce nom"},
@@ -863,6 +905,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Sadaqa",
         "accepted_answers": {"en": ["Sadaqah", "Sadaqa", "Charity"], "ar": ["صدقة", "الصدقة"], "fr": ["Sadaqa", "Aumône volontaire"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A virtuous act encouraged in Islam", "ar": "عمل فاضل مستحب في الإسلام", "fr": "Un acte vertueux encouragé en Islam"},
             "2": {"en": "Even a smile counts as one", "ar": "حتى الابتسامة تعتبر واحدة", "fr": "Même un sourire en est une"},
@@ -883,6 +926,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Istighfar",
         "accepted_answers": {"en": ["Istighfar", "Seeking forgiveness"], "ar": ["استغفار", "الاستغفار"], "fr": ["Istighfar", "Demande de pardon"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A practice the Prophet did over 70 times daily", "ar": "عمل كان النبي يفعله أكثر من 70 مرة يومياً", "fr": "Une pratique que le Prophète faisait plus de 70 fois par jour"},
             "2": {"en": "Opens doors to provision and relief", "ar": "يفتح أبواب الرزق والفرج", "fr": "Ouvre les portes de la provision et du soulagement"},
@@ -903,6 +947,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tawakkul",
         "accepted_answers": {"en": ["Tawakkul", "Trust in Allah", "Reliance"], "ar": ["توكل", "التوكل"], "fr": ["Tawakkul", "Confiance en Allah"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A quality of the believers", "ar": "صفة من صفات المؤمنين", "fr": "Une qualité des croyants"},
             "2": {"en": "Tie your camel, then do this", "ar": "اعقلها وتوكل", "fr": "Attache ton chameau, puis fais ceci"},
@@ -923,6 +968,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Patience",
         "accepted_answers": {"en": ["Sabr", "Patience"], "ar": ["صبر", "الصبر"], "fr": ["Patience", "Sabr"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "One of the most mentioned virtues in the Quran", "ar": "من أكثر الفضائل ذكراً في القرآن", "fr": "L'une des vertus les plus mentionnées dans le Coran"},
             "2": {"en": "Allah is with those who have this quality", "ar": "الله مع من يتحلى بهذه الصفة", "fr": "Allah est avec ceux qui ont cette qualité"},
@@ -944,6 +990,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Ikhlas",
         "accepted_answers": {"en": ["Al-Ikhlas", "Ikhlas", "Sincerity"], "ar": ["الإخلاص", "سورة الإخلاص"], "fr": ["Al-Ikhlas", "La Sincérité"]},
         "category": "Quran",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A very short surah", "ar": "سورة قصيرة جداً", "fr": "Une sourate très courte"},
             "2": {"en": "Equal to one-third of the Quran in reward", "ar": "تعدل ثلث القرآن أجراً", "fr": "Équivaut à un tiers du Coran en récompense"},
@@ -964,6 +1011,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Kahf",
         "accepted_answers": {"en": ["Al-Kahf", "The Cave"], "ar": ["الكهف", "سورة الكهف"], "fr": ["Al-Kahf", "La Caverne"]},
         "category": "Quran",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Recommended to read every Friday", "ar": "يُسن قراءتها كل جمعة", "fr": "Recommandé de la lire chaque vendredi"},
             "2": {"en": "Contains four major stories", "ar": "تحتوي أربع قصص رئيسية", "fr": "Contient quatre histoires majeures"},
@@ -984,6 +1032,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Mulk",
         "accepted_answers": {"en": ["Al-Mulk", "The Sovereignty", "Tabarak"], "ar": ["الملك", "سورة الملك", "تبارك"], "fr": ["Al-Mulk", "La Royauté"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Recommended to read before sleeping", "ar": "يُسن قراءتها قبل النوم", "fr": "Recommandé de la lire avant de dormir"},
             "2": {"en": "Protects from the punishment of the grave", "ar": "تحمي من عذاب القبر", "fr": "Protège du châtiment de la tombe"},
@@ -1004,6 +1053,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Sourate Yasin",
         "accepted_answers": {"en": ["Yasin", "Ya Sin", "Surah Yasin"], "ar": ["يس", "سورة يس"], "fr": ["Yasin", "Ya Sin", "Sourate Yasin"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Called the heart of the Quran", "ar": "تُسمى قلب القرآن", "fr": "Appelée le cœur du Coran"},
             "2": {"en": "Begins with two Arabic letters", "ar": "تبدأ بحرفين عربيين", "fr": "Commence par deux lettres arabes"},
@@ -1025,6 +1075,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Badr",
         "accepted_answers": {"en": ["Badr"], "ar": ["بدر"], "fr": ["Badr"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A decisive early event in Islamic history", "ar": "حدث حاسم في بداية الإسلام", "fr": "Un événement décisif au début de l'Islam"},
             "2": {"en": "Muslims were greatly outnumbered", "ar": "كان المسلمون أقل عدداً بكثير", "fr": "Les musulmans étaient largement dépassés en nombre"},
@@ -1045,6 +1096,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Uhud",
         "accepted_answers": {"en": ["Uhud", "Ohud"], "ar": ["أحد"], "fr": ["Uhud", "Ohoud"]},
         "category": "Islamic History",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A mountain near Madinah", "ar": "جبل قرب المدينة", "fr": "Une montagne près de Médine"},
             "2": {"en": "The Prophet said: this mountain loves us and we love it", "ar": "قال النبي: هذا جبل يحبنا ونحبه", "fr": "Le Prophète a dit : cette montagne nous aime et nous l'aimons"},
@@ -1065,6 +1117,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khandaq",
         "accepted_answers": {"en": ["Khandaq", "Trench", "Ahzab"], "ar": ["خندق", "الخندق", "الأحزاب"], "fr": ["Khandaq", "Tranchée"]},
         "category": "Islamic History",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A defensive strategy was used for the first time in Arabia", "ar": "استُخدمت استراتيجية دفاعية لأول مرة في الجزيرة", "fr": "Une stratégie défensive a été utilisée pour la première fois en Arabie"},
             "2": {"en": "Salman al-Farisi suggested the plan", "ar": "اقترح سلمان الفارسي الخطة", "fr": "Salman al-Farisi a suggéré le plan"},
@@ -1086,6 +1139,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Invocation",
         "accepted_answers": {"en": ["Dua", "Duraa", "Supplication"], "ar": ["دعاء", "الدعاء"], "fr": ["Invocation", "Dua", "Doua", "Douraa"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The weapon of the believer", "ar": "سلاح المؤمن", "fr": "L'arme du croyant"},
             "2": {"en": "Can be made at any time, anywhere", "ar": "يمكن فعله في أي وقت وأي مكان", "fr": "Peut être fait à tout moment, n'importe où"},
@@ -1106,6 +1160,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Dhikr",
         "accepted_answers": {"en": ["Dhikr", "Thikr", "Remembrance"], "ar": ["ذكر", "الذكر"], "fr": ["Dhikr", "Rappel"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Brings peace to the heart", "ar": "يطمئن القلب", "fr": "Apporte la paix au cœur"},
             "2": {"en": "Can be done silently or aloud", "ar": "يمكن فعله سراً أو جهراً", "fr": "Peut être fait silencieusement ou à voix haute"},
@@ -1126,6 +1181,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Joumou'a",
         "accepted_answers": {"en": ["Jumuah", "Jumu'ah", "Jummah", "Jumurah", "Friday prayer"], "ar": ["جمعة", "الجمعة"], "fr": ["Joumou'a", "Joumouaa", "Joumoura", "Prière du vendredi"]},
         "category": "Daily Life",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The best day of the week in Islam", "ar": "أفضل يوم في الأسبوع في الإسلام", "fr": "Le meilleur jour de la semaine en Islam"},
             "2": {"en": "Adam was created on this day", "ar": "خُلق آدم في هذا اليوم", "fr": "Adam a été créé ce jour-là"},
@@ -1146,6 +1202,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Miswak",
         "accepted_answers": {"en": ["Miswak", "Siwak"], "ar": ["مسواك", "سواك"], "fr": ["Miswak", "Siwak"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A Sunnah of the Prophet before an act of worship", "ar": "سنة نبوية قبل العبادة", "fr": "Une Sunnah du Prophète avant un acte d'adoration"},
             "2": {"en": "Comes from a tree", "ar": "يأتي من شجرة", "fr": "Provient d'un arbre"},
@@ -1167,6 +1224,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "La Mecque",
         "accepted_answers": {"en": ["Makkah", "Mecca"], "ar": ["مكة", "مكة المكرمة"], "fr": ["La Mecque", "Makkah"]},
         "category": "Places",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The holiest city in Islam", "ar": "أقدس مدينة في الإسلام", "fr": "La ville la plus sainte de l'Islam"},
             "2": {"en": "Located in a barren valley", "ar": "تقع في واد غير ذي زرع", "fr": "Située dans une vallée aride"},
@@ -1187,6 +1245,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Médine",
         "accepted_answers": {"en": ["Madinah", "Medina"], "ar": ["المدينة", "المدينة المنورة"], "fr": ["Médine", "Madinah"]},
         "category": "Places",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The city that welcomed the Prophet", "ar": "المدينة التي استقبلت النبي", "fr": "La ville qui a accueilli le Prophète"},
             "2": {"en": "Home to the first Islamic state", "ar": "مقر أول دولة إسلامية", "fr": "Siège du premier État islamique"},
@@ -1207,6 +1266,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Aqsa",
         "accepted_answers": {"en": ["Al-Aqsa", "Aqsa", "Masjid Al-Aqsa"], "ar": ["الأقصى", "المسجد الأقصى"], "fr": ["Al-Aqsa", "Mosquée Al-Aqsa"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The third holiest site in Islam", "ar": "ثالث أقدس مكان في الإسلام", "fr": "Le troisième lieu le plus saint de l'Islam"},
             "2": {"en": "First qiblah of Muslims", "ar": "أولى القبلتين", "fr": "Première qibla des musulmans"},
@@ -1227,6 +1287,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hira",
         "accepted_answers": {"en": ["Hira", "Cave of Hira", "Ghar Hira"], "ar": ["حراء", "غار حراء"], "fr": ["Hira", "Grotte de Hira"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A place of solitude and reflection", "ar": "مكان للعزلة والتأمل", "fr": "Un lieu de solitude et de réflexion"},
             "2": {"en": "Located on a mountain near a holy city", "ar": "يقع على جبل قرب مدينة مقدسة", "fr": "Situé sur une montagne près d'une ville sainte"},
@@ -1248,6 +1309,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Chahada",
         "accepted_answers": {"en": ["Shahada", "Shahadah"], "ar": ["شهادة", "الشهادة"], "fr": ["Chahada", "Shahada"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The most fundamental statement in Islam", "ar": "أهم عبارة في الإسلام", "fr": "La déclaration la plus fondamentale de l'Islam"},
             "2": {"en": "It is the first pillar of Islam", "ar": "الركن الأول من أركان الإسلام", "fr": "C'est le premier pilier de l'Islam"},
@@ -1268,6 +1330,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Sunna",
         "accepted_answers": {"en": ["Sunnah", "Sunna"], "ar": ["سنة", "السنة", "سنّة"], "fr": ["Sunna", "Sunnah"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A major source of Islamic guidance alongside the Quran", "ar": "مصدر رئيسي للتوجيه الإسلامي إلى جانب القرآن", "fr": "Une source majeure de guidance islamique aux côtés du Coran"},
             "2": {"en": "Preserved through hadiths", "ar": "محفوظة من خلال الأحاديث", "fr": "Préservée à travers les hadiths"},
@@ -1288,6 +1351,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Oumma",
         "accepted_answers": {"en": ["Ummah", "Umma"], "ar": ["أمة", "الأمة"], "fr": ["Oumma", "Ummah"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A concept that transcends borders and ethnicities", "ar": "مفهوم يتجاوز الحدود والأعراق", "fr": "Un concept qui transcende les frontières et les ethnies"},
             "2": {"en": "Nearly 2 billion people belong to it", "ar": "ينتمي إليها نحو ملياري شخص", "fr": "Près de 2 milliards de personnes y appartiennent"},
@@ -1308,6 +1372,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Qadr",
         "accepted_answers": {"en": ["Qadr", "Qadar", "Qader"], "ar": ["قدر", "القدر"], "fr": ["Qadr", "Qadar"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "One of the six pillars of faith (Iman)", "ar": "من أركان الإيمان الستة", "fr": "Un des six piliers de la foi (Iman)"},
             "2": {"en": "Related to Allah's knowledge of all things", "ar": "متعلق بعلم الله لكل شيء", "fr": "Lié à la connaissance d'Allah de toutes choses"},
@@ -1328,6 +1393,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Baraka",
         "accepted_answers": {"en": ["Baraka", "Barakah"], "ar": ["بركة", "البركة"], "fr": ["Baraka", "Barakah"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Something intangible that increases goodness", "ar": "شيء غير ملموس يزيد الخير", "fr": "Quelque chose d'intangible qui augmente le bien"},
             "2": {"en": "Found in certain times, places, and people", "ar": "توجد في أوقات وأماكن وأشخاص معينين", "fr": "Se trouve dans certains moments, lieux et personnes"},
@@ -1348,6 +1414,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tawba",
         "accepted_answers": {"en": ["Tawbah", "Tawba", "Taubah"], "ar": ["توبة", "التوبة"], "fr": ["Tawba", "Tawbah"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Allah loves those who do this sincerely", "ar": "الله يحب من يفعل هذا بإخلاص", "fr": "Allah aime ceux qui font cela sincèrement"},
             "2": {"en": "A surah in the Quran bears this name", "ar": "سورة في القرآن تحمل هذا الاسم", "fr": "Une sourate du Coran porte ce nom"},
@@ -1368,6 +1435,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Choukr",
         "accepted_answers": {"en": ["Shukr", "Shukur"], "ar": ["شكر", "الشكر"], "fr": ["Choukr", "Shukr"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The opposite of ingratitude", "ar": "عكس الجحود", "fr": "L'opposé de l'ingratitude"},
             "2": {"en": "Allah promises more for those who practice it", "ar": "وعد الله بالزيادة لمن يمارسه", "fr": "Allah promet plus à ceux qui le pratiquent"},
@@ -1388,6 +1456,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Niyyah",
         "accepted_answers": {"en": ["Niyyah", "Niyya", "Niya"], "ar": ["نية", "النية"], "fr": ["Niyyah", "Niya"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The Prophet said actions are judged by this", "ar": "قال النبي إنما الأعمال بها", "fr": "Le Prophète a dit que les actes sont jugés par cela"},
             "2": {"en": "It is in the heart, not spoken aloud", "ar": "محلها القلب لا اللسان", "fr": "Elle est dans le cœur, pas prononcée à voix haute"},
@@ -1408,6 +1477,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Fitra",
         "accepted_answers": {"en": ["Fitrah", "Fitra"], "ar": ["فطرة", "الفطرة"], "fr": ["Fitra", "Fitrah"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Every child is born upon this", "ar": "كل مولود يُولد عليها", "fr": "Chaque enfant naît avec cela"},
             "2": {"en": "An innate quality within every human", "ar": "صفة فطرية في كل إنسان", "fr": "Une qualité innée chez chaque être humain"},
@@ -1429,6 +1499,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Coran",
         "accepted_answers": {"en": ["Quran", "Qur'an", "Koran"], "ar": ["قرآن", "القرآن"], "fr": ["Coran", "Quran"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The most read book in the world", "ar": "أكثر كتاب يُقرأ في العالم", "fr": "Le livre le plus lu au monde"},
             "2": {"en": "Revealed over a period of 23 years", "ar": "أُنزل على مدى 23 سنة", "fr": "Révélé sur une période de 23 ans"},
@@ -1449,6 +1520,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ramadan",
         "accepted_answers": {"en": ["Ramadan", "Ramadhan"], "ar": ["رمضان"], "fr": ["Ramadan"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A month that Muslims wait for all year", "ar": "شهر ينتظره المسلمون طوال العام", "fr": "Un mois que les musulmans attendent toute l'année"},
             "2": {"en": "The Quran was first revealed during it", "ar": "نزل القرآن لأول مرة خلاله", "fr": "Le Coran a été révélé pour la première fois pendant ce mois"},
@@ -1469,6 +1541,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Aïd",
         "accepted_answers": {"en": ["Eid", "Eid al-Fitr", "Eid al-Adha"], "ar": ["عيد", "العيد"], "fr": ["Aïd", "Eid"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A joyous occasion celebrated by all Muslims", "ar": "مناسبة سعيدة يحتفل بها جميع المسلمين", "fr": "Une occasion joyeuse célébrée par tous les musulmans"},
             "2": {"en": "There are two of them each year", "ar": "هناك اثنان منه كل عام", "fr": "Il y en a deux chaque année"},
@@ -1489,6 +1562,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ihram",
         "accepted_answers": {"en": ["Ihram"], "ar": ["إحرام", "الإحرام"], "fr": ["Ihram"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A sacred state entered for a special journey", "ar": "حالة مقدسة يُدخل فيها لرحلة خاصة", "fr": "Un état sacré dans lequel on entre pour un voyage spécial"},
             "2": {"en": "Involves wearing specific unstitched garments", "ar": "يتضمن ارتداء ملابس غير مخيطة", "fr": "Implique le port de vêtements non cousus spécifiques"},
@@ -1509,6 +1583,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tawaf",
         "accepted_answers": {"en": ["Tawaf"], "ar": ["طواف", "الطواف"], "fr": ["Tawaf"]},
         "category": "Daily Life",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A ritual involving circular movement", "ar": "شعيرة تتضمن حركة دائرية", "fr": "Un rituel impliquant un mouvement circulaire"},
             "2": {"en": "Performed around the most sacred structure in Islam", "ar": "يُؤدى حول أقدس بناء في الإسلام", "fr": "Effectué autour de la structure la plus sacrée de l'Islam"},
@@ -1529,6 +1604,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Qibla",
         "accepted_answers": {"en": ["Qiblah", "Qibla", "Kiblah"], "ar": ["قبلة", "القبلة"], "fr": ["Qibla", "Qiblah"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Every mosque in the world is oriented toward it", "ar": "كل مسجد في العالم موجه نحوها", "fr": "Chaque mosquée du monde est orientée vers elle"},
             "2": {"en": "It was changed during the Prophet's lifetime", "ar": "تغيرت في حياة النبي", "fr": "Elle a été changée du vivant du Prophète"},
@@ -1549,6 +1625,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Minbar",
         "accepted_answers": {"en": ["Minbar", "Mimbar"], "ar": ["منبر", "المنبر"], "fr": ["Minbar"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Found in every mosque", "ar": "موجود في كل مسجد", "fr": "Trouvé dans chaque mosquée"},
             "2": {"en": "The imam stands on it for a weekly address", "ar": "يقف عليه الإمام لخطبة أسبوعية", "fr": "L'imam s'y tient pour un discours hebdomadaire"},
@@ -1569,6 +1646,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ghousl",
         "accepted_answers": {"en": ["Ghusl", "Ghusul"], "ar": ["غسل", "الغسل"], "fr": ["Ghousl", "Ghusl"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A purification ritual more thorough than Wudu", "ar": "طهارة أشمل من الوضوء", "fr": "Un rituel de purification plus complet que le Woudou"},
             "2": {"en": "Required after certain physical states", "ar": "مطلوب بعد حالات جسدية معينة", "fr": "Requis après certains états physiques"},
@@ -1590,6 +1668,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Zamzam",
         "accepted_answers": {"en": ["Zamzam", "Zam Zam"], "ar": ["زمزم"], "fr": ["Zamzam"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Has been flowing for thousands of years", "ar": "يتدفق منذ آلاف السنين", "fr": "Coule depuis des milliers d'années"},
             "2": {"en": "Miraculous in origin, connected to a mother and child", "ar": "معجزة في أصلها مرتبطة بأم وطفلها", "fr": "Miraculeuse dans son origine, liée à une mère et un enfant"},
@@ -1610,6 +1689,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Arafat",
         "accepted_answers": {"en": ["Arafat", "Arafah"], "ar": ["عرفات", "عرفة"], "fr": ["Arafat", "Arafah"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Standing here is the most important pillar of Hajj", "ar": "الوقوف هنا أهم ركن في الحج", "fr": "Se tenir ici est le pilier le plus important du Hajj"},
             "2": {"en": "The Prophet delivered his Farewell Sermon here", "ar": "ألقى النبي خطبة الوداع هنا", "fr": "Le Prophète a prononcé son Sermon d'Adieu ici"},
@@ -1630,6 +1710,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Mina",
         "accepted_answers": {"en": ["Mina", "Muna"], "ar": ["منى"], "fr": ["Mina"]},
         "category": "Places",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A valley near Makkah that transforms during Hajj", "ar": "وادٍ قرب مكة يتحول أثناء الحج", "fr": "Une vallée près de La Mecque qui se transforme pendant le Hajj"},
             "2": {"en": "Hundreds of thousands of white tents fill it", "ar": "تملؤه مئات آلاف الخيام البيضاء", "fr": "Des centaines de milliers de tentes blanches la remplissent"},
@@ -1650,6 +1731,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Safa",
         "accepted_answers": {"en": ["Safa", "Al-Safa"], "ar": ["صفا", "الصفا"], "fr": ["Safa", "Al-Safa"]},
         "category": "Places",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Part of a ritual walk during Hajj and Umrah", "ar": "جزء من مشي شعائري في الحج والعمرة", "fr": "Partie d'une marche rituelle pendant le Hajj et la Omra"},
             "2": {"en": "A mother desperately searched for water from here", "ar": "أم يائسة بحثت عن الماء من هنا", "fr": "Une mère a désespérément cherché de l'eau d'ici"},
@@ -1671,6 +1753,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hudaybiyyah",
         "accepted_answers": {"en": ["Hudaybiyyah", "Hudaibiyyah", "Hudaybiyah"], "ar": ["حديبية", "الحديبية"], "fr": ["Hudaybiyyah", "Houdaybiyyah"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A place where a historic agreement was made", "ar": "مكان أُبرمت فيه اتفاقية تاريخية", "fr": "Un lieu où un accord historique a été conclu"},
             "2": {"en": "The Quran called it a 'clear victory'", "ar": "سماه القرآن 'فتحاً مبيناً'", "fr": "Le Coran l'a appelé une 'victoire éclatante'"},
@@ -1691,6 +1774,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khaybar",
         "accepted_answers": {"en": ["Khaybar", "Khaibar"], "ar": ["خيبر"], "fr": ["Khaybar", "Khaïbar"]},
         "category": "Islamic History",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A fortified oasis north of Madinah", "ar": "واحة محصنة شمال المدينة", "fr": "Une oasis fortifiée au nord de Médine"},
             "2": {"en": "A famous battle cry is associated with its name", "ar": "صيحة حربية شهيرة مرتبطة باسمها", "fr": "Un célèbre cri de guerre est associé à son nom"},
@@ -1712,6 +1796,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Baqarah",
         "accepted_answers": {"en": ["Al-Baqarah", "Al Baqarah", "Baqarah"], "ar": ["البقرة", "سورة البقرة"], "fr": ["Al-Baqarah", "La Vache"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The longest surah in the Quran", "ar": "أطول سورة في القرآن", "fr": "La plus longue sourate du Coran"},
             "2": {"en": "Contains 286 verses", "ar": "تحتوي 286 آية", "fr": "Contient 286 versets"},
@@ -1733,6 +1818,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Lout / Lot",
         "accepted_answers": {"en": ["Lut", "Lot"], "ar": ["لوط"], "fr": ["Lot", "Lout"]},
         "category": "Prophets",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A prophet sent to a very sinful people", "ar": "نبي أُرسل لقوم عصاة جداً", "fr": "Un prophète envoyé à un peuple très pécheur"},
             "2": {"en": "He was Ibrahim's nephew", "ar": "كان ابن أخ إبراهيم", "fr": "Il était le neveu d'Ibrahim"},
@@ -1753,6 +1839,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ilyas / Élie",
         "accepted_answers": {"en": ["Ilyas", "Elijah", "Elias"], "ar": ["إلياس", "الياس"], "fr": ["Élie", "Ilyas"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A prophet sent to the people of Baalbek", "ar": "نبي أُرسل إلى أهل بعلبك", "fr": "Un prophète envoyé au peuple de Baalbek"},
             "2": {"en": "Warned against worshipping an idol named Baal", "ar": "حذر من عبادة صنم اسمه بعل", "fr": "Avertit contre l'adoration d'une idole nommée Baal"},
@@ -1773,6 +1860,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Dhul-Qarnayn",
         "accepted_answers": {"en": ["Dhul-Qarnayn", "Dhul Qarnayn", "Zul Qarnayn"], "ar": ["ذو القرنين", "ذي القرنين"], "fr": ["Dhul-Qarnayn", "Zul Qarnayn"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A powerful and just ruler mentioned in the Quran", "ar": "حاكم قوي وعادل ذُكر في القرآن", "fr": "Un dirigeant puissant et juste mentionné dans le Coran"},
             "2": {"en": "Traveled to the east and the west", "ar": "سافر إلى المشرق والمغرب", "fr": "Voyagea à l'est et à l'ouest"},
@@ -1793,6 +1881,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Luqman",
         "accepted_answers": {"en": ["Luqman", "Lukman"], "ar": ["لقمان"], "fr": ["Luqman", "Lokman"]},
         "category": "Quran",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A wise man mentioned in the Quran", "ar": "رجل حكيم ذُكر في القرآن", "fr": "Un homme sage mentionné dans le Coran"},
             "2": {"en": "A whole surah is named after him", "ar": "سورة كاملة سُميت باسمه", "fr": "Une sourate entière porte son nom"},
@@ -1814,6 +1903,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Rizq",
         "accepted_answers": {"en": ["Rizq", "Rizk", "Provision"], "ar": ["رزق", "الرزق"], "fr": ["Rizq", "Provision"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Something every creature receives from Allah", "ar": "شيء يتلقاه كل مخلوق من الله", "fr": "Quelque chose que chaque créature reçoit d'Allah"},
             "2": {"en": "Includes wealth, health, knowledge, and family", "ar": "يشمل المال والصحة والعلم والأسرة", "fr": "Inclut richesse, santé, savoir et famille"},
@@ -1834,6 +1924,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Akhirah",
         "accepted_answers": {"en": ["Akhirah", "Akhira", "Hereafter", "Afterlife"], "ar": ["آخرة", "الآخرة"], "fr": ["Akhirah", "Au-delà"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "One of the six pillars of Iman", "ar": "أحد أركان الإيمان الستة", "fr": "Un des six piliers de l'Iman"},
             "2": {"en": "The eternal life that comes after death", "ar": "الحياة الأبدية بعد الموت", "fr": "La vie éternelle après la mort"},
@@ -1854,6 +1945,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Shirk",
         "accepted_answers": {"en": ["Shirk", "Polytheism", "Idolatry"], "ar": ["شرك", "الشرك"], "fr": ["Shirk", "Polythéisme", "Associationnisme"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The greatest sin in Islam", "ar": "أعظم ذنب في الإسلام", "fr": "Le plus grand péché en Islam"},
             "2": {"en": "The only sin Allah will not forgive if one dies upon it", "ar": "الذنب الوحيد الذي لا يغفره الله إن مات عليه", "fr": "Le seul péché qu'Allah ne pardonne pas si on meurt dessus"},
@@ -1874,6 +1966,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Jannah",
         "accepted_answers": {"en": ["Jannah", "Janna", "Paradise", "Heaven"], "ar": ["جنة", "الجنة"], "fr": ["Jannah", "Paradis"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The ultimate reward for believers", "ar": "الجزاء الأعظم للمؤمنين", "fr": "La récompense ultime pour les croyants"},
             "2": {"en": "Has rivers of milk, honey, and wine", "ar": "فيها أنهار من لبن وعسل وخمر", "fr": "A des rivières de lait, miel et vin"},
@@ -1894,6 +1987,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hidayah",
         "accepted_answers": {"en": ["Hidayah", "Hidaya", "Guidance"], "ar": ["هداية", "الهداية"], "fr": ["Hidayah", "Guidance"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "What every Muslim asks for in every prayer", "ar": "ما يطلبه كل مسلم في كل صلاة", "fr": "Ce que chaque musulman demande dans chaque prière"},
             "2": {"en": "Ihdina as-sirat al-mustaqim", "ar": "اهدنا الصراط المستقيم", "fr": "Ihdina as-sirat al-mustaqim"},
@@ -1914,6 +2008,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Riba",
         "accepted_answers": {"en": ["Riba", "Usury", "Interest"], "ar": ["ربا", "الربا"], "fr": ["Riba", "Usure", "Intérêt"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Strictly prohibited in Islamic finance", "ar": "محرم تحريماً قاطعاً في المالية الإسلامية", "fr": "Strictement interdit en finance islamique"},
             "2": {"en": "The Quran declares war on those who practice it", "ar": "القرآن يعلن الحرب على من يمارسه", "fr": "Le Coran déclare la guerre à ceux qui le pratiquent"},
@@ -1934,6 +2029,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Halal",
         "accepted_answers": {"en": ["Halal", "Permissible"], "ar": ["حلال", "الحلال"], "fr": ["Halal", "Licite"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A core concept in Islamic jurisprudence", "ar": "مفهوم أساسي في الفقه الإسلامي", "fr": "Un concept central en jurisprudence islamique"},
             "2": {"en": "Applies to food, actions, and transactions", "ar": "ينطبق على الطعام والأفعال والمعاملات", "fr": "S'applique à la nourriture, aux actions et aux transactions"},
@@ -1954,6 +2050,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Haram",
         "accepted_answers": {"en": ["Haram", "Forbidden", "Prohibited"], "ar": ["حرام", "الحرام"], "fr": ["Haram", "Interdit", "Illicite"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The strongest prohibition in Islamic law", "ar": "أشد تحريم في الشريعة الإسلامية", "fr": "L'interdiction la plus forte en droit islamique"},
             "2": {"en": "Doing this intentionally is a sin", "ar": "فعله عمداً إثم", "fr": "Le faire intentionnellement est un péché"},
@@ -1974,6 +2071,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Seerah",
         "accepted_answers": {"en": ["Seerah", "Sirah", "Sira"], "ar": ["سيرة", "السيرة", "السيرة النبوية"], "fr": ["Seerah", "Sira"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A field of Islamic study", "ar": "مجال من مجالات الدراسات الإسلامية", "fr": "Un domaine d'études islamiques"},
             "2": {"en": "Ibn Hisham wrote a famous book about this", "ar": "كتب ابن هشام كتاباً شهيراً عنها", "fr": "Ibn Hisham écrivit un livre célèbre à ce sujet"},
@@ -1994,6 +2092,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Bid'ah",
         "accepted_answers": {"en": ["Bid'ah", "Bidah", "Innovation"], "ar": ["بدعة", "البدعة"], "fr": ["Bid'ah", "Innovation"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Something the Prophet warned against strongly", "ar": "شيء حذر منه النبي بشدة", "fr": "Quelque chose contre quoi le Prophète mit en garde fortement"},
             "2": {"en": "Adding something new to religious practice", "ar": "إضافة شيء جديد للممارسة الدينية", "fr": "Ajouter quelque chose de nouveau à la pratique religieuse"},
@@ -2015,6 +2114,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Sadaqah Jariyah",
         "accepted_answers": {"en": ["Sadaqah Jariyah", "Ongoing charity"], "ar": ["صدقة جارية"], "fr": ["Sadaqah Jariyah", "Aumône continue"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "One of three things that benefit you after death", "ar": "أحد ثلاثة أشياء تنفعك بعد الموت", "fr": "Une des trois choses qui vous profitent après la mort"},
             "2": {"en": "Building a well or a mosque is an example", "ar": "بناء بئر أو مسجد مثال عليها", "fr": "Construire un puits ou une mosquée en est un exemple"},
@@ -2035,6 +2135,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Istikhara",
         "accepted_answers": {"en": ["Istikhara", "Istikharah"], "ar": ["استخارة", "الاستخارة"], "fr": ["Istikhara", "Istikharah"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A special prayer for making decisions", "ar": "صلاة خاصة لاتخاذ القرارات", "fr": "Une prière spéciale pour prendre des décisions"},
             "2": {"en": "Two rak'ahs followed by a specific dua", "ar": "ركعتان يتبعهما دعاء محدد", "fr": "Deux rak'ahs suivies d'une dua spécifique"},
@@ -2055,6 +2156,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ruqyah",
         "accepted_answers": {"en": ["Ruqyah", "Ruqya"], "ar": ["رقية", "الرقية"], "fr": ["Ruqyah", "Ruqya"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A spiritual healing practice in Islam", "ar": "ممارسة شفاء روحية في الإسلام", "fr": "Une pratique de guérison spirituelle en Islam"},
             "2": {"en": "Done by reciting Quran and authentic duas", "ar": "تُؤدى بقراءة القرآن والأدعية الصحيحة", "fr": "Faite en récitant le Coran et des duas authentiques"},
@@ -2075,6 +2177,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Nikah",
         "accepted_answers": {"en": ["Nikah", "Nikah", "Marriage"], "ar": ["نكاح", "النكاح", "زواج"], "fr": ["Nikah", "Mariage"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Considered half of your deen", "ar": "يُعتبر نصف دينك", "fr": "Considéré comme la moitié de votre deen"},
             "2": {"en": "Requires a wali, witnesses, and mahr", "ar": "يتطلب ولياً وشهوداً ومهراً", "fr": "Nécessite un wali, des témoins et un mahr"},
@@ -2095,6 +2198,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Janazah",
         "accepted_answers": {"en": ["Janazah", "Janaza", "Funeral"], "ar": ["جنازة", "الجنازة"], "fr": ["Janazah", "Funérailles"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A communal obligation (Fard Kifayah)", "ar": "فرض كفاية", "fr": "Une obligation communautaire (Fard Kifayah)"},
             "2": {"en": "Has a special prayer with four takbirs", "ar": "لها صلاة خاصة بأربع تكبيرات", "fr": "A une prière spéciale avec quatre takbirs"},
@@ -2116,6 +2220,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hamza",
         "accepted_answers": {"en": ["Hamza", "Hamza ibn Abdul-Muttalib"], "ar": ["حمزة", "حمزة بن عبد المطلب"], "fr": ["Hamza"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The Prophet's uncle", "ar": "عم النبي", "fr": "L'oncle du Prophète"},
             "2": {"en": "Known for his great physical strength", "ar": "اشتهر بقوته البدنية العظيمة", "fr": "Connu pour sa grande force physique"},
@@ -2136,6 +2241,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Zubayr",
         "accepted_answers": {"en": ["Zubayr", "Zubayr ibn al-Awwam", "Az-Zubayr"], "ar": ["الزبير", "الزبير بن العوام"], "fr": ["Zubayr", "Az-Zubayr"]},
         "category": "Companions",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "One of the ten promised Paradise", "ar": "أحد العشرة المبشرين بالجنة", "fr": "Un des dix promis au Paradis"},
             "2": {"en": "The Prophet's cousin (son of his aunt)", "ar": "ابن عمة النبي", "fr": "Le cousin du Prophète (fils de sa tante)"},
@@ -2156,6 +2262,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Mus'ab",
         "accepted_answers": {"en": ["Mus'ab", "Musab", "Mus'ab ibn Umayr"], "ar": ["مصعب", "مصعب بن عمير"], "fr": ["Mus'ab", "Musab"]},
         "category": "Companions",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Was from a wealthy Qurayshi family", "ar": "كان من عائلة قرشية ثرية", "fr": "Était d'une famille riche de Quraysh"},
             "2": {"en": "Left luxury for the sake of Islam", "ar": "ترك الترف من أجل الإسلام", "fr": "Quitta le luxe pour l'Islam"},
@@ -2177,6 +2284,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Taif",
         "accepted_answers": {"en": ["Taif", "Ta'if", "Al-Taif"], "ar": ["الطائف", "طائف"], "fr": ["Taif", "Ta'if"]},
         "category": "Places",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A city near Makkah in the mountains", "ar": "مدينة قرب مكة في الجبال", "fr": "Une ville près de La Mecque dans les montagnes"},
             "2": {"en": "The Prophet went there seeking support", "ar": "ذهب إليها النبي طلباً للنصرة", "fr": "Le Prophète s'y rendit pour chercher du soutien"},
@@ -2197,6 +2305,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Yathrib",
         "accepted_answers": {"en": ["Yathrib"], "ar": ["يثرب"], "fr": ["Yathrib"]},
         "category": "Places",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "An ancient name for a famous Islamic city", "ar": "اسم قديم لمدينة إسلامية شهيرة", "fr": "Un ancien nom pour une célèbre ville islamique"},
             "2": {"en": "Where the Prophet migrated to", "ar": "حيث هاجر النبي", "fr": "Où le Prophète migra"},
@@ -2217,6 +2326,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Bayt al-Maqdis",
         "accepted_answers": {"en": ["Bayt al-Maqdis", "Jerusalem", "Al-Quds"], "ar": ["بيت المقدس", "القدس"], "fr": ["Bayt al-Maqdis", "Jérusalem", "Al-Quds"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The first Qiblah of Muslims", "ar": "أول قبلة للمسلمين", "fr": "La première Qiblah des musulmans"},
             "2": {"en": "Location of the Isra (night journey)", "ar": "مكان الإسراء (الرحلة الليلية)", "fr": "Lieu de l'Isra (voyage nocturne)"},
@@ -2238,6 +2348,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Andalus",
         "accepted_answers": {"en": ["Al-Andalus", "Andalus", "Andalusia"], "ar": ["الأندلس"], "fr": ["Al-Andalus", "Andalousie"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Muslim rule in a European region for ~800 years", "ar": "حكم إسلامي في منطقة أوروبية لنحو 800 سنة", "fr": "Règne musulman dans une région européenne pendant ~800 ans"},
             "2": {"en": "Known for coexistence of Muslims, Christians, and Jews", "ar": "اشتُهرت بتعايش المسلمين والمسيحيين واليهود", "fr": "Connue pour la coexistence de musulmans, chrétiens et juifs"},
@@ -2258,6 +2369,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Salahuddin",
         "accepted_answers": {"en": ["Salahuddin", "Saladin", "Salah al-Din"], "ar": ["صلاح الدين", "صلاح الدين الأيوبي"], "fr": ["Saladin", "Salahuddin"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A legendary Muslim military leader", "ar": "قائد عسكري مسلم أسطوري", "fr": "Un légendaire chef militaire musulman"},
             "2": {"en": "Recaptured Jerusalem from the Crusaders", "ar": "استعاد القدس من الصليبيين", "fr": "Reprit Jérusalem aux Croisés"},
@@ -2278,6 +2390,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ibn Sina",
         "accepted_answers": {"en": ["Ibn Sina", "Avicenna"], "ar": ["ابن سينا"], "fr": ["Ibn Sina", "Avicenne"]},
         "category": "Islamic History",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A towering figure of Islamic Golden Age", "ar": "شخصية بارزة في العصر الذهبي الإسلامي", "fr": "Une figure majeure de l'Âge d'or islamique"},
             "2": {"en": "Known as the Father of Early Modern Medicine", "ar": "يُعرف بأبي الطب الحديث المبكر", "fr": "Connu comme le Père de la médecine moderne précoce"},
@@ -2298,6 +2411,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ibn Battuta",
         "accepted_answers": {"en": ["Ibn Battuta", "Ibn Battutah"], "ar": ["ابن بطوطة"], "fr": ["Ibn Battuta", "Ibn Batouta"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The greatest traveler of the pre-modern world", "ar": "أعظم رحالة في العالم ما قبل الحديث", "fr": "Le plus grand voyageur du monde pré-moderne"},
             "2": {"en": "Traveled over 120,000 km across 44 countries", "ar": "سافر أكثر من 120,000 كم عبر 44 بلداً", "fr": "Voyagea plus de 120 000 km à travers 44 pays"},
@@ -2319,6 +2433,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "An-Naml",
         "accepted_answers": {"en": ["An-Naml", "Al-Naml", "The Ant"], "ar": ["النمل", "سورة النمل"], "fr": ["An-Naml", "La Fourmi"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Named after a small creature", "ar": "سُميت بمخلوق صغير", "fr": "Nommée d'après une petite créature"},
             "2": {"en": "This creature warned its colony about Sulayman's army", "ar": "حذر هذا المخلوق قومه من جيش سليمان", "fr": "Cette créature avertit sa colonie de l'armée de Sulayman"},
@@ -2339,6 +2454,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ar-Rahman",
         "accepted_answers": {"en": ["Ar-Rahman", "Al-Rahman", "The Most Merciful"], "ar": ["الرحمن", "سورة الرحمن"], "fr": ["Ar-Rahman", "Le Tout Miséricordieux"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Called the Bride of the Quran", "ar": "تُسمى عروس القرآن", "fr": "Appelée la Mariée du Coran"},
             "2": {"en": "Repeatedly asks: Which favors will you deny?", "ar": "تسأل مراراً: فبأي آلاء ربكما تكذبان؟", "fr": "Demande à plusieurs reprises : Lequel des bienfaits nierez-vous ?"},
@@ -2359,6 +2475,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Waqi'ah",
         "accepted_answers": {"en": ["Al-Waqi'ah", "Al-Waqiah", "The Event"], "ar": ["الواقعة", "سورة الواقعة"], "fr": ["Al-Waqi'ah", "L'Événement"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The Prophet recommended reciting it every night", "ar": "أوصى النبي بقراءتها كل ليلة", "fr": "Le Prophète recommanda de la réciter chaque nuit"},
             "2": {"en": "Associated with protection from poverty", "ar": "مرتبطة بالحماية من الفقر", "fr": "Associée à la protection contre la pauvreté"},
@@ -2380,6 +2497,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Harun / Aaron",
         "accepted_answers": {"en": ["Harun", "Aaron"], "ar": ["هارون"], "fr": ["Harun", "Aaron"]},
         "category": "Prophets",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A prophet and brother of another great prophet", "ar": "نبي وأخ لنبي عظيم آخر", "fr": "Un prophète et frère d'un autre grand prophète"},
             "2": {"en": "He was more eloquent in speech", "ar": "كان أفصح لساناً", "fr": "Il était plus éloquent dans la parole"},
@@ -2400,6 +2518,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Yasa / Élisée",
         "accepted_answers": {"en": ["Al-Yasa", "Elisha", "Alyasa"], "ar": ["اليسع"], "fr": ["Al-Yasa", "Élisée"]},
         "category": "Prophets",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Mentioned twice in the Quran", "ar": "ذُكر مرتين في القرآن", "fr": "Mentionné deux fois dans le Coran"},
             "2": {"en": "Succeeded Ilyas as prophet", "ar": "خلف إلياس كنبي", "fr": "Succéda à Ilyas comme prophète"},
@@ -2420,6 +2539,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Dhul-Kifl",
         "accepted_answers": {"en": ["Dhul-Kifl", "Dhul Kifl", "Zul-Kifl"], "ar": ["ذو الكفل", "ذي الكفل"], "fr": ["Dhul-Kifl", "Zul-Kifl"]},
         "category": "Prophets",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Mentioned in the Quran among the patient ones", "ar": "ذُكر في القرآن مع الصابرين", "fr": "Mentionné dans le Coran parmi les patients"},
             "2": {"en": "His name means 'the one of the pledge'", "ar": "اسمه يعني 'صاحب الكفالة'", "fr": "Son nom signifie 'celui de l'engagement'"},
@@ -2441,6 +2561,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Talha",
         "accepted_answers": {"en": ["Talha", "Talha ibn Ubaydullah"], "ar": ["طلحة", "طلحة بن عبيد الله"], "fr": ["Talha"]},
         "category": "Companions",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "One of the ten promised Paradise", "ar": "أحد العشرة المبشرين بالجنة", "fr": "Un des dix promis au Paradis"},
             "2": {"en": "Protected the Prophet with his body at Uhud", "ar": "حمى النبي بجسده في أحد", "fr": "Protégea le Prophète avec son corps à Uhud"},
@@ -2461,6 +2582,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Sa'd ibn Abi Waqqas",
         "accepted_answers": {"en": ["Sa'd", "Saad", "Sa'd ibn Abi Waqqas"], "ar": ["سعد", "سعد بن أبي وقاص"], "fr": ["Sa'd", "Saad"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "One of the ten promised Paradise", "ar": "أحد العشرة المبشرين بالجنة", "fr": "Un des dix promis au Paradis"},
             "2": {"en": "The first to shoot an arrow for Islam", "ar": "أول من رمى سهماً في سبيل الإسلام", "fr": "Le premier à tirer une flèche pour l'Islam"},
@@ -2481,6 +2603,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Abu Hurayrah",
         "accepted_answers": {"en": ["Abu Hurayrah", "Abu Hurairah", "Abu Huraira"], "ar": ["أبو هريرة"], "fr": ["Abu Hurayrah", "Abu Hurairah"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The most prolific narrator of hadith", "ar": "أكثر رواة الحديث", "fr": "Le plus prolifique narrateur de hadith"},
             "2": {"en": "Narrated over 5,000 hadiths", "ar": "روى أكثر من 5000 حديث", "fr": "Narra plus de 5 000 hadiths"},
@@ -2501,6 +2624,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Abu Dharr",
         "accepted_answers": {"en": ["Abu Dharr", "Abu Dhar", "Abu Dharr al-Ghifari"], "ar": ["أبو ذر", "أبو ذر الغفاري"], "fr": ["Abu Dharr"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Known for his extreme asceticism and poverty by choice", "ar": "اشتهر بزهده الشديد وفقره الاختياري", "fr": "Connu pour son ascétisme extrême et sa pauvreté choisie"},
             "2": {"en": "One of the earliest converts to Islam", "ar": "من أوائل المسلمين", "fr": "Un des premiers convertis à l'Islam"},
@@ -2521,6 +2645,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Umm Salamah",
         "accepted_answers": {"en": ["Umm Salamah", "Umm Salama"], "ar": ["أم سلمة"], "fr": ["Umm Salamah", "Oum Salama"]},
         "category": "Companions",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "One of the Mothers of the Believers", "ar": "إحدى أمهات المؤمنين", "fr": "Une des Mères des Croyants"},
             "2": {"en": "Known for her wisdom and sound counsel", "ar": "اشتهرت بحكمتها ورأيها السديد", "fr": "Connue pour sa sagesse et ses bons conseils"},
@@ -2542,6 +2667,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Fiqh",
         "accepted_answers": {"en": ["Fiqh", "Jurisprudence"], "ar": ["فقه", "الفقه"], "fr": ["Fiqh", "Jurisprudence"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The science of Islamic rulings", "ar": "علم الأحكام الإسلامية", "fr": "La science des règles islamiques"},
             "2": {"en": "Has four major schools (madhabs)", "ar": "له أربعة مذاهب رئيسية", "fr": "A quatre grandes écoles (madhabs)"},
@@ -2562,6 +2688,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Waqf",
         "accepted_answers": {"en": ["Waqf", "Endowment"], "ar": ["وقف", "الوقف"], "fr": ["Waqf", "Dotation"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A charitable endowment in Islamic law", "ar": "وقف خيري في الشريعة الإسلامية", "fr": "Une dotation charitable en droit islamique"},
             "2": {"en": "The asset cannot be sold or inherited", "ar": "لا يُباع الأصل ولا يُورث", "fr": "L'actif ne peut être vendu ni hérité"},
@@ -2582,6 +2709,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tafsir",
         "accepted_answers": {"en": ["Tafsir", "Exegesis"], "ar": ["تفسير", "التفسير"], "fr": ["Tafsir", "Exégèse"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A major field of Islamic scholarship", "ar": "مجال رئيسي في العلوم الإسلامية", "fr": "Un domaine majeur de l'érudition islamique"},
             "2": {"en": "Ibn Kathir wrote one of the most famous ones", "ar": "كتب ابن كثير أحد أشهرها", "fr": "Ibn Kathir écrivit l'un des plus célèbres"},
@@ -2602,6 +2730,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hadith",
         "accepted_answers": {"en": ["Hadith"], "ar": ["حديث", "الحديث"], "fr": ["Hadith"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The second source of Islamic law after the Quran", "ar": "المصدر الثاني للشريعة بعد القرآن", "fr": "La deuxième source de la loi islamique après le Coran"},
             "2": {"en": "Recorded sayings and actions of the Prophet", "ar": "أقوال وأفعال النبي المسجلة", "fr": "Paroles et actions enregistrées du Prophète"},
@@ -2622,6 +2751,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Aqidah",
         "accepted_answers": {"en": ["Aqidah", "Aqeeda", "Creed"], "ar": ["عقيدة", "العقيدة"], "fr": ["Aqidah", "Croyance"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The foundation of a Muslim's faith", "ar": "أساس إيمان المسلم", "fr": "Le fondement de la foi d'un musulman"},
             "2": {"en": "Includes belief in Allah, angels, books, prophets, Last Day, and Qadr", "ar": "تشمل الإيمان بالله والملائكة والكتب والرسل واليوم الآخر والقدر", "fr": "Inclut la croyance en Allah, les anges, les livres, les prophètes, le Dernier Jour et le Qadr"},
@@ -2642,6 +2772,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khilafah",
         "accepted_answers": {"en": ["Khilafah", "Caliphate", "Khilafa"], "ar": ["خلافة", "الخلافة"], "fr": ["Khilafah", "Califat"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The system of leadership after the Prophet", "ar": "نظام القيادة بعد النبي", "fr": "Le système de leadership après le Prophète"},
             "2": {"en": "Abu Bakr was the first to hold this position", "ar": "أبو بكر كان أول من تولى هذا المنصب", "fr": "Abu Bakr fut le premier à occuper ce poste"},
@@ -2662,6 +2793,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Mahr",
         "accepted_answers": {"en": ["Mahr", "Dowry", "Bridal gift"], "ar": ["مهر", "المهر"], "fr": ["Mahr", "Dot"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A mandatory part of an Islamic marriage", "ar": "جزء إلزامي من الزواج الإسلامي", "fr": "Une partie obligatoire du mariage islamique"},
             "2": {"en": "Given by the groom to the bride", "ar": "يُقدم من العريس للعروس", "fr": "Donné par le marié à la mariée"},
@@ -2682,6 +2814,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ijtihad",
         "accepted_answers": {"en": ["Ijtihad"], "ar": ["اجتهاد", "الاجتهاد"], "fr": ["Ijtihad"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Independent scholarly reasoning in Islamic law", "ar": "الاجتهاد العلمي المستقل في الشريعة", "fr": "Raisonnement savant indépendant en droit islamique"},
             "2": {"en": "Used when Quran and Sunnah don't explicitly address an issue", "ar": "يُستخدم عندما لا يتناول القرآن والسنة قضية صراحة", "fr": "Utilisé quand le Coran et la Sunnah n'abordent pas explicitement un sujet"},
@@ -2703,6 +2836,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tahajjud",
         "accepted_answers": {"en": ["Tahajjud", "Night prayer"], "ar": ["تهجد", "التهجد"], "fr": ["Tahajjud"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A voluntary prayer performed at night", "ar": "صلاة نافلة تُؤدى بالليل", "fr": "Une prière surérogatoire la nuit"},
             "2": {"en": "Best performed in the last third of the night", "ar": "أفضل وقت لها الثلث الأخير من الليل", "fr": "Meilleure dans le dernier tiers de la nuit"},
@@ -2723,6 +2857,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "I'tikaf",
         "accepted_answers": {"en": ["I'tikaf", "Itikaf", "Retreat"], "ar": ["اعتكاف", "الاعتكاف"], "fr": ["I'tikaf", "Itikaf"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A spiritual retreat in the mosque", "ar": "خلوة روحية في المسجد", "fr": "Une retraite spirituelle à la mosquée"},
             "2": {"en": "Commonly done in the last 10 days of Ramadan", "ar": "يُمارس عادة في العشر الأواخر من رمضان", "fr": "Fait couramment les 10 derniers jours de Ramadan"},
@@ -2743,6 +2878,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Aqiqah",
         "accepted_answers": {"en": ["Aqiqah", "Aqeeqah"], "ar": ["عقيقة", "العقيقة"], "fr": ["Aqiqah"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Done to celebrate the birth of a child", "ar": "تُعمل احتفالاً بولادة طفل", "fr": "Faite pour célébrer la naissance d'un enfant"},
             "2": {"en": "Involves slaughtering one or two sheep", "ar": "تتضمن ذبح شاة أو شاتين", "fr": "Implique l'abattage d'un ou deux moutons"},
@@ -2763,6 +2899,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khutbah",
         "accepted_answers": {"en": ["Khutbah", "Khutba", "Sermon"], "ar": ["خطبة", "الخطبة"], "fr": ["Khutbah", "Sermon", "Prêche"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Delivered every Friday before the prayer", "ar": "تُلقى كل جمعة قبل الصلاة", "fr": "Prononcé chaque vendredi avant la prière"},
             "2": {"en": "The imam delivers it from the minbar", "ar": "يلقيها الإمام من المنبر", "fr": "L'imam le prononce depuis le minbar"},
@@ -2783,6 +2920,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Witr",
         "accepted_answers": {"en": ["Witr"], "ar": ["وتر", "الوتر"], "fr": ["Witr"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A prayer prayed with an odd number of rak'ahs", "ar": "صلاة بعدد فردي من الركعات", "fr": "Une prière avec un nombre impair de rak'ahs"},
             "2": {"en": "The last prayer of the night", "ar": "آخر صلاة في الليل", "fr": "La dernière prière de la nuit"},
@@ -2803,6 +2941,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tayammum",
         "accepted_answers": {"en": ["Tayammum", "Dry ablution"], "ar": ["تيمم", "التيمم"], "fr": ["Tayammum"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "An alternative to wudu when water is unavailable", "ar": "بديل للوضوء عند عدم توفر الماء", "fr": "Une alternative au wudu quand l'eau n'est pas disponible"},
             "2": {"en": "Uses clean earth or dust", "ar": "يستخدم التراب النظيف", "fr": "Utilise de la terre ou de la poussière propre"},
@@ -2823,6 +2962,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Kaffarah",
         "accepted_answers": {"en": ["Kaffarah", "Kaffara", "Expiation"], "ar": ["كفارة", "الكفارة"], "fr": ["Kaffarah", "Expiation"]},
         "category": "Daily Life",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Required when breaking an oath or certain rules", "ar": "مطلوبة عند كسر يمين أو قواعد معينة", "fr": "Requise pour rompre un serment ou certaines règles"},
             "2": {"en": "Can involve feeding the poor or fasting", "ar": "قد تتضمن إطعام الفقراء أو الصيام", "fr": "Peut impliquer nourrir les pauvres ou jeûner"},
@@ -2843,6 +2983,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Salat al-Duha",
         "accepted_answers": {"en": ["Duha", "Salat al-Duha", "Forenoon prayer"], "ar": ["الضحى", "صلاة الضحى"], "fr": ["Duha", "Salat al-Duha"]},
         "category": "Daily Life",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A voluntary prayer in the morning", "ar": "صلاة نافلة في الصباح", "fr": "Une prière volontaire le matin"},
             "2": {"en": "Prayed after sunrise until before Dhuhr", "ar": "تُصلى بعد الشروق حتى قبل الظهر", "fr": "Priée après le lever du soleil jusqu'avant Dhuhr"},
@@ -2864,6 +3005,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Abyssinie",
         "accepted_answers": {"en": ["Abyssinia", "Habashah", "Ethiopia"], "ar": ["الحبشة"], "fr": ["Abyssinie", "Éthiopie"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The first migration destination for persecuted Muslims", "ar": "أول وجهة هجرة للمسلمين المضطهدين", "fr": "La première destination de migration pour les musulmans persécutés"},
             "2": {"en": "Its Christian king protected the Muslims", "ar": "حماهم ملكها المسيحي", "fr": "Son roi chrétien protégea les musulmans"},
@@ -2884,6 +3026,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Grotte de Thawr",
         "accepted_answers": {"en": ["Thawr", "Cave Thawr", "Cave of Thawr"], "ar": ["ثور", "غار ثور"], "fr": ["Thawr", "Grotte de Thawr"]},
         "category": "Places",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Where the Prophet hid during the Hijra", "ar": "حيث اختبأ النبي خلال الهجرة", "fr": "Où le Prophète se cacha pendant l'Hégire"},
             "2": {"en": "Abu Bakr was with him there", "ar": "كان أبو بكر معه هناك", "fr": "Abu Bakr était avec lui là-bas"},
@@ -2904,6 +3047,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Muzdalifah",
         "accepted_answers": {"en": ["Muzdalifah"], "ar": ["مزدلفة"], "fr": ["Muzdalifah"]},
         "category": "Places",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A stop during the Hajj pilgrimage", "ar": "محطة خلال حج البيت", "fr": "Un arrêt pendant le pèlerinage du Hajj"},
             "2": {"en": "Located between Arafat and Mina", "ar": "تقع بين عرفات ومنى", "fr": "Située entre Arafat et Mina"},
@@ -2924,6 +3068,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tabuk",
         "accepted_answers": {"en": ["Tabuk"], "ar": ["تبوك"], "fr": ["Tabuk", "Tabouk"]},
         "category": "Places",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Site of the Prophet's last military expedition", "ar": "موقع آخر غزوة للنبي", "fr": "Site de la dernière expédition militaire du Prophète"},
             "2": {"en": "Located in northern Arabia near the Byzantine border", "ar": "تقع في شمال الجزيرة العربية قرب الحدود البيزنطية", "fr": "Située au nord de l'Arabie près de la frontière byzantine"},
@@ -2945,6 +3090,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ad-Duha",
         "accepted_answers": {"en": ["Ad-Duha", "Al-Duha", "The Morning"], "ar": ["الضحى", "سورة الضحى"], "fr": ["Ad-Duha"]},
         "category": "Quran",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Revealed to comfort the Prophet during a difficult time", "ar": "نزلت لتطمين النبي في وقت صعب", "fr": "Révélée pour réconforter le Prophète dans un moment difficile"},
             "2": {"en": "Revelation had paused and people mocked him", "ar": "توقف الوحي وسخر منه الناس", "fr": "La révélation s'était arrêtée et les gens se moquaient de lui"},
@@ -2965,6 +3111,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Asr",
         "accepted_answers": {"en": ["Al-Asr", "The Time"], "ar": ["العصر", "سورة العصر"], "fr": ["Al-Asr", "Le Temps"]},
         "category": "Quran",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "One of the shortest surahs — only 3 verses", "ar": "من أقصر السور — 3 آيات فقط", "fr": "Une des sourates les plus courtes — seulement 3 versets"},
             "2": {"en": "Imam Shafi'i said it alone would suffice as guidance", "ar": "قال الشافعي لو لم ينزل غيرها لكفت", "fr": "L'Imam Shafi'i dit qu'elle seule suffirait comme guidance"},
@@ -2985,6 +3132,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Kawthar",
         "accepted_answers": {"en": ["Al-Kawthar", "Kawthar", "Abundance"], "ar": ["الكوثر", "سورة الكوثر"], "fr": ["Al-Kawthar", "L'Abondance"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The shortest surah in the Quran — 3 verses", "ar": "أقصر سورة في القرآن — 3 آيات", "fr": "La sourate la plus courte du Coran — 3 versets"},
             "2": {"en": "Named after a river in Paradise", "ar": "سُميت بنهر في الجنة", "fr": "Nommée d'après une rivière au Paradis"},
@@ -3005,6 +3153,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Maryam",
         "accepted_answers": {"en": ["Maryam", "Mary"], "ar": ["مريم", "سورة مريم"], "fr": ["Maryam", "Marie"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The only surah named after a woman", "ar": "السورة الوحيدة المسماة بامرأة", "fr": "La seule sourate nommée d'après une femme"},
             "2": {"en": "She is honored as the best woman of all worlds", "ar": "مُكرمة كأفضل نساء العالمين", "fr": "Honorée comme la meilleure femme de tous les mondes"},
@@ -3025,6 +3174,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "An-Nas",
         "accepted_answers": {"en": ["An-Nas", "Al-Nas", "Mankind"], "ar": ["الناس", "سورة الناس"], "fr": ["An-Nas", "Les Hommes"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The very last surah of the Quran", "ar": "آخر سورة في القرآن", "fr": "La toute dernière sourate du Coran"},
             "2": {"en": "Seeks refuge in Allah from the whisperer", "ar": "تستعيذ بالله من الوسواس", "fr": "Cherche refuge en Allah contre le tentateur"},
@@ -3045,6 +3195,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Falaq",
         "accepted_answers": {"en": ["Al-Falaq", "The Daybreak", "The Dawn"], "ar": ["الفلق", "سورة الفلق"], "fr": ["Al-Falaq", "L'Aube"]},
         "category": "Quran",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Seeks protection from the evil of darkness", "ar": "تستعيذ من شر الظلام", "fr": "Cherche protection contre le mal de l'obscurité"},
             "2": {"en": "The second to last surah of the Quran", "ar": "قبل أخيرة في القرآن", "fr": "L'avant-dernière sourate du Coran"},
@@ -3066,6 +3217,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tariq ibn Ziyad",
         "accepted_answers": {"en": ["Tariq", "Tariq ibn Ziyad"], "ar": ["طارق", "طارق بن زياد"], "fr": ["Tariq", "Tariq ibn Ziyad"]},
         "category": "Islamic History",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A Muslim military commander who crossed to Europe", "ar": "قائد عسكري مسلم عبر إلى أوروبا", "fr": "Un commandant militaire musulman qui traversa vers l'Europe"},
             "2": {"en": "Gibraltar is named after him (Jabal Tariq)", "ar": "جبل طارق سُمي باسمه", "fr": "Gibraltar est nommé d'après lui (Jabal Tariq)"},
@@ -3086,6 +3238,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Khwarizmi",
         "accepted_answers": {"en": ["Al-Khwarizmi", "Khwarizmi"], "ar": ["الخوارزمي"], "fr": ["Al-Khwarizmi"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The father of algebra", "ar": "أبو الجبر", "fr": "Le père de l'algèbre"},
             "2": {"en": "The word 'algorithm' comes from his name", "ar": "كلمة 'خوارزمية' مشتقة من اسمه", "fr": "Le mot 'algorithme' vient de son nom"},
@@ -3106,6 +3259,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ibn Khaldun",
         "accepted_answers": {"en": ["Ibn Khaldun"], "ar": ["ابن خلدون"], "fr": ["Ibn Khaldoun", "Ibn Khaldun"]},
         "category": "Islamic History",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Considered the father of sociology", "ar": "يُعتبر أبو علم الاجتماع", "fr": "Considéré comme le père de la sociologie"},
             "2": {"en": "Wrote 'Al-Muqaddimah' — a groundbreaking work", "ar": "كتب 'المقدمة' — عمل رائد", "fr": "Écrivit 'Al-Muqaddimah' — une œuvre révolutionnaire"},
@@ -3126,6 +3280,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Omeyyade",
         "accepted_answers": {"en": ["Umayyad", "Umayyads", "Ummayad"], "ar": ["أموي", "الأموي", "بنو أمية"], "fr": ["Omeyyade", "Omeyyades"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The first hereditary dynasty in Islam", "ar": "أول سلالة وراثية في الإسلام", "fr": "La première dynastie héréditaire en Islam"},
             "2": {"en": "Capital was Damascus", "ar": "عاصمتها دمشق", "fr": "La capitale était Damas"},
@@ -3146,6 +3301,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Abbasside",
         "accepted_answers": {"en": ["Abbasid", "Abbasids"], "ar": ["عباسي", "العباسي", "بنو العباس"], "fr": ["Abbasside", "Abbassides"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "The dynasty that built Baghdad", "ar": "السلالة التي بنت بغداد", "fr": "La dynastie qui construisit Bagdad"},
             "2": {"en": "Overthrew the Umayyads in 750 CE", "ar": "أطاحت بالأمويين عام 750م", "fr": "Renversa les Omeyyades en 750"},
@@ -3166,6 +3322,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Fatimide",
         "accepted_answers": {"en": ["Fatimid", "Fatimids"], "ar": ["فاطمي", "الفاطمي", "الفاطميون"], "fr": ["Fatimide", "Fatimides"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Named after the Prophet's daughter", "ar": "سُميت بابنة النبي", "fr": "Nommée d'après la fille du Prophète"},
             "2": {"en": "Founded the city of Cairo", "ar": "أسست مدينة القاهرة", "fr": "Fonda la ville du Caire"},
@@ -3187,6 +3344,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Nafl",
         "accepted_answers": {"en": ["Nafl", "Nafil", "Voluntary"], "ar": ["نفل", "النفل", "نافلة"], "fr": ["Nafl", "Surérogatoire"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Optional acts of worship beyond the obligatory", "ar": "عبادات اختيارية فوق الفرائض", "fr": "Actes d'adoration optionnels au-delà des obligations"},
             "2": {"en": "Doing them earns extra reward from Allah", "ar": "أداؤها يكسب أجراً إضافياً من الله", "fr": "Les faire rapporte une récompense supplémentaire d'Allah"},
@@ -3207,6 +3365,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Fard",
         "accepted_answers": {"en": ["Fard", "Obligatory", "Mandatory"], "ar": ["فرض", "الفرض", "فريضة"], "fr": ["Fard", "Obligatoire"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The highest category of obligation in Islam", "ar": "أعلى درجات الوجوب في الإسلام", "fr": "La plus haute catégorie d'obligation en Islam"},
             "2": {"en": "The five daily prayers have this status", "ar": "الصلوات الخمس بهذه الدرجة", "fr": "Les cinq prières quotidiennes ont ce statut"},
@@ -3227,6 +3386,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Wasiyyah",
         "accepted_answers": {"en": ["Wasiyyah", "Will", "Bequest"], "ar": ["وصية", "الوصية"], "fr": ["Wasiyyah", "Testament"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "An Islamic legal document for after death", "ar": "وثيقة شرعية لما بعد الموت", "fr": "Un document juridique islamique pour après la mort"},
             "2": {"en": "Cannot exceed one-third of one's wealth", "ar": "لا تتجاوز ثلث المال", "fr": "Ne peut dépasser un tiers de la richesse"},
@@ -3247,6 +3407,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Shifa",
         "accepted_answers": {"en": ["Shifa", "Cure", "Healing"], "ar": ["شفاء", "الشفاء"], "fr": ["Shifa", "Guérison"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The Quran is described as this for the hearts", "ar": "القرآن يوصف بهذا للقلوب", "fr": "Le Coran est décrit comme cela pour les cœurs"},
             "2": {"en": "Only Allah is the true source of this", "ar": "الله وحده المصدر الحقيقي لهذا", "fr": "Seul Allah est la vraie source de cela"},
@@ -3267,6 +3428,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tarbiyah",
         "accepted_answers": {"en": ["Tarbiyah", "Tarbiya", "Upbringing"], "ar": ["تربية", "التربية"], "fr": ["Tarbiyah", "Éducation"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "Islamic approach to raising and educating children", "ar": "المنهج الإسلامي في تنشئة وتعليم الأطفال", "fr": "L'approche islamique de l'éducation des enfants"},
             "2": {"en": "Encompasses moral, spiritual, and intellectual growth", "ar": "يشمل النمو الأخلاقي والروحي والفكري", "fr": "Englobe la croissance morale, spirituelle et intellectuelle"},
@@ -3288,6 +3450,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Istinja",
         "accepted_answers": {"en": ["Istinja"], "ar": ["استنجاء", "الاستنجاء"], "fr": ["Istinja"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Part of Islamic hygiene and cleanliness", "ar": "جزء من النظافة الإسلامية", "fr": "Partie de l'hygiène islamique"},
             "2": {"en": "Done after using the restroom", "ar": "يُؤدى بعد استخدام المرحاض", "fr": "Fait après l'utilisation des toilettes"},
@@ -3308,6 +3471,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Kursi",
         "accepted_answers": {"en": ["Kursi", "Footstool", "Throne"], "ar": ["كرسي", "الكرسي"], "fr": ["Kursi", "Trône"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Extends over the heavens and the earth", "ar": "يسع السماوات والأرض", "fr": "S'étend sur les cieux et la terre"},
             "2": {"en": "Mentioned in the most famous verse of the Quran", "ar": "ذُكر في أشهر آية في القرآن", "fr": "Mentionné dans le verset le plus célèbre du Coran"},
@@ -3328,6 +3492,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Salam",
         "accepted_answers": {"en": ["Salam", "Peace"], "ar": ["سلام", "السلام"], "fr": ["Salam", "Paix"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The greeting of Muslims", "ar": "تحية المسلمين", "fr": "La salutation des musulmans"},
             "2": {"en": "Also one of Allah's 99 names (As-Salam)", "ar": "أيضاً أحد أسماء الله الـ99 (السلام)", "fr": "Aussi un des 99 noms d'Allah (As-Salam)"},
@@ -3348,6 +3513,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Bismillah",
         "accepted_answers": {"en": ["Bismillah", "Basmala"], "ar": ["بسملة", "البسملة", "بسم الله"], "fr": ["Bismillah", "Basmala"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Said before eating, drinking, and starting any action", "ar": "تُقال قبل الأكل والشرب وأي عمل", "fr": "Dit avant de manger, boire et commencer toute action"},
             "2": {"en": "Begins every surah except one", "ar": "تبدأ بها كل سورة إلا واحدة", "fr": "Commence chaque sourate sauf une"},
@@ -3368,6 +3534,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Muezzin",
         "accepted_answers": {"en": ["Muezzin", "Mu'adhin"], "ar": ["مؤذن", "المؤذن"], "fr": ["Muezzin"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The person who calls Muslims to prayer", "ar": "الشخص الذي يدعو المسلمين للصلاة", "fr": "La personne qui appelle les musulmans à la prière"},
             "2": {"en": "Bilal was the first one in Islam", "ar": "بلال كان أول واحد في الإسلام", "fr": "Bilal fut le premier en Islam"},
@@ -3388,6 +3555,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Imam",
         "accepted_answers": {"en": ["Imam"], "ar": ["إمام", "الإمام"], "fr": ["Imam"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The person who leads the congregational prayer", "ar": "الشخص الذي يقود الصلاة الجماعية", "fr": "La personne qui dirige la prière en congrégation"},
             "2": {"en": "Stands in front of the rows", "ar": "يقف أمام الصفوف", "fr": "Se tient devant les rangs"},
@@ -3408,6 +3576,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hajr al-Aswad",
         "accepted_answers": {"en": ["Hajr al-Aswad", "Black Stone"], "ar": ["الحجر الأسود"], "fr": ["Hajr al-Aswad", "Pierre Noire"]},
         "category": "Places",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Located in one corner of the Kaaba", "ar": "يقع في أحد أركان الكعبة", "fr": "Situé dans un coin de la Kaaba"},
             "2": {"en": "Pilgrims try to kiss or point to it during Tawaf", "ar": "يحاول الحجاج تقبيله أو الإشارة إليه أثناء الطواف", "fr": "Les pèlerins essaient de l'embrasser ou de le pointer pendant le Tawaf"},
@@ -3429,6 +3598,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ammar",
         "accepted_answers": {"en": ["Ammar", "Ammar ibn Yasir"], "ar": ["عمار", "عمار بن ياسر"], "fr": ["Ammar"]},
         "category": "Companions",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "His family was the first to be martyred in Islam", "ar": "عائلته أول شهداء الإسلام", "fr": "Sa famille fut la première martyrisée en Islam"},
             "2": {"en": "His mother Sumayyah was the first female martyr", "ar": "أمه سمية أول شهيدة في الإسلام", "fr": "Sa mère Sumayyah fut la première femme martyre"},
@@ -3450,6 +3620,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Al-Hujurat",
         "accepted_answers": {"en": ["Al-Hujurat", "The Chambers"], "ar": ["الحجرات", "سورة الحجرات"], "fr": ["Al-Hujurat", "Les Appartements"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "Contains rules of Islamic manners and etiquette", "ar": "تحتوي قواعد الأدب والآداب الإسلامية", "fr": "Contient les règles de politesse et d'étiquette islamiques"},
             "2": {"en": "Says all mankind was created from one male and female", "ar": "تقول إن البشر خُلقوا من ذكر وأنثى", "fr": "Dit que toute l'humanité fut créée d'un mâle et d'une femelle"},
@@ -3471,6 +3642,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Jabal al-Nur",
         "accepted_answers": {"en": ["Jabal al-Nur", "Mountain of Light"], "ar": ["جبل النور"], "fr": ["Jabal al-Nur", "Montagne de la Lumière"]},
         "category": "Places",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A mountain near Makkah", "ar": "جبل قرب مكة", "fr": "Une montagne près de La Mecque"},
             "2": {"en": "Contains the Cave of Hira at its summit", "ar": "يحتوي غار حراء في قمته", "fr": "Contient la Grotte de Hira à son sommet"},
@@ -3492,6 +3664,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Adab",
         "accepted_answers": {"en": ["Adab", "Manners", "Etiquette"], "ar": ["أدب", "الأدب"], "fr": ["Adab", "Bonnes manières"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "What the Prophet was sent to perfect", "ar": "ما بُعث النبي لإتمامه", "fr": "Ce que le Prophète fut envoyé perfectionner"},
             "2": {"en": "Includes how to eat, greet, and treat others", "ar": "يشمل كيفية الأكل والسلام ومعاملة الآخرين", "fr": "Inclut comment manger, saluer et traiter les autres"},
@@ -3512,6 +3685,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Khalifah",
         "accepted_answers": {"en": ["Khalifah", "Caliph", "Vicegerent"], "ar": ["خليفة", "الخليفة"], "fr": ["Khalifah", "Calife"]},
         "category": "Islamic Concepts",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The title of the leader of the Muslim community", "ar": "لقب قائد الأمة الإسلامية", "fr": "Le titre du chef de la communauté musulmane"},
             "2": {"en": "Abu Bakr was the first one", "ar": "أبو بكر كان الأول", "fr": "Abu Bakr fut le premier"},
@@ -3533,6 +3707,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Bayt al-Hikma",
         "accepted_answers": {"en": ["Bayt al-Hikma", "House of Wisdom"], "ar": ["بيت الحكمة"], "fr": ["Bayt al-Hikma", "Maison de la Sagesse"]},
         "category": "Islamic History",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A famous center of learning in Baghdad", "ar": "مركز تعليم شهير في بغداد", "fr": "Un célèbre centre d'apprentissage à Bagdad"},
             "2": {"en": "Established during the Abbasid era", "ar": "أُسس في العصر العباسي", "fr": "Établi pendant l'ère abbasside"},
@@ -3554,6 +3729,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Jibril",
         "accepted_answers": {"en": ["Jibril", "Gabriel", "Jibreel"], "ar": ["جبريل", "جبرائيل"], "fr": ["Jibril", "Gabriel"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The greatest of all angels", "ar": "أعظم الملائكة", "fr": "Le plus grand de tous les anges"},
             "2": {"en": "Brought the Quran to the Prophet", "ar": "أنزل القرآن على النبي", "fr": "Apporta le Coran au Prophète"},
@@ -3574,6 +3750,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Isra",
         "accepted_answers": {"en": ["Isra", "Night Journey"], "ar": ["إسراء", "الإسراء"], "fr": ["Isra", "Voyage nocturne"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A miraculous journey the Prophet took at night", "ar": "رحلة معجزة قام بها النبي ليلاً", "fr": "Un voyage miraculeux que le Prophète fit la nuit"},
             "2": {"en": "From Makkah to Jerusalem", "ar": "من مكة إلى القدس", "fr": "De La Mecque à Jérusalem"},
@@ -3594,6 +3771,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Mi'raj",
         "accepted_answers": {"en": ["Mi'raj", "Miraj", "Ascension"], "ar": ["معراج", "المعراج"], "fr": ["Mi'raj", "Ascension"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The Prophet ascended through the seven heavens", "ar": "عرج النبي عبر السماوات السبع", "fr": "Le Prophète monta à travers les sept cieux"},
             "2": {"en": "Met different prophets at each heaven", "ar": "التقى أنبياء مختلفين في كل سماء", "fr": "Rencontra différents prophètes à chaque ciel"},
@@ -3614,6 +3792,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Buraq",
         "accepted_answers": {"en": ["Buraq", "Al-Buraq"], "ar": ["براق", "البراق"], "fr": ["Buraq", "Al-Buraq"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "The creature the Prophet rode during the Night Journey", "ar": "المخلوق الذي ركبه النبي في الإسراء", "fr": "La créature que le Prophète monta pendant le Voyage Nocturne"},
             "2": {"en": "White in color, between a mule and a donkey in size", "ar": "أبيض اللون بين البغل والحمار في الحجم", "fr": "Blanc, entre un mulet et un âne en taille"},
@@ -3634,6 +3813,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Kiswah",
         "accepted_answers": {"en": ["Kiswah", "Kiswa"], "ar": ["كسوة", "الكسوة"], "fr": ["Kiswah", "Kiswa"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "A black cloth embroidered with gold", "ar": "قماش أسود مطرز بالذهب", "fr": "Un tissu noir brodé d'or"},
             "2": {"en": "Covers the most sacred structure in Islam", "ar": "يغطي أقدس بناء في الإسلام", "fr": "Couvre la structure la plus sacrée de l'Islam"},
@@ -3654,6 +3834,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Masjid",
         "accepted_answers": {"en": ["Masjid", "Mosque"], "ar": ["مسجد", "المسجد"], "fr": ["Masjid", "Mosquée"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "The place where Muslims gather for prayer", "ar": "المكان حيث يجتمع المسلمون للصلاة", "fr": "Le lieu où les musulmans se rassemblent pour la prière"},
             "2": {"en": "Means 'place of prostration' in Arabic", "ar": "يعني 'مكان السجود' بالعربية", "fr": "Signifie 'lieu de prosternation' en arabe"},
@@ -3674,6 +3855,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Mihrab",
         "accepted_answers": {"en": ["Mihrab", "Prayer niche"], "ar": ["محراب", "المحراب"], "fr": ["Mihrab"]},
         "category": "Daily Life",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A niche in the wall of every mosque", "ar": "حفرة في جدار كل مسجد", "fr": "Une niche dans le mur de chaque mosquée"},
             "2": {"en": "Indicates the direction of the Qiblah", "ar": "يشير إلى اتجاه القبلة", "fr": "Indique la direction de la Qiblah"},
@@ -3694,6 +3876,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Surah",
         "accepted_answers": {"en": ["Surah", "Sura", "Chapter"], "ar": ["سورة", "السورة"], "fr": ["Sourate", "Surah"]},
         "category": "Quran",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "A chapter of the Quran", "ar": "فصل من القرآن", "fr": "Un chapitre du Coran"},
             "2": {"en": "There are 114 of them in the Quran", "ar": "يوجد 114 منها في القرآن", "fr": "Il y en a 114 dans le Coran"},
@@ -3714,6 +3897,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Ayah",
         "accepted_answers": {"en": ["Ayah", "Verse", "Sign"], "ar": ["آية", "الآية"], "fr": ["Ayah", "Verset"]},
         "category": "Quran",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A single verse of the Quran", "ar": "آية واحدة من القرآن", "fr": "Un seul verset du Coran"},
             "2": {"en": "Also means 'sign' or 'miracle' in Arabic", "ar": "تعني أيضاً 'علامة' أو 'معجزة' بالعربية", "fr": "Signifie aussi 'signe' ou 'miracle' en arabe"},
@@ -3734,6 +3918,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Husn al-Khuluq",
         "accepted_answers": {"en": ["Husn al-Khuluq", "Good character"], "ar": ["حسن الخلق"], "fr": ["Husn al-Khuluq", "Bon caractère"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "What the Prophet was described as having perfectly", "ar": "ما وُصف النبي بامتلاكه بشكل كامل", "fr": "Ce que le Prophète était décrit comme ayant parfaitement"},
             "2": {"en": "The heaviest thing on the scales on Judgment Day", "ar": "أثقل شيء في الميزان يوم القيامة", "fr": "La chose la plus lourde sur la balance le Jour du Jugement"},
@@ -3754,6 +3939,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Iman",
         "accepted_answers": {"en": ["Iman", "Faith", "Belief"], "ar": ["إيمان", "الإيمان"], "fr": ["Iman", "Foi"]},
         "category": "Islamic Concepts",
+        "difficulty": "medium",
         "hints": {
             "1": {"en": "One of the three levels of religion (with Islam and Ihsan)", "ar": "أحد مستويات الدين الثلاثة (مع الإسلام والإحسان)", "fr": "Un des trois niveaux de la religion (avec l'Islam et l'Ihsan)"},
             "2": {"en": "Has six pillars", "ar": "له ستة أركان", "fr": "A six piliers"},
@@ -3774,6 +3960,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Dhimmi",
         "accepted_answers": {"en": ["Dhimmi", "Protected person"], "ar": ["ذمي", "الذمي"], "fr": ["Dhimmi"]},
         "category": "Islamic History",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A non-Muslim citizen under Islamic governance", "ar": "مواطن غير مسلم تحت الحكم الإسلامي", "fr": "Un citoyen non-musulman sous gouvernance islamique"},
             "2": {"en": "Guaranteed protection of life, property, and worship", "ar": "يُضمن له حماية النفس والمال والعبادة", "fr": "Garanti la protection de la vie, des biens et du culte"},
@@ -3794,6 +3981,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Hafiz",
         "accepted_answers": {"en": ["Hafiz", "Hafidh"], "ar": ["حافظ", "الحافظ"], "fr": ["Hafiz", "Hafidh"]},
         "category": "Islamic Concepts",
+        "difficulty": "hard",
         "hints": {
             "1": {"en": "A person who has memorized the entire Quran", "ar": "شخص حفظ القرآن كاملاً", "fr": "Une personne qui a mémorisé le Coran entier"},
             "2": {"en": "There are millions of them worldwide", "ar": "يوجد ملايين منهم حول العالم", "fr": "Il y en a des millions dans le monde"},
@@ -3814,6 +4002,7 @@ QUIZ_WORDS: list[dict] = [
         "word_fr": "Tashahhud",
         "accepted_answers": {"en": ["Tashahhud", "Tashahud"], "ar": ["تشهد", "التشهد"], "fr": ["Tashahhud"]},
         "category": "Daily Life",
+        "difficulty": "easy",
         "hints": {
             "1": {"en": "Recited while sitting in prayer", "ar": "يُقرأ أثناء الجلوس في الصلاة", "fr": "Récité assis pendant la prière"},
             "2": {"en": "Contains the shahada (testimony of faith)", "ar": "يحتوي الشهادة (شهادة الإيمان)", "fr": "Contient la shahada (témoignage de foi)"},
@@ -3847,7 +4036,10 @@ async def seed_quiz_words(session: AsyncSession) -> None:
             # Update explanation if it was added
             if word_data.get("explanation") and not existing.explanation:
                 existing.explanation = word_data["explanation"]
-                session.add(existing)
+            # Update difficulty if changed
+            if word_data.get("difficulty") and existing.difficulty != word_data.get("difficulty"):
+                existing.difficulty = word_data["difficulty"]
+            session.add(existing)
             continue
         quiz_word = QuizWord(
             id=uuid4(),
@@ -3856,6 +4048,7 @@ async def seed_quiz_words(session: AsyncSession) -> None:
             word_fr=word_data.get("word_fr"),
             accepted_answers=word_data.get("accepted_answers"),
             category=word_data["category"],
+            difficulty=word_data.get("difficulty", "medium"),
             hints=word_data["hints"],
             explanation=word_data.get("explanation"),
         )

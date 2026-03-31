@@ -37,9 +37,16 @@ class WordQuizController:
         await self.session.commit()
         cache.invalidate(QUIZ_WORDS_CACHE_KEY)
 
-    async def get_random_words(self, count: int, exclude_ids: list[str] | None = None) -> list[QuizWord]:
+    async def get_random_words(
+        self, count: int, exclude_ids: list[str] | None = None, difficulty: str | None = None
+    ) -> list[QuizWord]:
         all_words = (await self.session.exec(select(QuizWord))).all()
         available = [w for w in all_words if not exclude_ids or str(w.id) not in exclude_ids]
+        # Filter by difficulty if specified (None or "mixed" means all difficulties)
+        if difficulty and difficulty != "mixed":
+            filtered = [w for w in available if w.difficulty == difficulty]
+            if filtered:
+                available = filtered
         if len(available) < count:
             available = list(all_words)
         return random.sample(list(available), min(count, len(available)))

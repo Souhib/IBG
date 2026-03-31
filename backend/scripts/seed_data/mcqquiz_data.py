@@ -28,6 +28,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yunus (paix sur lui) a été avalé par une baleine après avoir quitté son peuple sans la permission d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the first prophet in Islam?',
@@ -46,6 +47,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Adam (paix sur lui) fut le premier humain et le premier prophète créé par Allah.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet built the Ark?',
@@ -64,6 +66,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Nuh (paix sur lui) a construit l'Arche sur ordre d'Allah pour sauver les croyants du grand déluge.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was thrown into fire by his people?',
@@ -82,6 +85,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Ibrahim (paix sur lui) a été jeté dans le feu, mais Allah a rendu le feu frais et paisible pour lui.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet could talk to animals?',
@@ -100,6 +104,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Sulayman (paix sur lui) a reçu la capacité de comprendre et communiquer avec les animaux, les djinns et les oiseaux.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was known for his exceptional beauty?',
@@ -118,6 +123,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Yusuf (paix sur lui) a reçu la moitié de toute la beauté, comme mentionné dans le hadith.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet's staff turned into a snake?",
@@ -136,6 +142,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le bâton du prophète Musa (paix sur lui) s'est transformé en serpent comme l'un de ses miracles d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was born without a father?',
@@ -154,6 +161,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (paix sur lui) est né miraculeusement de Maryam sans père, par la volonté d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was the father of Ismail and Ishaq?',
@@ -172,6 +180,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim (paix sur lui) était le père d'Ismail et d'Ishaq.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was given the Zabur (Psalms)?',
@@ -190,6 +199,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Dawud (paix sur lui) a reçu le Zabur (Psaumes) d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was known for his patience during severe trials?',
@@ -208,6 +218,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Ayyub (paix sur lui) est réputé pour sa patience extraordinaire face à la maladie, la perte et les difficultés.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet was sent to the people of 'Ad?",
@@ -226,6 +237,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Hud (paix sur lui) a été envoyé au peuple de 'Ad, connus pour leur grande force physique.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet's people were destroyed for killing a she-camel?",
@@ -244,6 +256,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Salih (paix sur lui) a été envoyé au peuple de Thamud. Ils ont tué la chamelle miraculeuse et ont été détruits.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet interpreted dreams?',
@@ -262,6 +275,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yusuf (paix sur lui) a reçu le don d'interpréter les rêves, y compris celui du roi d'Égypte.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many brothers did Yusuf have?',
@@ -280,6 +294,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Yusuf avait 11 frères. Dans son rêve, il a vu 11 étoiles, le soleil et la lune se prosterner devant lui.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was the son of Dawud?',
@@ -298,6 +313,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Sulayman (paix sur lui) était le fils du prophète Dawud et a hérité de son royaume.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet parted the sea?',
@@ -316,6 +332,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Musa (paix sur lui) a fendu la mer Rouge avec son bâton par la permission d'Allah pour échapper à Pharaon.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was known as Khalilullah (Friend of Allah)?',
@@ -334,6 +351,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim (paix sur lui) a reçu le titre de Khalilullah, signifiant l'ami intime d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet spoke as a baby in the cradle?',
@@ -352,6 +370,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Isa (paix sur lui) a miraculeusement parlé en tant que nouveau-né dans le berceau pour défendre sa mère Maryam.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was commanded to sacrifice his son?',
@@ -370,6 +389,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim a reçu l'ordre de sacrifier son fils Ismail, mais Allah l'a remplacé par un bélier. Cet événement est commémoré lors de l'Aïd al-Adha.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was given the Tawrah (Torah)?',
@@ -388,6 +408,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Musa (paix sur lui) a reçu la Tawrah (Torah) d'Allah sur le Mont Sinaï.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was given the Injil (Gospel)?',
@@ -406,6 +427,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (paix sur lui) a reçu l'Injil (Évangile) d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the brother of Musa?',
@@ -424,6 +446,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Harun (paix sur lui) était le frère du prophète Musa et l'a assisté dans sa mission.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was raised to the heavens alive according to Islamic belief?',
@@ -442,6 +465,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (paix sur lui) a été élevé aux cieux par Allah et n'a été ni tué ni crucifié.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Whose wife turned into a pillar of salt according to the Quran?',
@@ -460,6 +484,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La femme du prophète Lut (paix sur lui) l'a trahi et a été parmi ceux détruits avec son peuple.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was sent to the people of Madyan?',
@@ -478,6 +503,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Shuayb (paix sur lui) a été envoyé au peuple de Madyan, connus pour tricher dans le commerce.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet had iron made soft in his hands?',
@@ -496,6 +522,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Allah a rendu le fer mou pour le prophète Dawud (paix sur lui) afin qu'il puisse fabriquer des cottes de mailles.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet had control over the wind?',
@@ -514,6 +541,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Allah a soumis le vent au prophète Sulayman. Il parcourait un mois de voyage en une matinée ou une soirée.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet is known as Kalimullah (The One who spoke to Allah)?',
@@ -532,6 +560,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Musa (paix sur lui) est appelé Kalimullah car Allah lui a parlé directement sur le Mont Sinaï.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many prophets are mentioned by name in the Quran?',
@@ -550,6 +579,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": '25 prophètes sont mentionnés par leur nom dans le Coran.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was known as Ruhullah (Spirit of Allah)?',
@@ -568,6 +598,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (paix sur lui) est appelé Ruhullah (Esprit d'Allah) car il a été créé par un acte spécial d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was a carpenter?',
@@ -586,6 +617,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Zakariyya (paix sur lui) était charpentier de profession.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet's son refused to board the Ark?",
@@ -604,6 +636,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'un des fils du prophète Nuh (Yam/Kan'an) a refusé de monter dans l'Arche et s'est noyé dans le déluge.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet is the ancestor of the Arab people?',
@@ -622,6 +655,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ismail (paix sur lui), fils d'Ibrahim, est considéré comme l'ancêtre du peuple arabe.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was also known as Israel?',
@@ -640,6 +674,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yaqub (paix sur lui) était aussi connu sous le nom d'Israël, et ses descendants sont appelés Bani Israël.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the last prophet in Islam?',
@@ -658,6 +693,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Muhammad ﷺ est le dernier messager et le sceau des prophètes (Khatam an-Nabiyyin).',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was a tailor?',
@@ -676,6 +712,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'On rapporte que le prophète Idris (paix sur lui) était tailleur et fut le premier à utiliser un stylo.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was the father of Yahya?',
@@ -694,6 +731,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Zakariyya (paix sur lui) était le père de Yahya, donné à lui dans sa vieillesse en réponse à sa prière.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": "What was the miracle of Prophet Salih's she-camel?",
@@ -712,6 +750,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La chamelle est miraculeusement sortie d'un rocher comme signe d'Allah au peuple de Thamud.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which two prophets rebuilt the Kaaba?',
@@ -730,6 +769,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Ibrahim et son fils Ismail (paix sur eux) ont élevé les fondations de la Kaaba à La Mecque.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was put in a well by his brothers?',
@@ -748,6 +788,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Yusuf (paix sur lui) a été jeté dans un puits par ses frères jaloux quand il était jeune.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet lived the longest?',
@@ -766,6 +807,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Nuh (paix sur lui) a prêché à son peuple pendant 950 ans comme mentionné dans le Coran (29:14).',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which prophet cured the blind and the leper by Allah's permission?",
@@ -784,6 +826,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (paix sur lui) guérissait les aveugles et les lépreux par la permission d'Allah, comme mentionné dans le Coran.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many pillars of Islam are there?',
@@ -802,6 +845,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Il y a 5 piliers de l'Islam : Shahada, Salah, Zakat, Sawm et Hajj.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the first pillar of Islam?',
@@ -820,6 +864,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Shahada (témoignage de foi) est le premier pilier : 'Il n'y a de dieu qu'Allah et Muhammad est Son messager.'",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'How many daily prayers are obligatory in Islam?',
@@ -838,6 +883,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Les musulmans accomplissent 5 prières quotidiennes : Fajr, Dhuhr, Asr, Maghrib et Isha.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the minimum percentage of wealth to be given as Zakat?',
@@ -856,6 +902,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Zakat est de 2,5% des économies et de la richesse détenues pendant une année lunaire (au-dessus du seuil du nisab).',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'During which Islamic month is fasting obligatory?',
@@ -874,6 +921,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le jeûne pendant le mois de Ramadan est le quatrième pilier de l'Islam.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Where does the Hajj pilgrimage take place?',
@@ -892,6 +940,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Hajj a lieu à La Mecque, en Arabie Saoudite, centré autour de la Kaaba dans le Masjid al-Haram.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many times must a Muslim perform Hajj in their lifetime?',
@@ -910,6 +959,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Hajj est obligatoire une fois dans la vie pour ceux qui en ont la capacité physique et financière.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "What does 'Shahada' mean?",
@@ -928,6 +978,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Shahada signifie témoignage ou déclaration de foi — témoigner qu'il n'y a de dieu qu'Allah et que Muhammad est Son messager.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the purpose of fasting in Ramadan?',
@@ -946,6 +997,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran dit : 'Le jeûne vous est prescrit comme il a été prescrit à ceux qui vous ont précédés, afin que vous atteigniez la Taqwa' (2:183).",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who is exempt from fasting in Ramadan?',
@@ -964,6 +1016,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Islam accorde des exemptions aux malades, voyageurs, femmes enceintes, allaitantes, en menstruation, personnes âgées et enfants prépubères.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the name of the pre-dawn meal before fasting?',
@@ -982,6 +1035,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Suhoor est le repas pré-aube mangé avant la prière du Fajr pendant le Ramadan. Le Prophète ﷺ a encouragé le suhoor.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the night prayer performed in Ramadan called?',
@@ -1000,6 +1054,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tarawih est la prière nocturne spéciale accomplie en congrégation pendant le Ramadan après la prière d'Isha.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What are the six pillars of Iman (faith)?',
@@ -1018,6 +1073,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les six piliers de l'Iman sont la croyance en Allah, Ses Anges, Ses Livres, Ses Messagers, le Jour du Jugement et le Décret Divin (Qadar).",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the meaning of the word 'Zakat'?",
@@ -1036,6 +1092,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Zakat signifie linguistiquement purification et croissance. Elle purifie la richesse et la fait croître par la bénédiction d'Allah.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the standing at Arafat during Hajj called?',
@@ -1054,6 +1111,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Wuquf (station) à Arafat est le pilier le plus essentiel du Hajj. Le Prophète ﷺ a dit : 'Le Hajj est Arafat.'",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many rakaat are in the Fajr prayer?',
@@ -1072,6 +1130,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La prière du Fajr se compose de 2 rakaat (unités de prière).',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is Zakat al-Fitr?',
@@ -1090,6 +1149,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Zakat al-Fitr est une charité obligatoire donnée à la fin du Ramadan avant la prière de l'Aïd, pour purifier le jeûneur.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Ihram in the context of Hajj?',
@@ -1108,6 +1168,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Ihram est l'état sacré dans lequel un musulman entre pour le Hajj ou la Umrah, comprenant le port de vêtements blancs spécifiques.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the direction Muslims face during prayer?',
@@ -1126,6 +1187,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Les musulmans font face à la Qibla (direction de la Kaaba à La Mecque) pendant la prière. Celle-ci a été changée de Jérusalem au début du séjour du Prophète ﷺ à Médine.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is Tawaf?',
@@ -1144,6 +1206,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tawaf est l'acte de circumambuler (marcher autour) de la Kaaba sept fois dans le sens inverse des aiguilles d'une montre.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many surahs are in the Quran?',
@@ -1162,6 +1225,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Coran contient 114 sourates (chapitres).',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the longest surah in the Quran?',
@@ -1180,6 +1244,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate Al-Baqarah (La Vache) est la plus longue sourate avec 286 versets.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the shortest surah in the Quran?',
@@ -1198,6 +1263,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate Al-Kawthar est la plus courte sourate avec seulement 3 versets.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the first surah of the Quran?',
@@ -1216,6 +1282,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Fatiha (L'Ouverture) est la première sourate du Coran et est récitée dans chaque prière.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the first word revealed in the Quran?',
@@ -1234,6 +1301,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le premier mot révélé fut 'Iqra' (Lis/Récite) de la sourate Al-Alaq (96:1).",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which surah is known as the 'Heart of the Quran'?",
@@ -1252,6 +1320,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Yasin est appelée le 'Cœur du Coran' selon un hadith du Prophète ﷺ.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah is equivalent to one-third of the Quran in reward?',
@@ -1270,6 +1339,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate Al-Ikhlas équivaut à un tiers du Coran car elle résume le concept de Tawhid (monothéisme).',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which verse is the longest in the Quran?',
@@ -1288,6 +1358,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le verset de la dette (Ayat ad-Dayn, 2:282) est le plus long verset du Coran, traitant des transactions financières.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many juz (parts) is the Quran divided into?',
@@ -1306,6 +1377,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Coran est divisé en 30 juz (parties) pour faciliter sa lecture sur un mois.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which surah does not begin with 'Bismillah'?",
@@ -1324,6 +1396,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate At-Tawbah (chapitre 9) est la seule sourate qui ne commence pas par Bismillah ar-Rahman ar-Rahim.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah mentions Bismillah twice?',
@@ -1342,6 +1415,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate An-Naml (Les Fourmis) contient Bismillah au début et aussi dans le verset 30, dans la lettre de Sulayman à la Reine de Saba.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Ayat al-Kursi?',
@@ -1360,6 +1434,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ayat al-Kursi est le verset 255 de la sourate Al-Baqarah. C'est le plus grand verset du Coran décrivant la souveraineté d'Allah.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah is recommended to read every Friday?',
@@ -1378,6 +1453,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La lecture de la sourate Al-Kahf chaque vendredi est recommandée par le Prophète ﷺ. Elle procure une lumière entre deux vendredis.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What are the two protective surahs called?',
@@ -1396,6 +1472,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Al-Muawwidhatayn (les deux sourates protectrices) sont la sourate Al-Falaq et la sourate An-Nas, cherchant refuge en Allah.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which surah tells the story of the People of the Cave?',
@@ -1414,6 +1491,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Kahf (La Caverne) raconte l'histoire de jeunes croyants qui se sont réfugiés dans une caverne et ont dormi pendant des centaines d'années.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many verses does Surah Al-Fatiha have?',
@@ -1432,6 +1510,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Fatiha contient 7 versets. Elle est aussi connue sous le nom de 'As-Sab al-Mathani' (Les Sept Versets Souvent Répétés).",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'In which surah is the story of Musa and Khidr mentioned?',
@@ -1450,6 +1529,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'histoire de Musa et Khidr est mentionnée dans la sourate Al-Kahf (18:60-82).",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which surah is named after a woman?',
@@ -1468,6 +1548,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Maryam (chapitre 19) porte le nom de Maryam, la mère du prophète Isa. Al-Nisa signifie 'Les Femmes' mais n'est pas nommée d'après une femme spécifique.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah protects from the punishment of the grave?',
@@ -1486,6 +1567,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate Al-Mulk est rapportée dans le hadith comme intercédant pour son lecteur et le protégeant du châtiment de la tombe.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which surah repeatedly asks 'Which of the favors of your Lord will you deny?'",
@@ -1504,6 +1586,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Ar-Rahman répète le verset 'Lequel des bienfaits de votre Seigneur nierez-vous ?' 31 fois.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": "What does 'Quran' literally mean?",
@@ -1522,6 +1605,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le mot 'Coran' vient de la racine arabe 'qara'a' signifiant lire ou réciter.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Over how many years was the Quran revealed?',
@@ -1540,6 +1624,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Coran a été révélé sur environ 23 ans — 13 ans à La Mecque et 10 ans à Médine.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which angel brought the revelation to Prophet Muhammad ﷺ?',
@@ -1558,6 +1643,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'ange Jibril (Gabriel) a apporté la révélation du Coran au Prophète Muhammad ﷺ.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'In which cave did Prophet Muhammad ﷺ receive the first revelation?',
@@ -1576,6 +1662,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète Muhammad ﷺ a reçu la première révélation dans la Grotte de Hira sur le Mont Noor près de La Mecque.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which surah is named after 'The Bee'?",
@@ -1594,6 +1681,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate An-Nahl (chapitre 16) signifie 'L'Abeille' et mentionne comment Allah a inspiré l'abeille.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which surah mentions the story of Dhul-Qarnayn?',
@@ -1612,6 +1700,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'histoire de Dhul-Qarnayn est mentionnée dans la sourate Al-Kahf (18:83-98), y compris sa construction de la barrière contre Gog et Magog.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the last surah of the Quran?',
@@ -1630,6 +1719,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate An-Nas (L'Humanité) est la 114ème et dernière sourate du Coran.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which surah is named after 'The Spider'?",
@@ -1648,6 +1738,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Ankabut (chapitre 29) signifie 'L'Araignée.' Elle compare ceux qui prennent des protecteurs autres qu'Allah à la toile fragile de l'araignée.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who compiled the Quran into one book?',
@@ -1666,6 +1757,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr a ordonné la première compilation après la Bataille de Yamama. Uthman l'a ensuite standardisé en une copie officielle.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which surah is named after 'Iron'?",
@@ -1684,6 +1776,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Hadid (chapitre 57) signifie 'Le Fer.' Elle mentionne qu'Allah a fait descendre le fer, dans lequel il y a une grande force et des bienfaits.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which surah tells the complete story of Yusuf?',
@@ -1702,6 +1795,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Yusuf (chapitre 12) est unique en ce qu'elle raconte l'histoire complète d'un prophète du début à la fin.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the meaning of 'Surah'?",
@@ -1720,6 +1814,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Une 'Sourate' désigne un chapitre du Coran. Le mot vient de la racine arabe signifiant 'enceinte' ou 'clôture.'",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'In which year was Prophet Muhammad ﷺ born?',
@@ -1738,6 +1833,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète Muhammad ﷺ est né en 570 ap. J.-C., connu comme l'Année de l'Éléphant (Aam al-Fil).",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the name of Prophet Muhammad's ﷺ mother?",
@@ -1756,6 +1852,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La mère du Prophète Muhammad ﷺ était Aminah bint Wahb. Elle est décédée quand il avait environ six ans.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the foster mother of Prophet Muhammad ﷺ?',
@@ -1774,6 +1871,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Halimah al-Sa'diyyah était la mère nourricière qui a allaité le Prophète Muhammad ﷺ dans le désert selon la coutume arabe.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the first wife of Prophet Muhammad ﷺ?',
@@ -1792,6 +1890,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khadijah bint Khuwaylid fut la première épouse du Prophète Muhammad ﷺ et la première personne à accepter l'Islam.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was Prophet Muhammad ﷺ known as before prophethood?',
@@ -1810,6 +1909,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète Muhammad ﷺ était connu comme Al-Amin (Le Digne de Confiance) et As-Sadiq (Le Véridique) même avant la prophétie.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What event marks the beginning of the Islamic calendar?',
@@ -1828,6 +1928,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Hijra (migration de La Mecque à Médine) en 622 ap. J.-C. marque le début du calendrier islamique (Hijri).',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the night journey of Prophet Muhammad ﷺ called?',
@@ -1846,6 +1947,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Isra wal-Mi'raj est le voyage nocturne de La Mecque à Jérusalem (Isra) et l'ascension aux cieux (Mi'raj).",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What was the first battle fought by Muslims?',
@@ -1864,6 +1966,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Bataille de Badr (624 ap. J.-C.) fut la première grande bataille, où 313 musulmans ont vaincu environ 1000 combattants de Quraysh.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": "Who was Prophet Muhammad's ﷺ uncle who raised him?",
@@ -1882,6 +1985,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Abu Talib a élevé le Prophète Muhammad ﷺ après la mort de son grand-père Abdul Muttalib.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the name of Prophet Muhammad's ﷺ grandfather?",
@@ -1900,6 +2004,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abdul Muttalib était le grand-père du Prophète Muhammad ﷺ qui a pris soin de lui après la mort de sa mère jusqu'à l'âge de 8 ans.",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'At what age did Prophet Muhammad ﷺ receive his first revelation?',
@@ -1918,6 +2023,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète Muhammad ﷺ a reçu sa première révélation à l'âge de 40 ans dans la Grotte de Hira.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What year did the conquest of Makkah occur?',
@@ -1936,6 +2042,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La conquête de La Mecque (Fath Makkah) a eu lieu en 8 AH (630 ap. J.-C.). Le Prophète ﷺ y est entré pacifiquement.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the name of the Prophet's ﷺ night mount during Isra?",
@@ -1954,6 +2061,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Al-Buraq était la monture céleste qui a transporté le Prophète Muhammad ﷺ de La Mecque à Jérusalem puis aux cieux.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the last sermon of Prophet Muhammad ﷺ called?',
@@ -1972,6 +2080,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sermon d'Adieu (Khutbah al-Wada) a été prononcé pendant le pèlerinage du Hajj en 10 AH, abordant l'égalité et les droits de l'homme.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the Treaty of Hudaybiyyah?',
@@ -1990,6 +2099,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Traité de Hudaybiyyah (6 AH) était un traité de paix de 10 ans entre le Prophète Muhammad ﷺ et les Quraysh.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Where is Prophet Muhammad ﷺ buried?',
@@ -2008,6 +2118,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète Muhammad ﷺ est enterré à Médine, dans la chambre de son épouse Aisha, qui fait maintenant partie du Masjid an-Nabawi.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'How many children did Prophet Muhammad ﷺ have?',
@@ -2026,6 +2137,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète Muhammad ﷺ avait 7 enfants : 3 fils (Qasim, Abdullah, Ibrahim) et 4 filles (Zainab, Ruqayyah, Umm Kulthum, Fatimah).',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the name of the mosque the Prophet ﷺ built upon arriving in Madinah?',
@@ -2044,6 +2156,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Masjid Quba fut la première mosquée construite par le Prophète ﷺ dans les environs de Médine à son arrivée lors de la Hijra.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who accompanied Prophet Muhammad ﷺ during the Hijra?',
@@ -2062,6 +2175,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Abu Bakr as-Siddiq a accompagné le Prophète ﷺ pendant la Hijra. Ils se sont cachés dans la Grotte de Thawr pendant trois jours.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the 'Year of Sorrow' (Aam al-Huzn)?",
@@ -2080,6 +2194,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Année de la Tristesse (619 ap. J.-C.) fait référence à l'année où Khadijah (son épouse) et Abu Talib (son oncle) sont décédés.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What prayer was made obligatory during the Mi'raj?",
@@ -2098,6 +2213,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les cinq prières quotidiennes ont été rendues obligatoires pendant le Mi'raj. Elles étaient initialement 50 mais réduites à 5 avec la récompense de 50.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the name of Prophet Muhammad's ﷺ father?",
@@ -2116,6 +2232,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Abdullah ibn Abdul Muttalib était le père du Prophète Muhammad ﷺ. Il est décédé avant la naissance du Prophète ﷺ.',
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What did the Prophet ﷺ do when he conquered Makkah?',
@@ -2134,6 +2251,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Lors de la conquête de La Mecque, le Prophète ﷺ a montré une grande miséricorde, accordant une amnistie générale et retirant les 360 idoles de la Kaaba.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What battle is known as the Battle of the Trench?',
@@ -2152,6 +2270,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Bataille du Fossé (Khandaq) en 5 AH tire son nom du fossé creusé autour de Médine, suggéré par Salman al-Farisi.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the first man to accept Islam?',
@@ -2170,6 +2289,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr as-Siddiq fut le premier homme adulte à accepter l'Islam. Ali fut le premier jeune, et Khadijah la première femme.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'At what age did Prophet Muhammad ﷺ pass away?',
@@ -2188,6 +2308,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète Muhammad ﷺ est décédé à l'âge de 63 ans à Médine, en l'an 11 AH (632 ap. J.-C.).",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What was the profession of Prophet Muhammad ﷺ before prophethood?',
@@ -2206,6 +2327,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète Muhammad ﷺ a travaillé comme berger dans sa jeunesse puis est devenu marchand, commerçant pour Khadijah.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the first Caliph after Prophet Muhammad ﷺ?',
@@ -2224,6 +2346,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Abu Bakr as-Siddiq fut le premier calife bien guidé. Il a régné pendant environ 2 ans (632-634 ap. J.-C.).',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'How many Rightly Guided Caliphs (Khulafa ar-Rashidun) are there?',
@@ -2242,6 +2365,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les quatre califes bien guidés sont Abu Bakr, Umar, Uthman et Ali (qu'Allah soit satisfait d'eux tous).",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which Caliph introduced the Islamic calendar?',
@@ -2260,6 +2384,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le calife Umar ibn al-Khattab a établi le calendrier Hijri, commençant à partir de l'année de la migration du Prophète ﷺ à Médine.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which dynasty built the Dome of the Rock in Jerusalem?',
@@ -2278,6 +2403,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Dôme du Rocher a été construit par le calife omeyyade Abd al-Malik ibn Marwan en 691 ap. J.-C.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the capital of the Abbasid Caliphate?',
@@ -2296,6 +2422,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Bagdad était la capitale du califat abbasside, fondée en 762 ap. J.-C. Elle est devenue un centre d'apprentissage et de culture.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was Salah ad-Din al-Ayyubi (Saladin)?',
@@ -2314,6 +2441,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Salah ad-Din al-Ayyubi a libéré Jérusalem des Croisés en 1187 ap. J.-C. après la Bataille de Hattin.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the House of Wisdom (Bayt al-Hikmah)?',
@@ -2332,6 +2460,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Bayt al-Hikmah était une grande bibliothèque et centre intellectuel à Bagdad pendant l'ère abbasside, traduisant des œuvres du grec, du persan et du sanskrit.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": "Who is known as the 'Father of Algebra'?",
@@ -2350,6 +2479,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Muhammad ibn Musa al-Khwarizmi a écrit 'Al-Kitab al-Mukhtasar fi Hisab al-Jabr wal-Muqabala,' fondant l'algèbre.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What was Islamic Spain (Al-Andalus) known for?',
@@ -2368,6 +2498,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Andalus (711-1492 ap. J.-C.) était un phare d'apprentissage, de tolérance et d'échange culturel entre musulmans, chrétiens et juifs.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": "Who wrote 'The Canon of Medicine'?",
@@ -2386,6 +2517,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn Sina (Avicenne) a écrit 'Le Canon de la Médecine,' qui a été utilisé comme manuel médical en Europe pendant des siècles.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which Caliph is known for his justice and was called 'Al-Farooq'?",
@@ -2404,6 +2536,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Umar ibn al-Khattab était connu comme Al-Farooq (celui qui distingue la vérité du mensonge) pour sa justice stricte.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who founded the Ottoman Empire?',
@@ -2422,6 +2555,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Osman Ier a fondé l'Empire ottoman vers 1299 ap. J.-C. L'empire a duré jusqu'en 1922.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who conquered Constantinople in 1453?',
@@ -2440,6 +2574,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Sultan Mehmed II (Muhammad al-Fatih, le Conquérant) a conquis Constantinople en 1453, accomplissant une prophétie du Prophète ﷺ.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the significance of the Alhambra?',
@@ -2458,6 +2593,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Alhambra est un magnifique complexe palatial à Grenade, en Espagne, montrant l'apogée de l'architecture islamique en Al-Andalus.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who is known as the father of sociology?',
@@ -2476,6 +2612,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn Khaldun (1332-1406) est considéré comme le père de la sociologie et de l'historiographie. Son œuvre majeure est 'Al-Muqaddimah.'",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which caliph standardized the Quran into a single text?',
@@ -2494,6 +2631,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le calife Uthman a standardisé le Coran en une copie officielle et l'a distribuée aux grandes villes pour éviter les variations.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the oldest university in the world, founded by a Muslim woman?',
@@ -2512,6 +2650,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Université al-Qarawiyyin à Fès, au Maroc, a été fondée par Fatima al-Fihri en 859 ap. J.-C. — reconnue comme la plus ancienne université existante.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the capital of the Umayyad Caliphate?',
@@ -2530,6 +2669,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Damas était la capitale du califat omeyyade (661-750 ap. J.-C.), la première dynastie héréditaire en Islam.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": "Who was known as 'The Lion of Allah'?",
@@ -2548,6 +2688,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Hamza ibn Abdul Muttalib, l'oncle du Prophète ﷺ, était appelé 'Le Lion d'Allah' pour sa bravoure. Il fut martyrisé à Uhud.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which Muslim scientist is known as the father of optics?',
@@ -2566,6 +2707,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn al-Haytham (965-1040 ap. J.-C.) a écrit 'Kitab al-Manazir' (Livre d'Optique) et est considéré comme le père de l'optique moderne.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Wudu?',
@@ -2584,6 +2726,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Wudu est l'ablution rituelle accomplie avant la prière, impliquant le lavage des mains, du visage, des bras, de la tête et des pieds.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Adhan?',
@@ -2602,6 +2745,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Adhan est l'appel islamique à la prière, annoncé cinq fois par jour depuis la mosquée pour inviter les musulmans à prier.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the first Muadhin (caller to prayer)?',
@@ -2620,6 +2764,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Bilal ibn Rabah, un compagnon éthiopien, fut le premier Muadhin en Islam, choisi par le Prophète ﷺ pour sa belle voix.',
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is Sadaqah?',
@@ -2638,6 +2783,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Sadaqah est une charité volontaire donnée par bonne volonté, contrairement à la Zakat qui est obligatoire.',
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the difference between Hajj and Umrah?',
@@ -2656,6 +2802,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Hajj est accompli pendant des jours spécifiques de Dhul Hijjah et comprend plus de rituels (Arafat, Mina, lapidation). La Umrah est le petit pèlerinage fait à tout moment.',
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Sunnah?',
@@ -2674,6 +2821,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Sunnah fait référence aux pratiques, paroles et approbations du Prophète Muhammad ﷺ, servant de deuxième source de guidance islamique après le Coran.',
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": "What does 'Halal' mean?",
@@ -2692,6 +2840,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Halal signifie permis ou licite en Islam. Cela s'applique à la nourriture, aux actions et aux transactions.",
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Dua?',
@@ -2710,6 +2859,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Dua est une supplication ou prière personnelle à Allah. Il peut être fait à tout moment et dans n'importe quelle langue.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Islamic greeting?',
@@ -2728,6 +2878,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "'As-salamu alaykum' signifie 'Que la paix soit sur vous.' La réponse est 'Wa alaykum as-salam' (Et sur vous la paix).",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Dhikr?',
@@ -2746,6 +2897,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Dhikr signifie le rappel d'Allah. Il comprend des phrases comme SubhanAllah, Alhamdulillah, Allahu Akbar et La ilaha illallah.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is Jumu'ah?",
@@ -2764,6 +2916,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Jumu'ah est la prière congregationnelle du vendredi qui remplace la prière du Dhuhr. Elle comprend un khutbah (sermon) et 2 rakaat.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What are the two Eid celebrations in Islam?',
@@ -2782,6 +2935,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les deux Aïds sont l'Aïd al-Fitr (après le Ramadan) et l'Aïd al-Adha (pendant la saison du Hajj, commémorant le sacrifice d'Ibrahim).",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Tayammum?',
@@ -2800,6 +2954,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tayammum est l'ablution sèche utilisant de la terre ou du sable propre quand l'eau n'est pas disponible ou en cas de maladie.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is an Imam in the context of prayer?',
@@ -2818,6 +2973,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Dans le contexte de la prière, un Imam est la personne qui dirige la prière en congrégation, se tenant devant les rangs.',
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Night of Qadr (Laylat al-Qadr)?',
@@ -2836,6 +2992,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Laylat al-Qadr est la nuit où le Coran a été révélé pour la première fois. Elle tombe dans les 10 derniers jours du Ramadan et vaut mieux que 1000 mois d'adoration.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was known as 'The Sword of Allah'?",
@@ -2854,6 +3011,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khalid ibn al-Walid a reçu le titre de 'Saifullah' (L'Épée d'Allah) par le Prophète ﷺ pour son génie militaire.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the first martyr (shaheed) in Islam?',
@@ -2872,6 +3030,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Sumayyah bint Khayyat fut la première martyre en Islam. Elle a été tuée par Abu Jahl pour avoir refusé de quitter l'Islam.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which companion narrated the most hadiths?',
@@ -2890,6 +3049,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Abu Hurairah a rapporté le plus de hadiths (plus de 5 000) grâce à sa compagnie constante avec le Prophète ﷺ.',
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which companion was known as 'Dhun-Nurayn' (possessor of two lights)?",
@@ -2908,6 +3068,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Uthman ibn Affan était appelé Dhun-Nurayn car il a épousé deux filles du Prophète ﷺ : Ruqayyah puis Umm Kulthum.',
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the youngest person to lead an army in Islam?',
@@ -2926,6 +3087,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Usama ibn Zayd a été nommé par le Prophète ﷺ pour diriger une armée à environ 18 ans, peu avant le décès du Prophète ﷺ.',
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the freed slave of the Prophet ﷺ who became like a son to him?',
@@ -2944,6 +3106,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Zayd ibn Harithah a été libéré et adopté par le Prophète ﷺ. Il a choisi de rester avec le Prophète ﷺ plutôt qu'avec sa propre famille.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which companion suggested digging the trench in the Battle of Khandaq?',
@@ -2962,6 +3125,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Salman al-Farisi, un compagnon perse, a suggéré la stratégie de creuser un fossé autour de Médine, une tactique inconnue des Arabes.',
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": "Who was known as 'As-Siddiq' (The Truthful)?",
@@ -2980,6 +3144,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr a été appelé As-Siddiq (Le Véridique) car il a immédiatement cru au Prophète ﷺ et à l'Isra wal-Mi'raj.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which companion was known as 'Bab al-Ilm' (Gate of Knowledge)?",
@@ -2998,6 +3163,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ali ibn Abi Talib a été appelé 'La Porte du Savoir' par le Prophète ﷺ qui a dit : 'Je suis la cité du savoir et Ali en est la porte.'",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which female companion was known for her vast knowledge and scholarship?',
@@ -3016,6 +3182,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Aisha bint Abu Bakr était l'une des compagnes les plus savantes. Elle a rapporté plus de 2 200 hadiths et était consultée par d'autres compagnons.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": "Who was the Prophet's ﷺ closest companion and father-in-law?",
@@ -3034,6 +3201,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr était le compagnon le plus proche du Prophète ﷺ et son beau-père (père d'Aisha). Il fut le premier homme adulte à accepter l'Islam.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which companion was the first child to accept Islam?',
@@ -3052,6 +3220,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ali ibn Abi Talib fut le premier enfant/jeune à accepter l'Islam. Il avait environ 10 ans à l'époque.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which companion was the first freed slave to accept Islam?',
@@ -3070,6 +3239,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Zayd ibn Harithah fut le premier esclave affranchi à accepter l'Islam. Il a été libéré et adopté par le Prophète ﷺ.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which companion was known for his generosity and financed the army of Tabuk?',
@@ -3088,6 +3258,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Uthman ibn Affan était extrêmement généreux. Il a équipé une grande partie de l'armée musulmane pour l'expédition de Tabuk.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What does Islam say about treating parents?',
@@ -3106,6 +3277,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran commande : 'Et ton Seigneur a décrété de n'adorer que Lui et d'être bon envers les parents' (17:23).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What does Islam teach about neighbors?',
@@ -3124,6 +3296,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'Jibril n'a cessé de me conseiller au sujet du voisin jusqu'à ce que je pense qu'il en ferait un héritier.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Tawakkul?',
@@ -3142,6 +3315,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tawakkul signifie avoir confiance dans le plan d'Allah tout en faisant des efforts. Le Prophète ﷺ a dit : 'Attache ton chameau, puis fais confiance à Allah.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the concept of Ihsan in Islam?',
@@ -3160,6 +3334,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Dans le hadith de Jibril, le Prophète ﷺ a défini l'Ihsan comme : 'Adorer Allah comme si tu Le vois, et si tu ne peux pas, sache qu'Il te voit.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What does Islam say about seeking knowledge?',
@@ -3178,6 +3353,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'La recherche du savoir est une obligation pour tout musulman.' Le premier mot révélé était 'Iqra' (Lis).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the Islamic teaching on honesty?',
@@ -3196,6 +3372,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'La véracité mène à la droiture, et la droiture mène au Paradis.' (Sahih Muslim)",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Sabr (patience) in Islam?',
@@ -3214,6 +3391,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran dit : 'En vérité, Allah est avec les patients' (2:153). Le Sabr signifie persévérer avec foi à travers les épreuves.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What does Islam say about the environment?',
@@ -3232,6 +3410,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Islam enseigne que les humains sont khalifah (intendants) de la Terre. Le Prophète ﷺ a dit : 'Si le Jour du Jugement arrive et que l'un de vous a un plant en main, qu'il le plante.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Shukr (gratitude) in Islam?',
@@ -3250,6 +3429,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran promet : 'Si vous êtes reconnaissants, Je vous augmenterai' (14:7). Le Shukr englobe le cœur, la langue et l'action.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the golden rule in Islam regarding treating others?',
@@ -3268,6 +3448,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'Aucun d'entre vous ne croit vraiment jusqu'à ce qu'il aime pour son frère ce qu'il aime pour lui-même.' (Sahih Bukhari)",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which prophet was known as 'Dhul-Nun' (The one of the fish)?",
@@ -3286,6 +3467,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Yunus (paix sur lui) est aussi connu comme Dhul-Nun (Celui du poisson) car il a été avalé par un poisson.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the supplication of Yunus inside the whale?',
@@ -3304,6 +3486,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Yunus a invoqué : 'Il n'y a de dieu que Toi, gloire à Toi, j'étais certes du nombre des injustes' (Coran 21:87).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet had the ability to make the dead come alive by Allah's permission?",
@@ -3322,6 +3505,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (paix sur lui) pouvait ressusciter les morts par la permission d'Allah, comme mentionné dans le Coran (3:49).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet asked Allah to show him how He gives life to the dead?',
@@ -3340,6 +3524,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Ibrahim a demandé à Allah de lui montrer comment Il donne la vie aux morts. Allah lui a dit de prendre quatre oiseaux (Coran 2:260).',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was the wife of Ibrahim who was the mother of Ismail?',
@@ -3358,6 +3543,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Hajar (Agar) était l'épouse d'Ibrahim et la mère d'Ismail. Sa course entre Safa et Marwa est commémorée lors du Hajj.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "What miracle did Adam's two sons demonstrate about good and evil?",
@@ -3376,6 +3562,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Habil et Qabil (Abel et Caïn), fils d'Adam, ont offert des sacrifices. Celui d'Habil a été accepté mais pas celui de Qabil, menant au premier meurtre (5:27-31).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Where was Musa raised as a child?',
@@ -3394,6 +3581,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Musa a été placé dans un panier sur le fleuve par sa mère et a été trouvé et élevé dans le palais de Pharaon.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which surah is known as 'The Bride of the Quran'?",
@@ -3412,6 +3600,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Ar-Rahman est appelée 'La Mariée du Coran' en raison de son beau style rythmique louant les bienfaits d'Allah.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which surah is named after 'The Elephant'?",
@@ -3430,6 +3619,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Fil (chapitre 105) décrit comment Allah a détruit l'armée d'Abraha venue avec des éléphants pour détruire la Kaaba.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many times is Prophet Musa mentioned in the Quran?',
@@ -3448,6 +3638,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Musa est mentionné environ 136 fois dans le Coran, ce qui en fait le prophète le plus fréquemment mentionné.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Surah Al-Mulk also known as?',
@@ -3466,6 +3657,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Mulk est aussi appelée Al-Mani'ah (La Protectrice) car elle protège celui qui la récite du châtiment de la tombe.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which surah begins with 'Alif Lam Mim'?",
@@ -3484,6 +3676,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Baqarah commence par 'Alif Lam Mim,' l'une des combinaisons de lettres mystérieuses (Huruf al-Muqatta'at) dans le Coran.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the meaning of 'Al-Fatiha'?",
@@ -3502,6 +3695,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Fatiha signifie 'L'Ouverture' car c'est le chapitre d'ouverture du Coran.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "In which surah is the verse 'Allah does not burden a soul beyond its capacity'?",
@@ -3520,6 +3714,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ce verset célèbre se trouve à la fin de la sourate Al-Baqarah (2:286), rassurant les croyants de la miséricorde d'Allah.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which surah is named after 'The Star'?",
@@ -3538,6 +3733,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate An-Najm (chapitre 53) signifie 'L'Étoile.' C'est la première sourate récitée publiquement et elle comprend le récit du Mi'raj.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What treaty was signed before the Hijra to protect Muslims who migrated to Abyssinia?',
@@ -3556,6 +3752,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Négus (An-Najashi), le roi chrétien d'Abyssinie, a accordé l'asile aux premiers musulmans et a refusé de les remettre aux Quraysh.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the Constitution of Madinah?',
@@ -3574,6 +3771,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Constitution de Médine était une charte pluraliste qui définissait les droits et devoirs de tous les citoyens, y compris les musulmans, les juifs et les païens.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the name of the Prophet's ﷺ beloved daughter?",
@@ -3592,6 +3790,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Fatimah az-Zahra était la plus jeune fille du Prophète ﷺ et de Khadijah. Elle est connue comme la chef des femmes du Paradis.',
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which Muslim scholar founded the Shafi'i school of jurisprudence?",
@@ -3610,6 +3809,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Imam Muhammad ibn Idris ash-Shafi'i (767-820 ap. J.-C.) a fondé l'école Shafi'i. Il a systématisé les principes de la jurisprudence islamique (Usul al-Fiqh).",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What are the four main Sunni schools of jurisprudence (madhahib)?',
@@ -3628,6 +3828,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les quatre principales écoles sunnites sont Hanafi (Abu Hanifa), Maliki (Imam Malik), Shafi'i (Imam Shafi'i) et Hanbali (Imam Ahmad).",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which Muslim polymath wrote 'Ihya Ulum ad-Din' (Revival of Religious Sciences)?",
@@ -3646,6 +3847,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Imam Abu Hamid Al-Ghazali (1058-1111 ap. J.-C.) a écrit 'Ihya Ulum ad-Din,' l'une des œuvres les plus importantes de la spiritualité islamique.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the oldest mosque in the world?',
@@ -3664,6 +3866,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Masjid al-Haram à La Mecque, contenant la Kaaba, est considéré comme la première et la plus ancienne mosquée. Abu Dharr a demandé au Prophète ﷺ qui l'a confirmé.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is I'tikaf?",
@@ -3682,6 +3885,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'I'tikaf est la pratique de se retirer dans une mosquée pour l'adoration. Le Prophète ﷺ le pratiquait surtout les 10 derniers jours du Ramadan.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic funeral prayer called?',
@@ -3700,6 +3904,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Salat al-Janazah est la prière funéraire islamique. Elle se compose de 4 takbirs et est une obligation communautaire (fard kifayah).',
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Aqiqah?',
@@ -3718,6 +3923,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Aqiqah est la Sunnah de sacrifier un ou deux moutons le 7ème jour après la naissance d'un enfant, en célébration et action de grâce.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is Ghusl?',
@@ -3736,6 +3942,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Ghusl est le lavage rituel complet du corps requis après l'impureté rituelle majeure (janabah), les menstruations, et avant la prière du vendredi (recommandé).",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Istikhara?',
@@ -3754,6 +3961,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Salat al-Istikhara est une prière accomplie pour demander la guidance d'Allah avant de prendre une décision importante.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was the companion known as 'the scholar of the Ummah' (Hibr al-Ummah)?",
@@ -3772,6 +3980,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abdullah ibn Abbas a reçu le titre de 'Hibr al-Ummah' (Savant de la Oumma). Le Prophète ﷺ a fait une invocation pour qu'il reçoive une compréhension profonde de la religion.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Taqwa?',
@@ -3790,6 +3999,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Taqwa est la conscience de Dieu — être conscient de la présence d'Allah et veiller à suivre Sa guidance et éviter Ses interdictions.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet could speak to animals?',
@@ -3808,6 +4018,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Sulayman (paix sur lui) a reçu la capacité de comprendre le langage des oiseaux et des animaux, comme mentionné dans la sourate An-Naml.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was known for his exceptional patience?',
@@ -3826,6 +4037,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ayyub (paix sur lui) est le symbole de la patience en Islam. Il a enduré une maladie grave et des pertes mais n'a jamais perdu foi en Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was thrown into a fire by his people?',
@@ -3844,6 +4056,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Ibrahim (paix sur lui) a été jeté dans le feu par le peuple du roi Nimrod, mais Allah a rendu le feu frais et paisible pour lui.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet's wife was turned to stone for disobeying Allah?",
@@ -3862,6 +4075,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La femme du prophète Lut (paix sur lui) était parmi les punis car elle soutenait les gens pécheurs et désobéissait à Allah.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was the prophet sent to the people of Thamud?',
@@ -3880,6 +4094,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Salih (paix sur lui) a été envoyé au peuple de Thamud. Il leur a apporté une chamelle comme miracle d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet had a miraculous staff that turned into a serpent?',
@@ -3898,6 +4113,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Musa (paix sur lui) a reçu d'Allah un bâton qui pouvait se transformer en serpent, qu'il a utilisé face à Pharaon.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet is known as 'Khalilullah' (Friend of Allah)?",
@@ -3916,6 +4132,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim (paix sur lui) est connu comme Khalilullah — l'ami intime d'Allah, comme mentionné dans le Coran (4:125).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet interpreted dreams as mentioned in the Quran?',
@@ -3934,6 +4151,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yusuf (paix sur lui) a reçu le don d'interpréter les rêves, comme détaillé dans la sourate Yusuf.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the minimum amount of wealth (nisab) for Zakat on gold?',
@@ -3952,6 +4170,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le nisab pour l'or est d'environ 85 grammes. Si un musulman possède ce montant pendant une année lunaire complète, la Zakat de 2,5% est due.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many times do Muslims circle the Kaaba during Tawaf?',
@@ -3970,6 +4189,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Les musulmans font 7 tours autour de la Kaaba lors du Tawaf, en commençant par le coin de la Pierre Noire dans le sens antihoraire.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the penalty for deliberately breaking fast during Ramadan without valid reason?',
@@ -3988,6 +4208,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'expiation (kaffarah) pour avoir rompu le jeûne délibérément est d'affranchir un esclave, jeûner 60 jours consécutifs, ou nourrir 60 pauvres.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is said during the Tashahud in prayer?',
@@ -4006,6 +4227,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tashahud commence par 'At-Tahiyyatu lillahi was-salawatu wat-tayyibat...' et inclut le témoignage et les bénédictions sur le Prophète ﷺ.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prayer has the most rakaat (units)?',
@@ -4024,6 +4246,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Dhuhr, Asr et Isha ont toutes 4 rakaat chacune. Dhuhr est la réponse car c'est la première prière à 4 rakaat dans l'ordre quotidien.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which surah is known as 'The Heart of the Quran'?",
@@ -4042,6 +4265,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Yasin est souvent appelée 'Le Cœur du Coran' en raison d'un hadith attribué au Prophète ﷺ sur ses grandes vertus.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": "How many surahs begin with 'Bismillah'?",
@@ -4060,6 +4284,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": '113 sourates commencent par Bismillah. La sourate At-Tawbah (9) est la seule qui ne commence pas par Bismillah.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the longest verse (ayah) in the Quran?',
@@ -4078,6 +4303,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le plus long verset du Coran est Ayat Ad-Dayn (le Verset de la Dette), sourate Al-Baqarah 2:282, qui traite des transactions financières et des contrats.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah is equivalent to one-third of the Quran?',
@@ -4096,6 +4322,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète ﷺ a dit que la sourate Al-Ikhlas (112) équivaut à un tiers du Coran car elle résume le concept du Tawhid (monothéisme).',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'In which surah is the story of the People of the Cave (Ashab Al-Kahf)?',
@@ -4114,6 +4341,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'histoire des Gens de la Caverne est dans la sourate Al-Kahf (18), qui décrit de jeunes croyants ayant dormi dans une grotte pendant des siècles pour échapper à la persécution.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which surah was revealed in its entirety at once?',
@@ -4132,6 +4360,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-An'am (6) aurait été révélée en entier en une seule fois, accompagnée de 70 000 anges.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the name of the Prophet's ﷺ first wife?",
@@ -4150,6 +4379,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khadijah bint Khuwaylid était la première épouse du Prophète Muhammad ﷺ et la première personne à accepter l'Islam.",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many children did the Prophet ﷺ have?',
@@ -4168,6 +4398,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète ﷺ avait 7 enfants : 3 fils (Qasim, Abdullah, Ibrahim) et 4 filles (Zainab, Ruqayyah, Umm Kulthum, Fatimah).',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the name of the Prophet's ﷺ uncle who protected him but never accepted Islam?",
@@ -4186,6 +4417,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Talib était l'oncle du Prophète ﷺ qui lui a fourni protection et soutien tout au long de sa vie mais est décédé sans accepter l'Islam.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the Year of Sorrow (Aam al-Huzn)?',
@@ -4204,6 +4436,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Année de la Tristesse fait référence à 619 apr. J.-C. lorsque Khadijah (l'épouse bien-aimée du Prophète) et Abu Talib (son oncle protecteur) sont décédés.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What happened during the Night Journey (Isra and Mi'raj)?",
@@ -4222,6 +4455,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Lors du Voyage Nocturne, le Prophète Muhammad ﷺ a voyagé du Masjid al-Haram au Masjid al-Aqsa (Isra), puis est monté à travers les cieux (Mi'raj), où les cinq prières quotidiennes ont été prescrites.",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was the founder of the Umayyad Caliphate?',
@@ -4240,6 +4474,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Muawiya ibn Abi Sufyan a établi le Califat Omeyyade en 661 apr. J.-C., faisant de Damas sa capitale.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Alhambra?',
@@ -4258,6 +4493,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Alhambra est un magnifique complexe palatial et fortifié à Grenade, en Espagne, construit sous la dynastie Nasride — un chef-d'œuvre de l'architecture islamique.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the Bayt al-Hikmah (House of Wisdom)?',
@@ -4276,6 +4512,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Bayt al-Hikmah était un centre intellectuel majeur à Bagdad sous le Califat Abbasside où les savants traduisaient des œuvres grecques, persanes et indiennes et faisaient des découvertes révolutionnaires.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which Muslim scholar is known as 'The Canon of Medicine' author?",
@@ -4294,6 +4531,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn Sina (Avicenne, 980-1037 apr. J.-C.) a écrit 'Al-Qanun fi al-Tibb' (Le Canon de la Médecine), utilisé comme manuel médical en Europe pendant des siècles.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Itikaf?',
@@ -4312,6 +4550,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Itikaf est la pratique de se retirer dans une mosquée pour le culte et la dévotion, généralement pratiqué pendant les 10 derniers jours du Ramadan pour chercher Laylat al-Qadr.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Sunnah prayer before Fajr called?',
@@ -4330,6 +4569,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les deux rakaat Sunnah avant le Fajr s'appellent Sunnah al-Fajr ou Raghiba. Le Prophète ﷺ a dit qu'elles sont meilleures que le monde et tout ce qu'il contient.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Sadaqah Jariyah?',
@@ -4348,6 +4588,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Sadaqah Jariyah est une charité continue qui profite aux gens après la mort du donateur, comme construire un puits, une école, ou planter des arbres.',
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the first child to accept Islam?',
@@ -4366,6 +4607,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ali ibn Abi Talib était le premier enfant (environ 10 ans) à accepter l'Islam. Il a grandi dans la maison du Prophète ﷺ.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was Bilal ibn Rabah?',
@@ -4384,6 +4626,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Bilal ibn Rabah était un compagnon éthiopien devenu le premier muezzin en Islam. Il a été libéré de l'esclavage par Abu Bakr.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which companion was known as 'Saifullah' (Sword of Allah)?",
@@ -4402,6 +4645,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khalid ibn al-Walid a reçu le titre de 'Saifullah' (Épée d'Allah) par le Prophète ﷺ pour son génie militaire. Il n'a jamais perdu de bataille.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": "Who compiled the Quran into a single book during Abu Bakr's caliphate?",
@@ -4420,6 +4664,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Zaid ibn Thabit a été chargé par Abu Bakr de compiler le Coran en un seul manuscrit après que de nombreux huffaz (mémorisateurs) soient morts à la Bataille de Yamama.',
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the concept of 'Amanah' in Islam?",
@@ -4438,6 +4683,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Amanah signifie fiabilité, honnêteté et accomplissement fidèle de ses responsabilités. C'est l'une des valeurs morales les plus importantes en Islam.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the ruling on backbiting (Gheebah) in Islam?',
@@ -4456,6 +4702,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La médisance est strictement interdite en Islam. Le Coran dit : 'L'un de vous aimerait-il manger la chair de son frère mort ? Vous en auriez horreur.' (49:12).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Shura in Islam?',
@@ -4474,6 +4721,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Shura (consultation) est un principe coranique où les dirigeants consultent les autres avant de prendre des décisions. Elle est mentionnée dans la sourate Ash-Shura (42:38).',
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What does Islam say about environmental stewardship?',
@@ -4492,6 +4740,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Islam enseigne que les humains sont Khalifah (intendants) sur Terre. Le Prophète ﷺ a dit : 'Si le Jour du Jugement arrive et que vous avez un semis dans la main, plantez-le.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the significance of the Black Stone (Hajar al-Aswad)?',
@@ -4510,6 +4759,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "On croit que la Pierre Noire vient du Paradis. Le prophète Ibrahim et son fils Ismail l'ont placée dans le coin de la Kaaba. Les musulmans ne l'adorent pas mais l'honorent lors du Tawaf.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the Day of Arafah?',
@@ -4528,6 +4778,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Jour d'Arafah (9 Dhul Hijjah) est le jour le plus important du Hajj. Les pèlerins se rassemblent au Mont Arafah. Le jeûne de ce jour expie les péchés de l'année passée et de l'année à venir.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was the Muslim scientist known as the 'Father of Optics'?",
@@ -4546,6 +4797,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn al-Haytham (Alhazen, 965-1040 apr. J.-C.) est considéré comme le père de l'optique moderne. Son 'Livre d'Optique' a révolutionné la compréhension de la lumière et de la vision.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the concept of 'Ihsan' in Islam?",
@@ -4564,6 +4816,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Ihsan est le plus haut niveau de foi. Le Prophète ﷺ l'a défini comme : 'Adorer Allah comme si tu Le voyais, et si tu ne Le vois pas, Lui te voit.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What are the names of the two angels that record deeds?',
@@ -4582,6 +4835,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Raqib et Atid sont les deux anges assignés à chaque personne pour enregistrer leurs bonnes et mauvaises actions, comme mentionné dans la sourate Qaf (50:17-18).',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the first obligation after Shahada in Islam?',
@@ -4600,6 +4854,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Salah (prière) est la première obligation après la Shahada et le deuxième pilier de l'Islam. C'est l'obligation la plus fréquemment mentionnée dans le Coran.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What was the first mosque built in Islam?',
@@ -4618,6 +4873,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Masjid Quba à Médine était la première mosquée construite en Islam. Le Prophète Muhammad ﷺ en a posé les fondations à son arrivée à Médine lors de l'Hégire.",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which surah is recited for protection before sleeping?',
@@ -4636,6 +4892,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a recommandé de réciter la sourate Al-Mulk avant de dormir. On dit qu'elle intercède pour son récitant et protège du châtiment de la tombe.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the Islamic ruling on honoring promises and contracts?',
@@ -4654,6 +4911,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Respecter les promesses est obligatoire en Islam. Le Prophète ﷺ a dit : 'Les signes de l'hypocrite sont trois : quand il parle il ment, quand il promet il trahit, et quand on lui confie il trompe.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'How many gates does Jannah (Paradise) have?',
@@ -4672,6 +4930,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Jannah a 8 portes. Le Prophète ﷺ a mentionné que chaque porte est désignée pour des bonnes actions spécifiques : prière, jeûne, charité, jihad, etc.',
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic calendar based on?',
@@ -4690,6 +4949,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le calendrier islamique (Hijri) est basé sur les cycles lunaires. Chaque mois commence avec l'observation du nouveau croissant, et une année compte environ 354 jours.",
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the significance of Laylat al-Qadr?',
@@ -4708,6 +4968,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Laylat al-Qadr (la Nuit du Destin) est la nuit où le Coran a été révélé pour la première fois. Elle tombe dans les 10 dernières nuits du Ramadan et vaut mieux que 1 000 mois d'adoration.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which prophet was known as 'Kalimullah' (The one who spoke to Allah)?",
@@ -4726,6 +4987,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Musa (paix sur lui) est connu comme Kalimullah car Allah lui a parlé directement sur le Mont Tur (Sinaï).',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many brothers did Prophet Yusuf have?',
@@ -4744,6 +5006,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yusuf avait 11 frères. Il était l'un des 12 fils du prophète Yaqub (Jacob), paix sur eux.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet is described as having been born without a father?',
@@ -4762,6 +5025,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa (Jésus, paix sur lui) est né miraculeusement de Maryam (Marie) sans père, par la volonté d'Allah.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was the prophet sent to the people of 'Ad?",
@@ -4780,6 +5044,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Hud (paix sur lui) a été envoyé au peuple de 'Ad, puissant et arrogant. Ils furent détruits par un vent violent.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was the father of Yusuf?',
@@ -4798,6 +5063,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Yaqub (Jacob, paix sur lui) était le père du prophète Yusuf. La lignée est Ibrahim → Ishaq → Yaqub → Yusuf.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet made iron soft by the will of Allah?',
@@ -4816,6 +5082,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Allah a rendu le fer souple pour le prophète Dawud (paix sur lui), lui permettant de façonner des armures et des cottes de mailles (Coran 34:10-11).',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What breaks the fast during Ramadan?',
@@ -4834,6 +5101,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Manger, boire ou avoir des relations intimes intentionnellement pendant les heures de jeûne invalident le jeûne. Manger/boire accidentellement ne rompt pas le jeûne.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What percentage of wealth is given as Zakat?',
@@ -4852,6 +5120,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Zakat est de 2,5% de la richesse éligible détenue pendant une année lunaire complète au-dessus du seuil du nisab.',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which surah contains the verse 'Allah does not burden a soul beyond its capacity'?",
@@ -4870,6 +5139,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ce verset célèbre est de la sourate Al-Baqarah (2:286), l'un des versets les plus réconfortants du Coran.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is Juz' in the Quran?",
@@ -4888,6 +5158,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran est divisé en 30 Juz' (parties) de longueur à peu près égale, facilitant la récitation complète du Coran en un mois.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which surah warns about the harms of backbiting and slander?',
@@ -4906,6 +5177,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Humazah (104) met en garde contre tout calomniateur et moqueur qui amasse des richesses et pense qu'elles le rendront immortel.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'At what age did Prophet Muhammad ﷺ receive the first revelation?',
@@ -4924,6 +5196,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète Muhammad ﷺ a reçu la première révélation à l'âge de 40 ans dans la grotte de Hira pendant le mois de Ramadan.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the first word revealed to Prophet Muhammad ﷺ?',
@@ -4942,6 +5215,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le premier mot révélé était 'Iqra' (Lis/Récite) de la sourate Al-Alaq (96:1), transmis par l'ange Jibril dans la grotte de Hira.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Where did the Prophet ﷺ hide during the Hijrah?',
@@ -4960,6 +5234,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Pendant l'Hégire, le Prophète ﷺ et Abu Bakr se sont cachés dans la grotte de Thawr pendant trois jours avant de continuer vers Médine.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the Farewell Sermon (Khutbat al-Wada)?',
@@ -4978,6 +5253,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sermon d'Adieu a été prononcé lors du seul Hajj du Prophète ﷺ en 632 apr. J.-C. au Mont Arafat, établissant des principes d'égalité et de droits humains.",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which battle was the first major battle in Islam?',
@@ -4996,6 +5272,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Bataille de Badr (624 apr. J.-C.) fut la première grande bataille de l'Islam, où 313 musulmans ont vaincu environ 1 000 soldats Quraysh avec l'aide d'Allah.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was Ibn Khaldun?',
@@ -5014,6 +5291,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn Khaldun (1332-1406 apr. J.-C.) a écrit 'Al-Muqaddimah', considéré comme le premier ouvrage de sciences sociales, l'établissant comme le père de la sociologie et de l'historiographie.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which city was the capital of the Abbasid Caliphate?',
@@ -5032,6 +5310,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Bagdad a été fondée en 762 apr. J.-C. comme capitale du Califat Abbasside et est devenue le premier centre d'apprentissage au monde pendant l'Âge d'or islamique.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the Ottoman Empire known as?',
@@ -5050,6 +5329,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Empire Ottoman (1299-1922 apr. J.-C.) était l'un des empires islamiques les plus durables et puissants, s'étendant sur l'Europe, l'Asie et l'Afrique à son apogée.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was Al-Zahrawi?',
@@ -5068,6 +5348,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Zahrawi (936-1013 apr. J.-C.) de Cordoue, Espagne, est considéré comme le père de la chirurgie moderne. Son encyclopédie 'Al-Tasrif' a décrit plus de 200 instruments chirurgicaux.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Aqeeqah?',
@@ -5086,6 +5367,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Aqeeqah est la pratique islamique de sacrifier un ou deux moutons/chèvres le septième jour après la naissance d'un enfant, en remerciement à Allah.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What does Salam mean?',
@@ -5104,6 +5386,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Salam signifie 'Paix'. La salutation islamique 'As-Salamu Alaikum' signifie 'Que la paix soit sur vous'. C'est à la fois une salutation et une invocation.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is Salat al-Janazah?',
@@ -5122,6 +5405,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Salat al-Janazah est une prière funéraire communautaire (fard kifayah) accomplie debout, avec quatre takbirat et sans ruku ni sujud.',
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which companion was known as 'Dhun-Nurayn' (Possessor of Two Lights)?",
@@ -5140,6 +5424,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Uthman ibn Affan a été appelé 'Dhun-Nurayn' car il a épousé deux filles du Prophète ﷺ : Ruqayyah puis Umm Kulthum.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which companion was the first to migrate to Madinah?',
@@ -5158,6 +5443,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Abu Salamah ibn Abdul Asad est rapporté comme étant le premier compagnon à migrer vers Médine, avant même la migration générale.',
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was Fatimah Az-Zahra?',
@@ -5176,6 +5462,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Fatimah Az-Zahra était la plus jeune fille du Prophète Muhammad ﷺ et de Khadijah, épouse d'Ali ibn Abi Talib, et décrite comme la maîtresse des femmes du Paradis.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which companion is known as 'The Conqueror of Egypt'?",
@@ -5194,6 +5481,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Amr ibn al-As a mené la conquête musulmane de l'Égypte en 641 apr. J.-C. et est devenu son premier gouverneur musulman, fondant la ville de Fustat (le vieux Caire).",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic view on racism?',
@@ -5212,6 +5500,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit dans son Sermon d'Adieu : 'Aucun Arabe n'a de supériorité sur un non-Arabe... sauf par la piété.' Le Coran dit que les humains ont été créés en nations pour se connaître (49:13).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Sabr in Islam?',
@@ -5230,6 +5519,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sabr (patience) est l'une des qualités les plus louées en Islam. Le Coran le mentionne plus de 90 fois : 'Certes, Allah est avec les patients' (2:153).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the concept of 'Tawakkul'?",
@@ -5248,6 +5538,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tawakkul est de se fier à Allah tout en prenant des mesures pratiques. Le Prophète ﷺ a dit : 'Attache ton chameau, puis mets ta confiance en Allah.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What does Islam say about helping the needy?',
@@ -5266,6 +5557,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Islam commande d'aider tous les nécessiteux quelle que soit leur religion. Le Prophète ﷺ a dit : 'N'est pas croyant celui dont le ventre est plein tandis que son voisin a faim.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the reward of smiling in Islam?',
@@ -5284,6 +5576,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'Ton sourire au visage de ton frère est une charité.' Même les petits actes de bonté sont récompensés en Islam.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": "What are the Muqatta'at (disconnected letters) in the Quran?",
@@ -5302,6 +5595,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les Muqatta'at sont des combinaisons de lettres arabes qui apparaissent au début de 29 sourates (comme Alif-Lam-Mim, Ya-Sin, Ha-Mim). Leur signification exacte n'est connue que d'Allah.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What does Surah Al-Asr teach?',
@@ -5320,6 +5614,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Asr (103) résume tout le message de l'Islam en seulement 3 versets : la foi, les bonnes actions, le conseil mutuel de vérité et la patience.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the name of the Prophet's ﷺ camel during the Hijrah?",
@@ -5338,6 +5633,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Qaswa était la célèbre chamelle du Prophète ﷺ qu'il a montée pendant l'Hégire vers Médine. L'endroit où elle s'est agenouillée a déterminé l'emplacement du Masjid an-Nabawi.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What did the Prophet ﷺ establish between the Muhajirun and Ansar?',
@@ -5356,6 +5652,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a établi la Mu'akhah (fraternité) entre les Muhajirun (migrants de La Mecque) et les Ansar (auxiliaires de Médine), créant des liens de soutien mutuel.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was Al-Andalus?',
@@ -5374,6 +5671,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Andalus était le territoire sous domination musulmane dans la péninsule Ibérique (711-1492 apr. J.-C.), connu pour ses contributions remarquables à la science, l'art et la coexistence des religions.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who led the Muslim forces in the conquest of Constantinople?',
@@ -5392,6 +5690,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sultan Muhammad al-Fatih (Mehmed II) a conquis Constantinople en 1453 apr. J.-C. à l'âge de 21 ans, accomplissant une prophétie du Prophète ﷺ sur la conquête de cette ville.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Ihram?',
@@ -5410,6 +5709,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Ihram est l'état sacré dans lequel entre le pèlerin avant le Hajj ou la Umrah. Les hommes portent deux étoffes blanches non cousues ; les femmes portent des vêtements modestes. Certaines actions deviennent interdites.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Sai between Safa and Marwa?',
@@ -5428,6 +5728,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sa'i consiste à marcher/courir 7 fois entre les collines de Safa et Marwa, commémorant la recherche d'eau par Hajar pour son fils Ismail.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet is the ancestor of both the Arabs and the Jews?',
@@ -5446,6 +5747,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim est l'ancêtre commun : par Ismail il est l'ancêtre des Arabes, et par Ishaq il est l'ancêtre des Enfants d'Israël.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": "Who is known as 'As-Siddiq' (The Truthful)?",
@@ -5464,6 +5766,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr a reçu le titre 'As-Siddiq' (Le Véridique) car il a immédiatement cru le Prophète ﷺ au sujet du Voyage Nocturne (Isra et Mi'raj).",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which companion freed Bilal from slavery?',
@@ -5482,6 +5785,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr as-Siddiq a acheté et libéré Bilal ibn Rabah de son maître Umayyah ibn Khalaf, qui torturait Bilal pour avoir accepté l'Islam.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Sunnah way of eating?',
@@ -5500,6 +5804,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a enseigné : 'Dis Bismillah, mange avec ta main droite, et mange de ce qui est le plus proche de toi.' Il a aussi conseillé de ne pas gaspiller la nourriture.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was Saladin (Salah ad-Din)?',
@@ -5518,6 +5823,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Saladin (1137-1193 apr. J.-C.) était le chef musulman qui a repris Jérusalem en 1187 apr. J.-C., connu pour sa chevalerie et sa miséricorde envers les ennemis vaincus.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the Islamic Golden Age?',
@@ -5536,6 +5842,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Âge d'or islamique (8e-14e siècle apr. J.-C.) a vu des avancées révolutionnaires en mathématiques, astronomie, médecine, philosophie et art à travers le monde musulman.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet was known for his exceptional patience during severe illness and loss?',
@@ -5554,6 +5861,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Ayyub (Job) est réputé pour sa patience extraordinaire. Il perdit sa richesse, ses enfants et sa santé mais ne perdit jamais sa foi en Allah.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Prophet Idris is believed to have been the first to do what?',
@@ -5572,6 +5880,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "On croit traditionnellement que le prophète Idris fut le premier à écrire avec un stylo et à coudre des vêtements. Allah l'éleva à un rang élevé (Coran 19:57).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which prophet's people were destroyed by a volcanic eruption and earthquake?",
@@ -5590,6 +5899,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le peuple de Madyan du prophète Shuayb fut détruit par un puissant tremblement de terre (Rajfah) pour leur malhonnêteté dans le commerce et leur rejet de son message.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many sons did Prophet Yaqub have?',
@@ -5608,6 +5918,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yaqub avait 12 fils, qui devinrent les ancêtres des douze tribus d'Israël. Parmi eux se trouvait Yusuf, qui était son fils le plus aimé.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet could speak to birds and command the jinn?',
@@ -5626,6 +5937,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Sulayman reçut la capacité de comprendre le langage des oiseaux et des fourmis, et de commander les djinns et le vent. Son histoire est détaillée dans la sourate An-Naml.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": "What miracle did Prophet Salih's people demand as proof?",
@@ -5644,6 +5956,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le peuple du prophète Salih (Thamud) demanda qu'une chamelle sorte d'un rocher comme preuve. Allah accorda ce miracle, mais ils tuèrent plus tard la chamelle et furent détruits.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Prophet Zakariya prayed for a child in his old age. Who was his son?',
@@ -5662,6 +5975,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yahya (Jean) était le fils de Zakariya, né miraculeusement de parents âgés. Le Coran dit qu'Allah lui donna un nom que personne n'avait porté avant (Coran 19:7).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What special ability did Prophet Dawud have?',
@@ -5680,6 +5994,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Allah rendit le fer mou pour le prophète Dawud afin qu'il puisse le façonner en armures. Il reçut aussi une belle voix avec laquelle les montagnes et les oiseaux glorifiaient Allah avec lui.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet is mentioned the most times in the Quran?',
@@ -5698,6 +6013,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Musa est mentionné par son nom environ 136 fois dans le Coran, ce qui en fait le prophète le plus fréquemment mentionné.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the miracle of Prophet Isa regarding food?',
@@ -5716,6 +6032,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Dans la sourate Al-Ma'idah (5:112-115), les disciples d'Isa demandèrent une table garnie du ciel, et Allah la fit descendre comme un signe.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which is the longest surah in the Quran?',
@@ -5734,6 +6051,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Baqarah (La Vache) est la plus longue sourate avec 286 versets. Elle contient Ayat al-Kursi (verset 255), l'un des versets les plus connus.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Ayat al-Kursi is found in which surah?',
@@ -5752,6 +6070,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ayat al-Kursi (Le Verset du Trône) est le verset 255 de la sourate Al-Baqarah. Le Prophète ﷺ a dit que c'est le plus grand verset du Coran.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": "Surah Al-Kahf mentions the story of the 'People of the Cave'. How many years did they sleep?",
@@ -5770,6 +6089,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran indique qu'ils restèrent dans leur caverne pendant 309 ans (Coran 18:25). C'étaient de jeunes croyants qui avaient fui la persécution et Allah les fit dormir.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which surah is recommended to recite every Friday?',
@@ -5788,6 +6108,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète ﷺ recommandait de réciter la sourate Al-Kahf (Chapitre 18) chaque vendredi. Elle procure lumière et protection entre deux vendredis.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which companion suggested digging a trench at the Battle of Khandaq?',
@@ -5806,6 +6127,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Salman al-Farisi suggéra de creuser un fossé (khandaq) autour de Médine, une tactique militaire perse inconnue des Arabes. Cette stratégie fut cruciale pour se défendre contre l'armée confédérée.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who was the first martyr in Islam?',
@@ -5824,6 +6146,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Sumayyah bint Khayyat, la mère d'Ammar ibn Yasir, fut la première personne martyrisée pour l'islam. Elle fut tuée par Abu Jahl pour avoir refusé de renoncer à sa foi.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which companion conquered Egypt in 641 CE?',
@@ -5842,6 +6165,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Amr ibn al-As mena la conquête musulmane de l'Égypte en 641 EC sous le califat d'Umar ibn al-Khattab. Il fonda la ville de Fustat, qui devint plus tard Le Caire.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "hard",
     },
     {
         "question_en": 'In which year did the Hijra (migration from Mecca to Medina) occur?',
@@ -5860,6 +6184,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Hijra eut lieu en 622 EC et marque le début du calendrier islamique (Hijri). Le Prophète ﷺ migra de La Mecque à Médine pour échapper aux persécutions.',
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many Muslims fought in the Battle of Badr?',
@@ -5878,6 +6203,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Environ 313 musulmans combattirent contre environ 1 000 guerriers Quraysh lors de la Bataille de Badr (2 AH / 624 EC). Malgré leur infériorité numérique, les musulmans remportèrent une victoire décisive.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the first mosque built by the Prophet ﷺ?',
@@ -5896,6 +6222,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Masjid Quba fut la première mosquée construite par le Prophète ﷺ à son arrivée près de Médine lors de la Hijra. Le Prophète ﷺ a dit que prier deux rak'ahs là-bas équivaut à la récompense d'une Umrah.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which battle is also known as the 'Battle of the Trench'?",
@@ -5914,6 +6241,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Bataille de Khandaq (5 AH / 627 EC), aussi appelée la Bataille du Fossé ou Al-Ahzab (Les Confédérés), vit les musulmans défendre Médine en creusant un fossé sur suggestion de Salman al-Farisi.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the name of the Prophet's ﷺ night journey from Mecca to Jerusalem?",
@@ -5932,6 +6260,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Isra désigne spécifiquement le voyage nocturne de La Mecque à Jérusalem (Al-Aqsa). Al-Miraj est l'ascension ultérieure à travers les cieux. Ensemble, ils sont connus sous le nom d'Al-Isra wal-Miraj.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the first Caliph after the Prophet ﷺ?',
@@ -5950,6 +6279,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr al-Siddiq devint le premier Calife après la mort du Prophète ﷺ en 632 EC. Il servit comme Calife pendant environ deux ans jusqu'à sa mort en 634 EC.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'During whose caliphate was the Quran compiled into a single standardized copy?',
@@ -5968,6 +6298,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Calife Uthman ibn Affan standardisa le Coran en un texte unifié (le Mushaf Uthmanien) vers 650 EC pour éviter les variations dialectales. Des copies furent distribuées aux principales villes musulmanes.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who conquered Constantinople in 1453 CE?',
@@ -5986,6 +6317,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sultan Mehmed II (le Conquérant / al-Fatih) conquit Constantinople en 1453 EC à l'âge de 21 ans, accomplissant une prophétie du Prophète ﷺ sur la conquête de cette ville.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Who recaptured Jerusalem from the Crusaders in 1187 CE?',
@@ -6004,6 +6336,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Salahuddin al-Ayyubi (Saladin) reprit Jérusalem après la Bataille de Hattin en 1187 EC. Il montra une grande clémence envers les habitants chrétiens de la ville.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which Muslim scholar is known as the 'Father of Algebra'?",
@@ -6022,6 +6355,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Khwarizmi (780-850 EC) écrivit 'Al-Kitab al-Mukhtasar fi Hisab al-Jabr wal-Muqabala', qui donna son nom à l'algèbre. Le mot 'algorithme' dérive aussi de son nom.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Ibn Sina (Avicenna) is famous for his work in which field?',
@@ -6040,6 +6374,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn Sina (980-1037 EC) écrivit 'Le Canon de la Médecine' (Al-Qanun fi al-Tibb), qui fut le manuel médical standard en Europe et dans le monde islamique pendant des siècles.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Zakat rate on gold, silver, and cash savings?',
@@ -6058,6 +6393,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le taux de Zakat sur l'or, l'argent et les espèces est de 2,5% (1/40ème). Cela s'applique lorsque la richesse atteint le seuil du nisab et a été détenue pendant une année lunaire.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "How many rak'ahs are in the Isha prayer?",
@@ -6076,6 +6412,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La prière d'Isha (nuit) consiste en 4 rak'ahs obligatoires. C'est la dernière des cinq prières quotidiennes.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Salat al-Janazah?',
@@ -6094,6 +6431,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Salat al-Janazah est la prière funèbre islamique. C'est une obligation communautaire (fard kifayah) consistant en 4 takbirs sans prosternation ni inclinaison.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'According to a hadith, what are the three things whose reward continues after death?',
@@ -6112,6 +6450,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'Quand une personne meurt, ses actes cessent sauf trois : une charité continue (sadaqah jariyah), une connaissance bénéfique, et un enfant pieux qui prie pour elle.' (Sahih Muslim)",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What does the Quran say about killing one innocent person?',
@@ -6130,6 +6469,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran déclare dans la sourate Al-Ma'idah (5:32) : 'Quiconque tue une âme... c'est comme s'il avait tué toute l'humanité. Et quiconque en sauve une, c'est comme s'il avait sauvé toute l'humanité.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the Islamic concept of Ihsan?',
@@ -6148,6 +6488,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Dans le célèbre Hadith de Jibril, le Prophète ﷺ définit l'Ihsan comme : 'Adorer Allah comme si tu Le vois, et si tu ne Le vois pas, sache qu'Il te voit.' Il représente le plus haut niveau de foi.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What does the Prophet ﷺ say about a person who sleeps full while their neighbor is hungry?',
@@ -6166,6 +6507,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'N'est pas croyant celui dont l'estomac est plein tandis que son voisin à côté de lui a faim.' Cela souligne l'importance du soin communautaire en Islam.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the Constitution of Medina?',
@@ -6184,6 +6526,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Constitution de Médine (Sahifat al-Madinah) établit une communauté multireligieuse où les musulmans, les juifs et les autres avaient des droits et des responsabilités définis. Elle est considérée comme l'un des premiers documents constitutionnels.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the last of the Rightly Guided Caliphs?',
@@ -6202,6 +6545,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Ali ibn Abi Talib fut le quatrième et dernier des Califes bien guidés (Khulafa al-Rashidun). Il était le cousin et gendre du Prophète ﷺ.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet built the Kaaba according to the Quran?',
@@ -6220,6 +6564,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran déclare dans la sourate Al-Baqarah (2:127) : 'Et quand Ibrahim élevait les fondations de la Maison avec Ismail, [disant] : Notre Seigneur, accepte de nous.'",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet was thrown into a fire but was not burned?',
@@ -6238,6 +6583,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim fut jeté dans un grand feu par le peuple du roi Nimrod, mais Allah ordonna : 'Ô feu, sois fraîcheur et paix pour Ibrahim' (Coran 21:69).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'How many daily prayers were originally prescribed before being reduced to five?',
@@ -6256,6 +6602,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Lors du Mi'raj, 50 prières quotidiennes furent initialement prescrites. Sur le conseil de Musa, le Prophète ﷺ demanda une réduction plusieurs fois jusqu'à atteindre 5, mais avec la récompense de 50.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Nisab for Zakat on gold?',
@@ -6274,6 +6621,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Nisab (seuil minimum) pour la Zakat sur l'or est d'environ 85 grammes (équivalent à 20 dinars). Si l'on possède ce montant pendant une année lunaire complète, 2,5% doivent être donnés en Zakat.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What are the three types of Hajj?',
@@ -6292,6 +6640,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Les trois types de Hajj sont : Tamattu (Umrah puis Hajj séparément), Qiran (Umrah et Hajj combinés), et Ifrad (Hajj uniquement sans Umrah).',
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'During Ramadan, what invalidates the fast?',
@@ -6310,6 +6659,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Manger, boire ou avoir des relations intimes intentionnellement pendant les heures de jeûne invalide le jeûne. Manger ou boire accidentellement n'annule pas le jeûne selon la plupart des savants.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Laylat al-Qadr?',
@@ -6328,6 +6678,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Laylat al-Qadr (La Nuit du Destin/Pouvoir) est la nuit où le Coran fut révélé pour la première fois. Le Coran dit qu'elle est 'meilleure que mille mois' (97:3). Elle tombe dans les 10 dernières nuits du Ramadan.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which companion was sent as the first ambassador of Islam to Medina?',
@@ -6346,6 +6697,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Musab ibn Umayr fut envoyé par le Prophète ﷺ comme premier ambassadeur à Médine après le Premier Serment d'Aqabah. Il réussit à répandre l'Islam là-bas avant la Hijra.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah mentions the story of Prophet Yusuf in detail?',
@@ -6364,6 +6716,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Yusuf (Chapitre 12) est entièrement consacrée à l'histoire du prophète Yusuf. Le Coran l'appelle 'le meilleur des récits' (ahsan al-qasas) au verset 12:3.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Abbasid Caliphate known for?',
@@ -6382,6 +6735,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Califat abbasside (750-1258 EC), basé à Bagdad, présida l'Âge d'Or islamique avec des avancées extraordinaires en science, médecine, mathématiques et philosophie à travers des institutions comme Bayt al-Hikmah.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet's people were the nation of Ad?",
@@ -6400,6 +6754,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le prophète Hud fut envoyé au peuple de Ad, qui étaient puissants et arrogants. Ils rejetèrent son message et furent détruits par un vent furieux qui dura sept nuits et huit jours.',
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": "How many rak'ahs are in the Maghrib prayer?",
@@ -6418,6 +6773,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La prière du Maghrib (coucher du soleil) consiste en 3 rak'ahs obligatoires. C'est la seule prière obligatoire à nombre impair parmi les cinq prières quotidiennes.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Islamic term for the obligation to enjoin good and forbid evil?',
@@ -6436,6 +6792,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Al-Amr bil-Maruf wan-Nahy an al-Munkar (ordonner le bien et interdire le mal) est un devoir islamique fondamental mentionné dans le Coran (3:110) comme caractéristique de la meilleure communauté.',
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which Muslim scientist is known as the 'Father of Optics'?",
@@ -6454,6 +6811,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibn al-Haytham (965-1040 EC), connu en Occident sous le nom d'Alhazen, écrivit le 'Livre d'Optique' (Kitab al-Manazir) qui révolutionna la compréhension de la lumière et de la vision.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Maqam Ibrahim at the Kaaba?',
@@ -6472,6 +6830,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Maqam Ibrahim est la pierre sur laquelle le prophète Ibrahim se tenait lors de la construction de la Kaaba. Elle porte ses empreintes et est mentionnée dans le Coran (2:125) : 'Prenez le Maqam Ibrahim comme lieu de prière.'",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which battle took place in 8 AH and resulted in the peaceful conquest of Mecca?',
@@ -6490,6 +6849,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La Conquête de La Mecque (Fath Makkah) en 8 AH / 630 EC vit le Prophète ﷺ mener 10 000 musulmans à La Mecque en grande partie sans effusion de sang. Il accorda une amnistie générale à ses habitants.',
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the first woman to accept Islam?',
@@ -6508,6 +6868,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khadijah bint Khuwaylid, la première épouse du Prophète ﷺ, fut la première personne (et première femme) à accepter l'islam. Elle soutint le Prophète ﷺ tout au long des premières années de la révélation.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the significance of the Black Stone (Al-Hajar al-Aswad)?',
@@ -6526,6 +6887,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Pierre Noire marque le point de départ du Tawaf. Elle fut placée par Ibrahim et Ismail lors de la construction de la Kaaba. Umar dit : 'Je sais que tu es une pierre qui ne peut ni nuire ni profiter ; si je n'avais pas vu le Prophète t'embrasser, je ne t'aurais pas embrassé.'",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "What does 'Taqwa' mean in Islam?",
@@ -6544,6 +6906,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Taqwa signifie la conscience de Dieu, la piété et la conscience d'Allah dans toutes les actions. Le Coran dit : 'Le plus honoré d'entre vous auprès d'Allah est le plus pieux' (49:13).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was Tariq ibn Ziyad?',
@@ -6562,6 +6925,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Tariq ibn Ziyad mena la conquête omeyyade de la péninsule ibérique (Al-Andalus) en 711 EC. Le Rocher de Gibraltar (Jabal Tariq) porte son nom.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which surah protects from the punishment of the grave according to hadith?',
@@ -6580,6 +6944,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Prophète ﷺ a dit que la sourate Al-Mulk (Chapitre 67) est un protecteur qui sauve du châtiment de la tombe. Il est recommandé de la réciter chaque nuit avant de dormir.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What are the last two surahs of the Quran called collectively?',
@@ -6598,6 +6963,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'La sourate Al-Falaq (113) et la sourate An-Nas (114) sont collectivement appelées Al-Muawwidhatain (Les Deux Protectrices). Elles sont récitées pour se protéger du mal.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Battle of Hunayn?',
@@ -6616,6 +6982,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Bataille de Hunayn (8 AH / 630 EC) eut lieu peu après la Conquête de La Mecque. L'armée musulmane de 12 000 hommes fuit initialement mais se rallia et gagna. Le Coran la mentionne dans la sourate At-Tawbah (9:25-26).",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who was the young companion who served the Prophet ﷺ for 10 years?',
@@ -6634,6 +7001,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Anas ibn Malik servit le Prophète ﷺ pendant 10 ans à partir de la Hijra. Il dit que le Prophète ﷺ ne lui dit jamais 'Uff' et ne le critiqua jamais pour quoi que ce soit qu'il fit ou ne fit pas.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What did the Prophet ﷺ say about seeking knowledge?',
@@ -6652,6 +7020,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'La recherche du savoir est une obligation pour chaque musulman.' (Ibn Majah). L'Islam accorde une grande importance à l'apprentissage et à l'éducation pour les hommes et les femmes.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which surah was revealed to the Prophet ﷺ as a complete unit at once?',
@@ -6670,6 +7039,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Fatiha fut révélée comme une sourate complète d'un seul coup. Elle est aussi connue sous le nom d'Umm al-Kitab (Mère du Livre) et est la sourate la plus récitée car elle est lue dans chaque unité de prière.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the significance of the number 99 in Islam?',
@@ -6688,6 +7058,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "99 fait référence aux Beaux Noms d'Allah (Al-Asma al-Husna). Le Prophète ﷺ a dit : 'Allah a 99 noms. Quiconque les mémorise et agit en conséquence entrera au Paradis.'",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What happened in the Year of the Elephant (Am al-Fil)?',
@@ -6706,6 +7077,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Année de l'Éléphant (~570 EC), Abraha mena une armée avec des éléphants pour détruire la Kaaba. Allah envoya des oiseaux (Ababil) qui les bombardèrent de pierres, détruisant l'armée. La sourate Al-Fil (105) décrit cet événement.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the farewell sermon of the Prophet ﷺ called?',
@@ -6724,6 +7096,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khutbat al-Wida (Le Sermon d'Adieu) fut prononcé par le Prophète ﷺ à Arafat lors de son dernier Hajj en 10 AH. Il aborda les droits humains, l'égalité et l'achèvement de la religion.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Which prophet is known as Khalilullah (Friend of Allah)?',
@@ -6742,6 +7115,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Ibrahim est connu comme Khalilullah (Ami d'Allah). Le Coran déclare : 'Et Allah prit Ibrahim comme ami (khalil)' (4:125).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet is known as Ruhullah (Spirit of Allah)?',
@@ -6760,6 +7134,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa est désigné comme Ruhullah (Esprit d'Allah) dans le Coran. Cela fait référence à sa naissance miraculeuse par la parole et l'esprit d'Allah, pas à la divinité.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Waqf in Islamic tradition?',
@@ -6778,6 +7153,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Waqf est une dotation islamique où des propriétés ou des actifs sont donnés à des fins caritatives de façon permanente. Il finança des mosquées, des écoles, des hôpitaux et des services publics tout au long de l'histoire islamique.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How many juz (parts) does the Quran have?',
@@ -6796,6 +7172,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Coran est divisé en 30 juz (parties) de longueur à peu près égale. Cette division facilite la lecture du Coran entier en un mois, notamment pendant le Ramadan.',
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which battle was the last major expedition of the Prophet ﷺ?',
@@ -6814,6 +7191,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Bataille de Tabuk (9 AH / 630 EC) fut la dernière grande expédition militaire menée par le Prophète ﷺ. C'était une marche vers l'Empire byzantin mais aucune bataille réelle n'eut lieu.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic term for patience and perseverance?',
@@ -6832,6 +7210,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Sabr signifie patience, persévérance et constance. Le Coran le mentionne plus de 90 fois et dit : 'En vérité, Allah est avec les patients' (2:153).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet was given the Tawrat (Torah)?',
@@ -6850,6 +7229,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Musa reçut la Tawrat (Torah) d'Allah. Le Coran le mentionne à plusieurs endroits, dont 5:44 : 'Nous avons fait descendre la Torah dans laquelle il y avait guide et lumière.'",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the Suhuf Ibrahim?',
@@ -6868,6 +7248,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les Suhuf Ibrahim (Rouleaux d'Ibrahim) sont mentionnés dans le Coran (87:19). C'étaient des écritures divines révélées au prophète Ibrahim, bien que leur contenu ne soit pas préservé.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the name of the angel who delivers revelation to prophets?',
@@ -6886,6 +7267,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Jibril (Gabriel) est l'ange responsable de délivrer la révélation divine aux prophètes. Il transmit le Coran au Prophète Muhammad ﷺ sur une période de 23 ans.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What are the six articles of faith (Iman) in Islam?',
@@ -6904,6 +7286,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les six articles de l'Iman sont : la croyance en Allah, les Anges, les Livres divins, les Prophètes, le Jour du Jugement et le Décret divin (Qadr). Ils furent énoncés dans le Hadith de Jibril.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the first month of the Islamic calendar?',
@@ -6922,6 +7305,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Muharram est le premier mois du calendrier islamique (Hijri). C'est l'un des quatre mois sacrés. Le 10 Muharram (Ashura) est un jour de jeûne recommandé.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What are the four sacred months in Islam?',
@@ -6940,6 +7324,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Les quatre mois sacrés sont Muharram, Rajab, Dhul-Qadah et Dhul-Hijjah. Le combat était traditionnellement interdit pendant ces mois (Coran 9:36).',
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What was the first migration of Muslims (before Medina)?',
@@ -6958,6 +7343,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La première migration fut vers l'Abyssinie (Éthiopie) en 615 EC. Le Prophète ﷺ envoya un groupe de musulmans au roi chrétien Najashi (Négus) qui leur accorda protection contre la persécution des Quraysh.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the name of the well near the Kaaba?',
@@ -6976,6 +7362,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Puits de Zamzam est situé près de la Kaaba. Il jaillit miraculeusement pour le bébé Ismail et sa mère Hajar lorsqu'ils étaient dans le désert. Il coule depuis des milliers d'années.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What did the Prophet ﷺ say about smiling?',
@@ -6994,6 +7381,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit : 'Votre sourire au visage de votre frère est un acte de charité (sadaqah).' (Tirmidhi). Il était lui-même connu pour ses sourires fréquents.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is Al-Ghazali known for?',
@@ -7012,6 +7400,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Hamid Al-Ghazali (1058-1111 EC) fut l'un des plus grands savants de l'Islam. Son chef-d'œuvre 'Ihya Ulum al-Din' est un guide complet de la spiritualité, du droit et de l'éthique islamiques.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Quran's position on racial superiority?",
@@ -7030,6 +7419,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran déclare (49:13) : 'Ô hommes, Nous vous avons créés d'un mâle et d'une femelle et Nous avons fait de vous des peuples et des tribus afin que vous vous connaissiez. Le plus honoré d'entre vous auprès d'Allah est le plus pieux.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which surah contains the verse 'There is no compulsion in religion'?",
@@ -7048,6 +7438,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le verset 'La ikraha fid-din' (Pas de contrainte en religion) se trouve dans la sourate Al-Baqarah (2:256). Il établit le principe de la liberté religieuse en Islam.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the Sa'i ritual during Hajj?",
@@ -7066,6 +7457,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Sa'i consiste à marcher entre les collines de Safa et Marwa sept fois. Il commémore la recherche désespérée d'eau par Hajar pour son fils Ismail.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "What companion was known as 'The Conqueror of Egypt'?",
@@ -7084,6 +7476,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Amr ibn al-As mena la conquête musulmane de l'Égypte en 641 EC sous le Calife Umar. Il fonda Fustat (plus tard Le Caire) et devint le premier gouverneur musulman de l'Égypte.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic ruling on interest (Riba)?',
@@ -7102,6 +7495,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Riba (intérêt/usure) est strictement interdit en Islam. Le Coran l'aborde dans plusieurs versets dont 2:275 : 'Allah a rendu licite le commerce et a interdit l'intérêt.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": "How many times is 'Bismillah' mentioned in the Quran?",
@@ -7120,6 +7514,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Bismillah apparaît 114 fois : une fois au début de chacune des 113 sourates qui commencent par elle (toutes sauf At-Tawbah), plus une fois au milieu de la sourate An-Naml (27:30).',
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What are the two Eids celebrated in Islam?',
@@ -7138,6 +7533,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Les deux Eids sont : Eid al-Fitr (célébrant la fin du Ramadan, 1er Shawwal) et Eid al-Adha (Fête du Sacrifice pendant le Hajj, 10 Dhul-Hijjah).',
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What miracle is associated with the beginning of the Well of Zamzam?',
@@ -7156,6 +7552,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Quand Hajar cherchait désespérément de l'eau entre Safa et Marwa, le bébé Ismail frappa le sol (ou Jibril le frappa selon certaines narrations) et le puits de Zamzam apparut miraculeusement.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'Which prophet had a staff that turned into a snake?',
@@ -7174,6 +7571,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le bâton du prophète Musa pouvait se transformer en serpent par la puissance d'Allah. Ce miracle fut montré au Pharaon comme preuve de sa prophétie (Coran 7:107, 20:20).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Surah Ar-Rahman known as?',
@@ -7192,6 +7590,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Ar-Rahman (Chapitre 55) est connue comme 'Arus al-Quran' (La Mariée du Coran) en raison de son style beau et rythmique. Son refrain 'Lequel des bienfaits de votre Seigneur nierez-vous ?' est répété 31 fois.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "What does the name 'Muhammad' mean?",
@@ -7210,6 +7609,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le nom 'Muhammad' signifie 'Le Loué' ou 'Digne de louange' en arabe. Il vient de la racine 'h-m-d' signifiant louange. Son grand-père Abdul-Muttalib lui donna ce nom.",
         },
         "category": 'Seerah',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the role of Mikail (Michael) among the angels?',
@@ -7228,6 +7628,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'ange Mikail est responsable de fournir la subsistance aux créatures et de contrôler les phénomènes naturels comme la pluie, le vent et la végétation par l'ordre d'Allah.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What was the outcome of the Battle of Uhud?',
@@ -7246,6 +7647,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "À Uhud (3 AH), les musulmans gagnaient initialement mais beaucoup d'archers quittèrent leurs postes sur la colline pour ramasser le butin. Khalid ibn al-Walid (combattant alors pour les Quraysh) les contourna. Le Prophète ﷺ fut blessé.",
         },
         "category": 'Seerah',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What did Umar ibn al-Khattab establish during his caliphate?',
@@ -7264,6 +7666,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Calife Umar établit de nombreuses innovations administratives dont le calendrier Hijri, le Bayt al-Mal (trésor public), des salaires réguliers pour les soldats et un système de recensement.',
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the difference between Makki and Madani surahs?',
@@ -7282,6 +7685,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les sourates Makki furent révélées avant la Hijra (généralement plus courtes, centrées sur la foi, l'existence d'Allah, l'au-delà). Les sourates Madani furent révélées après (généralement plus longues, centrées sur le droit, les régulations sociales, la gouvernance).",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who built the Dome of the Rock in Jerusalem?',
@@ -7300,6 +7704,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Dôme du Rocher fut construit par le Calife omeyyade Abd al-Malik ibn Marwan en 691 EC. C'est l'un des plus anciens monuments islamiques et il se trouve sur le Mont du Temple (Haram al-Sharif) à Jérusalem.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the concept of Ummah in Islam?',
@@ -7318,6 +7723,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Ummah désigne la communauté mondiale des musulmans unis par leur foi commune, indépendamment de la nationalité, de l'ethnie ou de la langue. Le Coran dit : 'Cette Ummah qui est la vôtre est une Ummah unique' (21:92).",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": "Which companion was given the title 'Amin al-Ummah' (Trustee of the Nation)?",
@@ -7336,6 +7742,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Ubaidah ibn al-Jarrah reçut le titre d'Amin al-Ummah (Gardien de la Nation) du Prophète ﷺ. Il commanda plus tard les armées musulmanes dans la conquête de la Syrie.",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is Dhikr in Islam?',
@@ -7354,6 +7761,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Dhikr est le souvenir d'Allah à travers des phrases comme SubhanAllah (Gloire à Allah), Alhamdulillah (Louange à Allah) et Allahu Akbar (Allah est le Plus Grand). Le Coran dit : 'Souvenez-vous de Moi, Je me souviendrai de vous' (2:152).",
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the significance of the 10th of Muharram (Ashura)?',
@@ -7372,6 +7780,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le 10 Muharram (Ashura) marque le jour où Allah sauva Musa et les Israélites du Pharaon en ouvrant la mer. Le Prophète ﷺ jeûna ce jour et recommanda le jeûne.',
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the minimum number of witnesses required for an Islamic marriage?',
@@ -7390,6 +7799,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Un mariage islamique (Nikah) nécessite un minimum de deux témoins. Les autres éléments essentiels incluent le consentement des deux parties, le wali (tuteur) de la mariée et le mahr (dot).',
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What did Prophet Nuh build to save the believers?',
@@ -7408,6 +7818,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Nuh construisit une arche sur l'ordre d'Allah pour sauver les croyants et des paires d'animaux du grand déluge. Son histoire est détaillée dans la sourate Nuh (71) et la sourate Hud (11).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": "What surah begins with 'Alif Lam Mim'?",
@@ -7426,6 +7837,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Baqarah commence par 'Alif Lam Mim', qui font partie des Huruf al-Muqatta'at (lettres disjointes). Leur signification exacte n'est connue que d'Allah. Plusieurs sourates commencent par ces lettres.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Sadaqah in Islam?',
@@ -7444,6 +7856,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Sadaqah est une charité volontaire donnée pour l'amour d'Allah. Contrairement à la Zakat (obligatoire avec des taux fixes), la Sadaqah peut être de n'importe quel montant et peut même être un mot gentil ou un sourire.",
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet is associated with the miracle of splitting the moon?',
@@ -7462,6 +7875,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La division de la lune est un miracle attribué au Prophète Muhammad ﷺ, référencé dans le Coran : 'L'Heure s'est approchée et la lune s'est fendue' (54:1). Les Quraysh furent témoins de cet événement.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is Hajj al-Tamattu?',
@@ -7480,6 +7894,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Dans le Hajj al-Tamattu, le pèlerin accomplit d'abord l'Umrah, puis quitte l'état d'Ihram, et entre plus tard à nouveau en Ihram pour le Hajj. C'est le type de Hajj le plus courant aujourd'hui.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet's wife was turned into a pillar of salt?",
@@ -7498,6 +7913,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La femme du prophète Lut ne crut pas en son message et fut détruite avec les gens de Sodome. Le Coran mentionne qu'elle était 'parmi ceux qui restèrent en arrière' (7:83, 26:171).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'Who was the nurse/foster mother of Prophet Muhammad ﷺ?',
@@ -7516,6 +7932,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Halimah al-Sadiyyah était la nourrice et mère nourricière du Prophète Muhammad ﷺ. Selon la coutume des Quraysh, l'enfant Muhammad fut envoyé pour être élevé dans le désert par des familles bédouines.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Quran's stance on the environment and nature?",
@@ -7534,6 +7951,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran enseigne que les humains sont des khalifah (intendants/gardiens) sur Terre (2:30). Ils sont chargés de prendre soin de la création, pas de l'exploiter. Le Prophète ﷺ enseigna aussi la conservation et la plantation d'arbres.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "hard",
     },
     {
         "question_en": "What does 'Alhamdulillah' mean?",
@@ -7552,6 +7970,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "'Alhamdulillah' signifie 'Toute louange est due à Allah.' C'est l'une des phrases les plus couramment utilisées en Islam, dite en gratitude. La sourate Al-Fatiha commence par cette phrase.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the Quran's teaching about parents?",
@@ -7570,6 +7989,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le Coran ordonne la bonté envers les parents : \'Ne leur dis point "uff" et ne les repousse pas, mais adresse-leur des paroles nobles\' (17:23). Le Prophète ﷺ a dit que le paradis se trouve sous les pieds des mères.',
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the fastest-growing religion in the world?',
@@ -7588,6 +8008,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Selon plusieurs études dont le Pew Research Center, l'Islam est la religion qui connaît la croissance la plus rapide au monde, avec environ 1,9 milliard de fidèles (environ 24% de la population mondiale).",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the Quran's teaching about justice?",
@@ -7606,6 +8027,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran (4:135) dit : 'Ô vous qui croyez, soyez fermement attachés à la justice, témoins pour Allah, même contre vous-mêmes, vos parents et vos proches.'",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Which prophet is known as Kalimullah (The One Who Spoke to Allah)?',
@@ -7624,6 +8046,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Musa est connu comme Kalimullah car Allah lui parla directement au Mont Tur (Sinaï). Le Coran déclare : 'Et Allah parla à Musa directement' (4:164).",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What miracle did Prophet Isa perform regarding the dead?',
@@ -7642,6 +8065,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Isa ressuscitait les morts avec la permission d'Allah, comme le Coran le dit (3:49) : 'Et je ramène les morts à la vie avec la permission d'Allah.' Il guérissait aussi les aveugles et les lépreux.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What is the Stoning of the Jamarat during Hajj?',
@@ -7660,6 +8084,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Rami al-Jamarat consiste à jeter des cailloux sur trois piliers à Mina. Il commémore le rejet par Ibrahim de la tentation de Shaytan lorsqu'il fut commandé de sacrifier son fils Ismail.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "medium",
     },
     {
         "question_en": 'Who compiled the most authentic collection of hadith?',
@@ -7678,6 +8103,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "L'Imam al-Bukhari (810-870 EC) compila le Sahih al-Bukhari, considéré comme la collection de hadiths la plus authentique. Il rassembla plus de 600 000 hadiths et en inclut environ 7 275 dans son Sahih après une vérification rigoureuse.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What are the four major Sunni schools of Islamic jurisprudence (Madhabs)?',
@@ -7696,6 +8122,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les quatre grandes Madhabs sunnites sont : Hanafi (fondé par Abu Hanifa), Maliki (Imam Malik), Shafi'i (Imam al-Shafi'i) et Hanbali (Imam Ahmad ibn Hanbal). Ils diffèrent en méthodologie mais s'accordent sur les fondamentaux.",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the meaning of 'SubhanAllah'?",
@@ -7714,6 +8141,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "'SubhanAllah' signifie 'Gloire à Allah' ou 'Allah est exempt de toute imperfection.' C'est l'une des phrases de dhikr les plus répétées. Le Prophète ﷺ a dit qu'elle remplit la balance des bonnes actions.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the significance of Friday (Yawm al-Jumu'ah) in Islam?",
@@ -7732,6 +8160,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit que le vendredi est le meilleur jour de la semaine. La prière en congrégation du Jumu'ah remplace le Dhuhr et est obligatoire pour les hommes. Le Coran dit : 'Quand on appelle à la prière du vendredi, hâtez-vous vers le rappel d'Allah' (62:9).",
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the first thing a Muslim says in a newborn's ear?",
@@ -7750,6 +8179,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "C'est une Sunnah de réciter l'Adhan (appel à la prière) dans l'oreille droite d'un nouveau-né. C'est pour que les premiers mots que l'enfant entend soient les paroles du Tawhid (monothéisme).",
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the Quran's guidance on dealing with different religions?",
@@ -7768,6 +8198,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran enseigne la tolérance religieuse : 'À vous votre religion, et à moi la mienne' (109:6) et 'Pas de contrainte en religion' (2:256). Les musulmans doivent traiter les gens de toutes les confessions avec justice et bonté.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'How long did it take for the Quran to be revealed?',
@@ -7786,6 +8217,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran fut révélé sur environ 23 ans (610-632 EC), de la première révélation dans la grotte de Hira jusqu'à peu avant la mort du Prophète ﷺ. Il fut révélé graduellement pour répondre aux événements et guider la communauté.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the name of the night prayer prayed in congregation during Ramadan?',
@@ -7804,6 +8236,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Salat al-Tarawih est la prière nocturne spéciale effectuée en congrégation pendant le Ramadan après la prière d'Isha. Elle fut établie comme pratique congregationnelle par le Calife Umar.",
         },
         "category": 'Islamic practices',
+        "difficulty": "hard",
     },
     {
         "question_en": "What animal is associated with the story of Prophet Ibrahim's sacrifice?",
@@ -7822,6 +8255,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Quand Ibrahim se prépara à sacrifier son fils Ismail en obéissance à Allah, Allah remplaça Ismail par un bélier. Le Coran dit : 'Et Nous le rachetâmes par un grand sacrifice' (37:107). Cela est commémoré lors de l'Eid al-Adha.",
         },
         "category": 'Prophets and their stories',
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the name of the well-known Islamic philosopher who wrote 'The Incoherence of the Philosophers'?",
@@ -7840,6 +8274,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Ghazali écrivit 'Tahafut al-Falasifah' (L'Incohérence des Philosophes) pour critiquer la philosophie islamique influencée par les Grecs. Ibn Rushd répondit plus tard avec 'L'Incohérence de l'Incohérence.'",
         },
         "category": 'Islamic history and civilization',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the ruling on eating pork in Islam?',
@@ -7858,6 +8293,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": 'Le porc est strictement interdit (haram) en Islam. Le Coran le déclare clairement dans plusieurs versets dont 2:173, 5:3, 6:145 et 16:115. Cependant, en cas de nécessité extrême pour survivre, il peut être consommé.',
         },
         "category": 'Islamic practices',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic concept of Barakah?',
@@ -7876,6 +8312,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Barakah signifie bénédiction divine, grâce spirituelle et augmentation du bien venant d'Allah. On peut la trouver dans le temps, la richesse, la nourriture, le savoir et les actions. Le Prophète ﷺ enseigna des moyens d'attirer la barakah.",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What did the Quran say about honey?',
@@ -7894,6 +8331,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran (16:69) dit à propos du miel : 'De leurs ventres sort une boisson de couleur variée, dans laquelle il y a guérison pour les gens.' La sourate An-Nahl (L'Abeille) parle des abeilles et du miel.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "easy",
     },
     {
         "question_en": 'What is the significance of Mount Arafat during Hajj?',
@@ -7912,6 +8350,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Se tenir à Arafat (Wuquf) le 9 Dhul-Hijjah est le rite le plus essentiel du Hajj. Le Prophète ﷺ a dit : 'Le Hajj est Arafat.' C'est là où le Sermon d'Adieu fut prononcé.",
         },
         "category": 'Pillars of Islam',
+        "difficulty": "hard",
     },
     {
         "question_en": 'What surah contains the verse about the creation of humans from clay?',
@@ -7930,6 +8369,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La sourate Al-Hijr (15:26) déclare : 'Et Nous avons certes créé l'homme d'une argile d'une boue altérée.' La création d'Adam à partir d'argile est mentionnée dans plusieurs sourates.",
         },
         "category": 'Quran knowledge',
+        "difficulty": "hard",
     },
     {
         "question_en": "Which companion was known for his deep knowledge and was called 'the interpreter of the Quran'?",
@@ -7948,6 +8388,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abdullah ibn Abbas était connu comme 'Tarjuman al-Quran' (Interprète du Coran). Le Prophète ﷺ pria pour lui : 'Ô Allah, donne-lui la compréhension de la religion et enseigne-lui l'interprétation.'",
         },
         "category": 'Companions of the Prophet',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Seerah?',
@@ -7966,6 +8407,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Seerah est la biographie et l'étude de la vie du Prophète Muhammad ﷺ. La plus célèbre Seerah ancienne fut écrite par Ibn Ishaq (704-768 EC), plus tard éditée par Ibn Hisham.",
         },
         "category": 'Seerah',
+        "difficulty": "medium",
     },
     {
         "question_en": 'What is the Islamic concept of Fitrah?',
@@ -7984,6 +8426,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Fitrah est la disposition naturelle innée de chaque être humain à reconnaître et adorer Allah. Le Prophète ﷺ a dit : 'Chaque enfant naît sur la Fitrah.' (Bukhari)",
         },
         "category": 'Islamic ethics and values',
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the meaning of 'InShaAllah'?",
@@ -8002,6 +8445,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "'InShaAllah' signifie 'Si Dieu le veut.' Les musulmans le disent en parlant de plans futurs, reconnaissant que tous les résultats sont finalement entre les mains d'Allah. Le Coran l'enseigne dans 18:23-24.",
         },
         "category": 'Islamic practices',
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet was known as 'Safiyyullah' (the Chosen of Allah)?",
@@ -8020,6 +8464,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Adam (paix sur lui) est connu comme Safiyyullah, signifiant l'Élu d'Allah, car il fut le premier humain créé par Allah.",
         },
         "category": "Prophets and their stories",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the reward for reciting Ayat al-Kursi after every obligatory prayer?",
@@ -8038,6 +8483,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit que quiconque récite Ayat al-Kursi après chaque prière obligatoire, rien ne l'empêche d'entrer au Paradis sauf la mort.",
         },
         "category": "Quran knowledge",
+        "difficulty": "hard",
     },
     {
         "question_en": "Who was the first Muslim ambassador sent by Prophet Muhammad ﷺ?",
@@ -8056,6 +8502,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Mus'ab ibn Umayr fut envoyé à Médine comme premier ambassadeur musulman pour enseigner l'Islam aux habitants de Yathrib avant l'Hégire.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the Islamic concept of 'Birr al-Walidayn'?",
@@ -8074,6 +8521,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Birr al-Walidayn signifie la bonté, le respect et le traitement respectueux de ses parents, l'une des vertus les plus soulignées en Islam après l'adoration d'Allah.",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the Battle of Badr primarily significant for?",
@@ -8092,6 +8540,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La bataille de Badr en 624 fut la première grande victoire militaire des musulmans, où 313 musulmans vainquirent environ 1 000 combattants de Quraysh.",
         },
         "category": "Seerah",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is Qiyam al-Layl?",
@@ -8110,6 +8559,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Qiyam al-Layl est la prière nocturne volontaire effectuée après Isha et avant Fajr, hautement recommandée en Islam.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "Which Pillar of Islam involves a declaration of faith?",
@@ -8128,6 +8578,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Shahada est la déclaration de foi : 'Il n'y a de dieu qu'Allah, et Muhammad est le Messager d'Allah.' C'est le premier et le plus fondamental pilier de l'Islam.",
         },
         "category": "Pillars of Islam",
+        "difficulty": "easy",
     },
     {
         "question_en": "What was the significance of the Abyssinian migration (Hijrah to Habasha)?",
@@ -8146,6 +8597,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La migration vers l'Abyssinie fut la première migration musulmane, où les premiers musulmans cherchèrent refuge contre la persécution de Quraysh auprès du roi chrétien juste Najashi.",
         },
         "category": "Seerah",
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the contribution of Abbas ibn Firnas to science?",
@@ -8164,6 +8616,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abbas ibn Firnas (810-887) était un polymathe andalou qui tenta l'un des premiers vols humains enregistrés utilisant un appareil semblable à un planeur, des siècles avant les frères Wright.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is 'Haya' in Islam?",
@@ -8182,6 +8635,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Haya signifie la modestie, la pudeur et le sens de la honte qui empêche une personne de mal agir. Le Prophète ﷺ a dit : 'Haya est une branche de la foi.'",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "hard",
     },
     {
         "question_en": "Which prophet was given the miracle of speaking to birds?",
@@ -8200,6 +8654,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Sulayman (Salomon) reçut la capacité de comprendre et communiquer avec les oiseaux et les animaux, comme mentionné dans le Coran (27:16).",
         },
         "category": "Prophets and their stories",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the significance of Laylat al-Mi'raj?",
@@ -8218,6 +8673,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Laylat al-Mi'raj commémore le voyage nocturne et l'ascension du Prophète Muhammad ﷺ de Masjid al-Haram à Masjid al-Aqsa puis aux cieux, où les cinq prières quotidiennes furent prescrites.",
         },
         "category": "Seerah",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Islamic ruling on 'Riba' (usury/interest)?",
@@ -8236,6 +8692,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Riba (usure/intérêt) est strictement interdit en Islam. Le Coran met explicitement en garde contre lui dans plusieurs versets (2:275-280).",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "hard",
     },
     {
         "question_en": "Which companion was known as 'Sayfullah' (Sword of Allah)?",
@@ -8254,6 +8711,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khalid ibn al-Walid reçut le titre de 'Sayfullah' (Épée d'Allah) du Prophète Muhammad ﷺ pour ses prouesses militaires exceptionnelles.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the name of the well that miraculously sprang for Hajar and baby Ismail?",
@@ -8272,6 +8730,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Zamzam est le puits miraculeux qui jaillit dans le désert quand le bébé Ismail eut soif et que Hajar courut entre Safa et Marwah cherchant de l'eau.",
         },
         "category": "Prophets and their stories",
+        "difficulty": "easy",
     },
     {
         "question_en": "How many times is the word 'Sabr' (patience) mentioned in the Quran approximately?",
@@ -8290,6 +8749,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le mot Sabr (patience) et ses dérivés apparaissent environ 90 fois dans le Coran, soulignant son importance dans la foi et la pratique islamiques.",
         },
         "category": "Quran knowledge",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Islamic concept of 'Waqf'?",
@@ -8308,6 +8768,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Waqf est une dotation charitable islamique où des biens ou actifs sont dédiés à des fins religieuses ou charitables à perpétuité.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet is mentioned the most times in the Quran after Musa?",
@@ -8326,6 +8787,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ibrahim (Abraham) est mentionné environ 69 fois dans le Coran, ce qui en fait le deuxième prophète le plus mentionné après Musa (Moïse) mentionné environ 136 fois.",
         },
         "category": "Prophets and their stories",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is 'Nisab' in the context of Zakat?",
@@ -8344,6 +8806,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Nisab est le seuil minimum de richesse qu'un musulman doit posséder pendant une année lunaire avant que la Zakat ne devienne obligatoire, équivalent à 85 grammes d'or.",
         },
         "category": "Pillars of Islam",
+        "difficulty": "easy",
     },
     {
         "question_en": "What role did the city of Cordoba play in Islamic civilization?",
@@ -8362,6 +8825,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Cordoue était la capitale du califat omeyyade en Al-Andalus et devint l'une des plus grandes et des plus avancées villes de l'Europe médiévale.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the concept of 'Amanah' (trust) in Islam?",
@@ -8380,6 +8844,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Amanah fait référence à la confiance et la responsabilité morale qu'Allah a placées sur les humains. Elle englobe tous les devoirs et obligations.",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "hard",
     },
     {
         "question_en": "Which companion was the first to compile the Quran into a single book?",
@@ -8398,6 +8863,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abu Bakr as-Siddiq ordonna la première compilation du Coran en un seul manuscrit (Mushaf) pendant son califat, sur suggestion d'Umar après la bataille de Yamama.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the significance of the 15th of Sha'ban (Laylat al-Bara'ah)?",
@@ -8416,6 +8882,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Laylat al-Bara'ah (Nuit du Pardon) le 15 Sha'ban est considérée comme une nuit où Allah pardonne à beaucoup de Ses serviteurs.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet had the ability to control the wind?",
@@ -8434,6 +8901,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Sulayman (Salomon) reçut le contrôle du vent, qui le portait où il le souhaitait, comme mentionné dans le Coran (21:81, 34:12).",
         },
         "category": "Prophets and their stories",
+        "difficulty": "easy",
     },
     {
         "question_en": "What was the first battle fought by the Muslim navy?",
@@ -8452,6 +8920,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La bataille des Mâts (Dhat al-Sawari) en 655 fut la première grande bataille navale de l'histoire islamique entre la flotte musulmane et la flotte byzantine.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the meaning of 'Ihsan' in Islam?",
@@ -8470,6 +8939,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Ihsan signifie l'excellence dans l'adoration — adorer Allah comme si vous Le voyiez, et si vous ne Le voyez pas, sachez qu'Il vous voit. C'est du célèbre hadith de Jibril.",
         },
         "category": "Pillars of Islam",
+        "difficulty": "easy",
     },
     {
         "question_en": "Which surah is known as 'The Light' (An-Nur)?",
@@ -8488,6 +8958,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Sourate An-Nur est la 24e sourate du Coran. Elle contient des règles importantes sur la modestie, le célèbre Verset de la Lumière (24:35) et la conduite sociale.",
         },
         "category": "Quran knowledge",
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the role of Salman al-Farisi in the Battle of the Trench?",
@@ -8506,6 +8977,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Salman al-Farisi suggéra la stratégie de creuser un fossé autour de Médine, une tactique défensive de la guerre perse inconnue des Arabes à l'époque.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is 'Sujud al-Sahw' (prostration of forgetfulness)?",
@@ -8524,6 +8996,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Sujud al-Sahw consiste en deux prosternations effectuées pour compenser les erreurs involontaires dans la prière, comme ajouter ou omettre une rak'ah.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was Al-Farabi and what was his contribution to Islamic thought?",
@@ -8542,6 +9015,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Farabi (872-950) était un philosophe renommé connu comme le 'Deuxième Maître' (après Aristote). Il apporta des contributions majeures à la logique et la philosophie politique.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "medium",
     },
     {
         "question_en": "What does the Quran say about the creation of humans from clay?",
@@ -8560,6 +9034,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran déclare dans plusieurs versets (par exemple 15:26, 23:12, 38:71) qu'Allah créa Adam d'argile (tin), d'argile sonore (salsal) et de terre (turab).",
         },
         "category": "Quran knowledge",
+        "difficulty": "hard",
     },
     {
         "question_en": "What was the Pact of Umar (Al-Uhda al-Umariyya)?",
@@ -8578,6 +9053,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Pacte d'Umar était un traité donné par le Calife Umar ibn al-Khattab aux chrétiens de Jérusalem lors de la conquête pacifique de la ville en 637, garantissant leurs droits religieux et leur sécurité.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Islamic ruling on backbiting (Gheebah)?",
@@ -8596,6 +9072,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La médisance (Gheebah) est strictement interdite en Islam. Le Coran (49:12) la compare à manger la chair de son frère mort, soulignant sa gravité.",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet is associated with the miracle of the she-camel?",
@@ -8614,6 +9091,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Salih fut envoyé au peuple de Thamud avec le miracle d'une chamelle sortie d'un rocher. Quand ils la tuèrent malgré son avertissement, ils furent détruits.",
         },
         "category": "Prophets and their stories",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the difference between Fard and Sunnah prayers?",
@@ -8632,6 +9110,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les prières Fard (obligatoires) sont les cinq prières quotidiennes requises de chaque musulman. Les prières Sunnah (volontaires) sont des prières supplémentaires recommandées par le Prophète ﷺ.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "What was the contribution of Al-Jazari to Islamic civilization?",
@@ -8650,6 +9129,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Jazari (1136-1206) fut un ingénieur mécanique pionnier qui inventa de nombreuses machines automatisées et est considéré comme le père de la robotique.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the concept of 'Tazkiyah' (purification of the soul)?",
@@ -8668,6 +9148,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Tazkiyah est la purification et le développement de l'âme, en éliminant les traits négatifs comme l'arrogance et l'envie, et en cultivant les vertus comme l'humilité et la gratitude.",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Quran's teaching about the People of the Book (Ahl al-Kitab)?",
@@ -8686,6 +9167,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran reconnaît les juifs et chrétiens comme 'Gens du Livre' — destinataires de révélations divines antérieures (Torah et Évangile). L'Islam reconnaît les origines abrahamiques communes.",
         },
         "category": "Quran knowledge",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the significance of the Tashahhud in prayer?",
@@ -8704,6 +9186,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Tashahhud est récité assis dans la prière. Il comprend les salutations de paix, le témoignage de foi (Shahada) et les bénédictions sur le Prophète Muhammad ﷺ.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "Which prophet was a carpenter by trade?",
@@ -8722,6 +9205,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Zakariya (Zacharie) était connu comme charpentier. Il est mentionné dans le Coran comme tuteur de Maryam (Marie) et père de Yahya (Jean).",
         },
         "category": "Prophets and their stories",
+        "difficulty": "hard",
     },
     {
         "question_en": "What are the conditions for a valid Salah (prayer)?",
@@ -8740,6 +9224,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les conditions d'une Salah valide incluent : la pureté rituelle (Wudu/Ghusl), faire face à la Qiblah, couvrir le corps (awrah), entrer dans le temps de prière et avoir l'intention (niyyah).",
         },
         "category": "Pillars of Islam",
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was Fatimah bint Muhammad ﷺ?",
@@ -8758,6 +9243,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Fatimah était la plus jeune fille du Prophète Muhammad ﷺ et Khadijah, et l'épouse d'Ali ibn Abi Talib. Elle est l'une des femmes les plus révérées en Islam.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is 'Tafakkur' in Islam?",
@@ -8776,6 +9262,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Tafakkur est la contemplation profonde et la réflexion sur la création, les signes et les bienfaits d'Allah. Le Coran encourage les croyants à réfléchir sur la création des cieux et de la terre (3:190-191).",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "medium",
     },
     {
         "question_en": "What was the significance of the Treaty of Medina (Constitution of Medina)?",
@@ -8794,6 +9281,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "La Constitution de Médine, rédigée par le Prophète Muhammad ﷺ, établit un État multi-religieux garantissant la liberté religieuse, la défense mutuelle et l'égalité des droits pour les musulmans, les juifs et autres groupes.",
         },
         "category": "Seerah",
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet's people were destroyed by a volcanic eruption?",
@@ -8812,6 +9300,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le peuple de Shuayb (Madyan) fut détruit par un cri puissant et un tremblement de terre. Certains savants interprètent cela comme un événement volcanique (Coran 7:91, 29:37).",
         },
         "category": "Prophets and their stories",
+        "difficulty": "hard",
     },
     {
         "question_en": "What is the ruling on eating with the right hand in Islam?",
@@ -8830,6 +9319,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Manger avec la main droite est une Sunnah (pratique recommandée) du Prophète ﷺ. Il dit : 'Mangez de votre main droite, car Satan mange de sa main gauche.'",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the Quran's position on religious coercion?",
@@ -8848,6 +9338,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran déclare explicitement 'Pas de contrainte en religion' (2:256), établissant le principe de liberté religieuse et interdisant la conversion forcée.",
         },
         "category": "Quran knowledge",
+        "difficulty": "medium",
     },
     {
         "question_en": "What are the 'Ashra Mubasharah' (Ten Promised Paradise)?",
@@ -8866,6 +9357,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Les Ashra Mubasharah sont dix compagnons auxquels le Prophète ﷺ a promis le Paradis : Abu Bakr, Umar, Uthman, Ali, Talha, Zubayr, Abdur Rahman ibn Awf, Sa'd ibn Abi Waqqas, Said ibn Zayd et Abu Ubaidah ibn al-Jarrah.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the Islamic calendar called?",
@@ -8884,6 +9376,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le calendrier islamique est le calendrier hégirien, un calendrier lunaire qui commença avec la migration (Hégire) du Prophète ﷺ de La Mecque à Médine en 622. Il comporte 12 mois lunaires.",
         },
         "category": "Islamic practices",
+        "difficulty": "easy",
     },
     {
         "question_en": "Which Muslim geographer created one of the most advanced world maps in the 12th century?",
@@ -8902,6 +9395,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Al-Idrisi créa la célèbre 'Tabula Rogeriana' en 1154, l'une des cartes du monde les plus avancées de la période médiévale, commandée par le roi Roger II de Sicile.",
         },
         "category": "Islamic history and civilization",
+        "difficulty": "medium",
     },
     {
         "question_en": "What does the Quran teach about the relationship between humans and nature?",
@@ -8920,6 +9414,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Coran enseigne que les humains sont des Khulafa (intendants) de la terre (2:30). Ils sont responsables de son entretien et ne doivent pas causer de corruption (fasad).",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "medium",
     },
     {
         "question_en": "Which prophet is known for interpreting dreams in the Quran?",
@@ -8938,6 +9433,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le prophète Yusuf (Joseph) fut doté par Allah de la capacité d'interpréter les rêves. La sourate Yusuf (12) narre en détail son histoire incluant l'interprétation du rêve du roi.",
         },
         "category": "Prophets and their stories",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the significance of Surah Al-Mulk?",
@@ -8956,6 +9452,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Le Prophète ﷺ a dit que la sourate Al-Mulk (67) est la protectrice et la salvatrice du tourment de la tombe. Il recommandait de la réciter chaque nuit avant de dormir.",
         },
         "category": "Quran knowledge",
+        "difficulty": "medium",
     },
     {
         "question_en": "What is the concept of 'Khushu' in prayer?",
@@ -8974,6 +9471,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Khushu signifie l'humilité, l'attention et la dévotion dans la prière. Le Coran décrit les croyants réussis comme ceux qui observent Khushu dans leurs prières (23:1-2).",
         },
         "category": "Pillars of Islam",
+        "difficulty": "easy",
     },
     {
         "question_en": "Who was the companion known for his knowledge of Quran interpretation (Tafsir)?",
@@ -8992,6 +9490,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Abdullah ibn Abbas était connu comme 'Hibr al-Ummah' (Savant de la Oummah) et 'Tarjuman al-Quran' (Interprète du Coran). Le Prophète ﷺ fit dua pour sa compréhension profonde du Coran.",
         },
         "category": "Companions of the Prophet",
+        "difficulty": "easy",
     },
     {
         "question_en": "What is the 'Maqasid al-Shariah' (Objectives of Islamic Law)?",
@@ -9010,6 +9509,7 @@ MCQ_QUESTIONS: list[dict] = [
             "fr": "Maqasid al-Shariah fait référence aux objectifs supérieurs de la loi islamique, qui visent à protéger cinq valeurs essentielles : la religion, la vie, l'intellect, la lignée et la propriété.",
         },
         "category": "Islamic ethics and values",
+        "difficulty": "medium",
     },
 ]
 
@@ -9032,6 +9532,10 @@ async def seed_mcq_questions(session: AsyncSession) -> None:
             )
         ).first()
         if existing:
+            # Update difficulty if changed
+            if q_data.get("difficulty") and existing.difficulty != q_data.get("difficulty"):
+                existing.difficulty = q_data["difficulty"]
+                session.add(existing)
             continue
         question = McqQuestion(
             id=uuid4(),
@@ -9042,6 +9546,7 @@ async def seed_mcq_questions(session: AsyncSession) -> None:
             correct_answer_index=q_data["correct_answer_index"],
             explanation=q_data.get("explanation"),
             category=q_data["category"],
+            difficulty=q_data.get("difficulty", "medium"),
         )
         session.add(question)
         count += 1

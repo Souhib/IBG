@@ -7,15 +7,26 @@ interface HintDisplayProps {
   hints: string[]
   hintsRevealed: number
   maxHints: number
+  difficulty?: string | null
 }
 
-export const HintDisplay = memo(function HintDisplay({ hints, hintsRevealed, maxHints }: HintDisplayProps) {
+export const HintDisplay = memo(function HintDisplay({ hints, hintsRevealed, maxHints, difficulty }: HintDisplayProps) {
   const { t } = useTranslation()
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-extrabold tracking-tight">{t("game.wordQuiz.hint")}</h3>
+        {difficulty && (
+          <span className={cn(
+            "inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+            difficulty === "easy" && "bg-emerald-500/15 text-emerald-500",
+            difficulty === "medium" && "bg-amber-500/15 text-amber-500",
+            difficulty === "hard" && "bg-red-500/15 text-red-500",
+          )}>
+            {t(`room.difficulty${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`)}
+          </span>
+        )}
         <span className="text-xs font-mono tabular-nums text-muted-foreground">
           {t("game.wordQuiz.hintNumber", { number: hintsRevealed, total: maxHints })}
         </span>

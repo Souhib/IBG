@@ -65,6 +65,7 @@ interface McqQuizState {
     total_score: number
   }[]
   game_over: boolean
+  difficulty?: string | null
 }
 
 export const Route = createFileRoute("/_auth/game/mcqquiz/$gameId")({
@@ -339,6 +340,7 @@ function McqQuizGamePage() {
                 question={state.question}
                 currentRound={state.current_round}
                 totalRounds={state.total_rounds}
+                difficulty={state.difficulty}
               />
               {!state.is_spectator && (
                 <>
@@ -396,6 +398,7 @@ function McqQuizGamePage() {
                 question={state.question}
                 currentRound={state.current_round}
                 totalRounds={state.total_rounds}
+                difficulty={state.difficulty}
               />
               <ChoiceButtons
                 choices={state.choices}
