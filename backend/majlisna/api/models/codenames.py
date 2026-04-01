@@ -3,8 +3,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship
 
-from ipg.api.models.shared import DBModel
-from ipg.api.schemas.shared import BaseTable
+from majlisna.api.models.shared import DBModel
+from majlisna.api.schemas.shared import BaseTable
 
 
 class CodenamesWordPack(BaseTable, table=True):

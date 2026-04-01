@@ -4,20 +4,20 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from ipg.api.ws.notify import notify_game_changed, notify_room_changed
+from majlisna.api.ws.notify import notify_game_changed, notify_room_changed
 
 
 @pytest.fixture
 def mock_sio():
     """Mock Socket.IO server."""
-    with patch("ipg.api.ws.notify.sio") as mock:
+    with patch("majlisna.api.ws.notify.sio") as mock:
         mock.emit = AsyncMock()
         yield mock
 
 
 @pytest.fixture
 def mock_fetch_room_state():
-    with patch("ipg.api.ws.notify.fetch_room_state", new_callable=AsyncMock) as mock:
+    with patch("majlisna.api.ws.notify.fetch_room_state", new_callable=AsyncMock) as mock:
         mock.return_value = {"id": "room-1", "players": []}
         yield mock
 
@@ -34,7 +34,7 @@ async def test_notify_room_changed_emits_to_room(mock_sio, mock_fetch_room_state
 
 async def test_room_notification_failure_does_not_propagate(mock_sio):  # noqa: ARG001
     """If broadcast fails, it doesn't crash the caller."""
-    with patch("ipg.api.ws.notify.fetch_room_state", new_callable=AsyncMock, side_effect=RuntimeError("oops")):
+    with patch("majlisna.api.ws.notify.fetch_room_state", new_callable=AsyncMock, side_effect=RuntimeError("oops")):
         # Should not raise
         await notify_room_changed("room-abc")
 
@@ -44,7 +44,7 @@ async def test_room_notification_failure_does_not_propagate(mock_sio):  # noqa: 
 
 async def test_game_updated_emits_signal_to_room(mock_sio, mock_fetch_room_state):  # noqa: ARG001
     """Game change emits game_updated signal to game room, not per-user state."""
-    with patch("ipg.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value="room-1"):
+    with patch("majlisna.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value="room-1"):
         await notify_game_changed("game-1")
 
     # game_updated signal to game room
@@ -65,6 +65,6 @@ async def test_game_broadcast_failure_does_not_propagate(mock_sio):
     """If game broadcast fails, it doesn't crash the caller."""
     mock_sio.emit.side_effect = Exception("Redis down")
 
-    with patch("ipg.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value=None):
+    with patch("majlisna.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value=None):
         # Should not raise
         await notify_game_changed("game-1")

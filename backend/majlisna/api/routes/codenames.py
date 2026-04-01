@@ -5,16 +5,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from starlette.status import HTTP_201_CREATED
 
-from ipg.api.controllers.codenames import CodenamesController
-from ipg.api.controllers.codenames_game import CodenamesGameController
-from ipg.api.models.codenames import (
+from majlisna.api.controllers.codenames import CodenamesController
+from majlisna.api.controllers.codenames_game import CodenamesGameController
+from majlisna.api.models.codenames import (
     CodenamesWord,
     CodenamesWordCreate,
     CodenamesWordPack,
     CodenamesWordPackCreate,
 )
-from ipg.api.models.table import User
-from ipg.api.schemas.codenames import (
+from majlisna.api.models.table import User
+from majlisna.api.schemas.codenames import (
     CodenamesBoardState,
     CodenamesHintViewedRequest,
     EndTurnResponse,
@@ -24,10 +24,10 @@ from ipg.api.schemas.codenames import (
     GuessCardResponse,
     StartCodenamesRequest,
 )
-from ipg.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
-from ipg.api.ws.handlers import auto_join_game_room
-from ipg.api.ws.notify import notify_game_changed, notify_room_changed
-from ipg.dependencies import get_codenames_controller, get_codenames_game_controller, get_current_user
+from majlisna.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
+from majlisna.api.ws.handlers import auto_join_game_room
+from majlisna.api.ws.notify import notify_game_changed, notify_room_changed
+from majlisna.dependencies import get_codenames_controller, get_codenames_game_controller, get_current_user
 
 router = APIRouter(
     prefix="/codenames",

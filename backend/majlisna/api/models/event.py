@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import Column, DateTime
 from sqlmodel import Field
 
-from ipg.api.models.shared import DBModel
+from majlisna.api.models.shared import DBModel
 
 
 class EventBase(DBModel):

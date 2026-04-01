@@ -109,7 +109,7 @@ const kyInstance = ky.create({
   hooks: {
     beforeRequest: [
       (request) => {
-        const token = localStorage.getItem("ipg-token")
+        const token = localStorage.getItem("majlisna-token")
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`)
         }
@@ -118,12 +118,12 @@ const kyInstance = ky.create({
     afterResponse: [
       async (_request, _options, response) => {
         if (!response.ok && response.status === 401) {
-          const hadToken = !!localStorage.getItem("ipg-token")
+          const hadToken = !!localStorage.getItem("majlisna-token")
 
-          localStorage.removeItem("ipg-token")
-          localStorage.removeItem("ipg-refresh-token")
-          localStorage.removeItem("ipg-token-expiry")
-          localStorage.removeItem("ipg-user-data")
+          localStorage.removeItem("majlisna-token")
+          localStorage.removeItem("majlisna-refresh-token")
+          localStorage.removeItem("majlisna-token-expiry")
+          localStorage.removeItem("majlisna-user-data")
 
           if (hadToken && typeof window !== "undefined" && !window.location.pathname.includes("/auth/login")) {
             window.location.href = "/auth/login"

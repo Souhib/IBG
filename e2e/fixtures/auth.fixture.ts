@@ -18,7 +18,7 @@ async function injectAuth(
   await page.evaluate(
     ({ tokens, keys }) => {
       // Dismiss the first-visit language picker modal
-      localStorage.setItem("ipg-first-visit-complete", "true");
+      localStorage.setItem("majlisna-first-visit-complete", "true");
       localStorage.setItem(keys.token, tokens.access_token);
       localStorage.setItem(keys.refreshToken, tokens.refresh_token);
       localStorage.setItem(
@@ -52,7 +52,7 @@ export async function createPlayerPage(
         {
           origin: FRONTEND_URL,
           localStorage: [
-            { name: "ipg-first-visit-complete", value: "true" },
+            { name: "majlisna-first-visit-complete", value: "true" },
           ],
         },
       ],

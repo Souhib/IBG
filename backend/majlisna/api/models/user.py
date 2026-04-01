@@ -3,7 +3,7 @@ import pydantic
 from pydantic import EmailStr
 from sqlmodel import AutoString, Field
 
-from ipg.api.models.shared import DBModel
+from majlisna.api.models.shared import DBModel
 
 
 class UserBase(DBModel):

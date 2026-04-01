@@ -20,7 +20,7 @@ Add to auth-sensitive endpoints:
 - `POST /auth/register` — 5/minute
 - `POST /auth/refresh` — 30/minute
 
-**Files:** `backend/ipg/api/middleware.py` (add limiter setup), auth route decorators
+**Files:** `backend/majlisna/api/middleware.py` (add limiter setup), auth route decorators
 
 ### 3. Sentry (frontend)
 LaTabdhir pattern from `front/src/lib/sentry.ts`:
@@ -34,7 +34,7 @@ LaTabdhir pattern from `front/src/lib/sentry.ts`:
 **Files:** `front/src/lib/sentry.ts` (new), `front/vite.config.ts` (plugin), `front/src/routes/__root.tsx` (ErrorBoundary)
 
 ### 4. i18n — Add French
-User wants French / English / Arabic. Currently IPG has English + Arabic.
+User wants French / English / Arabic. Currently Majlisna has English + Arabic.
 - Add `front/src/i18n/locales/fr.json`
 - Register in i18n config
 - Add language switcher to UI (LaTabdhir has one)
@@ -70,7 +70,7 @@ LaTabdhir uses `vite-plugin-pwa`:
 - Web app manifest (name, icons, theme color, display: standalone)
 - Workbox runtime caching (API: NetworkFirst, images: CacheFirst)
 
-IPG as a game benefits greatly from being installable on phones.
+Majlisna as a game benefits greatly from being installable on phones.
 
 ### 8. Frontend structured logging (`loglayer`)
 LaTabdhir pattern:
@@ -96,7 +96,7 @@ LaTabdhir pattern:
 - Resend API integration
 - Jinja2 HTML templates with i18n (French/English/Arabic)
 - RTL support for Arabic emails
-- Use cases for IPG: welcome email, password reset
+- Use cases for Majlisna: welcome email, password reset
 
 ### 12. Referral system
 LaTabdhir pattern:
@@ -107,13 +107,13 @@ LaTabdhir pattern:
 
 ### 13. Image upload (MinIO)
 LaTabdhir uses boto3 with MinIO (local) / S3 (prod):
-- Profile avatars for IPG users
+- Profile avatars for Majlisna users
 - Docker compose MinIO service
 - CDN URL generation
 
 ### 14. Background cron jobs
 LaTabdhir uses `fastapi-scheduler` locally:
-- IPG use cases: cleanup stale/inactive rooms, reset daily stats, check achievements
+- Majlisna use cases: cleanup stale/inactive rooms, reset daily stats, check achievements
 - Pattern: separate handler functions, can later be extracted to Lambda if needed
 
 ---

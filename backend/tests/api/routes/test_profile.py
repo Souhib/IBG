@@ -6,10 +6,10 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.profile import ProfileController
-from ipg.api.models.table import User
-from ipg.api.schemas.profile import PublicProfile
-from ipg.dependencies import get_current_user, get_profile_controller
+from majlisna.api.controllers.profile import ProfileController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.profile import PublicProfile
+from majlisna.dependencies import get_current_user, get_profile_controller
 
 BASE_URL = "/api/v1/profiles"
 

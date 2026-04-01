@@ -47,9 +47,9 @@ Majlisna brings together classic social deduction, word games, and quizzes, reim
 ### Monorepo Structure
 
 ```
-IPG/
+Majlisna/
 ├── backend/                    # FastAPI (REST + Socket.IO)
-│   ├── ipg/
+│   ├── majlisna/
 │   │   ├── api/               # REST API + WebSocket
 │   │   │   ├── controllers/   # Business logic + game logic
 │   │   │   ├── models/        # SQLModel DB tables
@@ -168,7 +168,7 @@ cd backend
 uv sync --dev
 cp .env.example .env.development
 # Edit .env.development with your config
-echo "IPG_ENV=development" > .env
+echo "MAJLISNA_ENV=development" > .env
 uv run python main.py
 ```
 
@@ -274,11 +274,11 @@ bun run docker:down
 
 ### Environment Configuration
 
-The backend uses `IPG_ENV` to select which `.env.{env}` file to load:
+The backend uses `MAJLISNA_ENV` to select which `.env.{env}` file to load:
 
 | File | Purpose |
 |------|---------|
-| `backend/.env` | Selector: `IPG_ENV=development` |
+| `backend/.env` | Selector: `MAJLISNA_ENV=development` |
 | `backend/.env.development` | Local dev config (SQLite) |
 | `backend/.env.production` | Production config (PostgreSQL) |
 | `backend/.env.example` | Reference template (committed) |

@@ -6,10 +6,10 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.user import UserController
-from ipg.api.models.table import User
-from ipg.api.schemas.error import UserAlreadyExistsError, UserNotFoundError
-from ipg.dependencies import get_current_user, get_user_controller
+from majlisna.api.controllers.user import UserController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.error import UserAlreadyExistsError, UserNotFoundError
+from majlisna.dependencies import get_current_user, get_user_controller
 
 
 def _make_user(user_id=None, username="JohnDoe", email="john.doe@test.com", country="FRA"):

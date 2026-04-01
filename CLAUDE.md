@@ -9,9 +9,9 @@
 This is a **monorepo** with separate backend and frontend applications:
 
 ```
-IPG/
+Majlisna/
 ├── backend/                    # Python/FastAPI (REST + Socket.IO)
-│   ├── ipg/
+│   ├── majlisna/
 │   │   ├── api/               # REST API + WebSocket
 │   │   │   ├── controllers/   # Business logic + game logic
 │   │   │   ├── models/        # SQLModel DB tables
@@ -246,8 +246,8 @@ When something fails or is flaky:
 from loguru import logger
 from sqlmodel import select
 
-from ipg.api.models.table import User, Room
-from ipg.api.schemas.error import NotFoundError
+from majlisna.api.models.table import User, Room
+from majlisna.api.schemas.error import NotFoundError
 
 class MyController:
     async def my_method(self):
@@ -264,11 +264,11 @@ class MyController:
 
 - Use `def` for pure functions, `async def` for asynchronous operations
 - Python 3.10+ type hints for all function signatures
-- **CRITICAL: Always use the project's base classes from `ipg.api.schemas.shared`**, never `pydantic.BaseModel` or `sqlmodel.SQLModel` directly
+- **CRITICAL: Always use the project's base classes from `majlisna.api.schemas.shared`**, never `pydantic.BaseModel` or `sqlmodel.SQLModel` directly
 - **No nested function definitions.** Do not define functions inside other functions. Extract inner logic into separate methods on the class or standalone module-level functions.
 - Use descriptive variable names with auxiliary verbs (e.g., `is_active`, `has_permission`)
 - Use lowercase with underscores for directories and files
-- Store all magic values in `ipg/api/constants.py`
+- Store all magic values in `majlisna/api/constants.py`
 
 #### Route → Controller → Model
 
@@ -303,9 +303,9 @@ When a test fails, the goal is NEVER to make the test pass — it's to have a wo
 - **Route -> Controller -> Model**: No business logic in routes
 - **Async Everything**: All DB operations and external calls are async
 - **Dependency Injection**: FastAPI's `Depends()` with `Annotated` type hints
-- **BaseModel/BaseTable**: All models inherit from `ipg.api.schemas.shared.BaseModel/BaseTable`
+- **BaseModel/BaseTable**: All models inherit from `majlisna.api.schemas.shared.BaseModel/BaseTable`
 - **Enhanced Errors**: Auto i18n keys, auto-logging, `frontend_message` for UI
-- **Multi-env Settings**: `IPG_ENV` selector (.env -> .env.{env})
+- **Multi-env Settings**: `MAJLISNA_ENV` selector (.env -> .env.{env})
 - **REST + Socket.IO Notifications**: Mutations go through REST. Socket.IO pushes state updates to clients after mutations. PostgreSQL is the ONLY source of truth — Redis is ONLY for Socket.IO cross-worker pub/sub (ephemeral, no game data).
 - **Game State in PostgreSQL**: `Game.live_state` JSON column stores full game state
 - **Manual kick**: Host can kick players from room; no auto-disconnect
@@ -314,14 +314,14 @@ When a test fails, the goal is NEVER to make the test pass — it's to have a wo
 - **Spectator Mode**: Users can join rooms as spectators (`RoomUserLink.is_spectator`). Spectators see sanitized game state (no roles/words until game over), read-only UI with no action buttons.
 - **Friend Invites**: Room hosts can invite friends via `POST /api/v1/rooms/{id}/invite`. Socket.IO personal rooms (`user:{user_id}`) deliver real-time invite notifications.
 - **Game History**: `GET /api/v1/games/{id}/summary` returns typed `GameSummary` with `VoteRound`, `ClueHistoryEntry`, player roles, and word explanations.
-- **Caching**: `ipg.api.utils.cache.TTLCache` caches undercover words/term pairs, codenames word packs, and user stats. Tests use autouse `clear_cache` fixture.
+- **Caching**: `majlisna.api.utils.cache.TTLCache` caches undercover words/term pairs, codenames word packs, and user stats. Tests use autouse `clear_cache` fixture.
 - **PWA**: Manifest + service worker for installable web app with offline navigation shell.
 - **Pre-commit**: `prek` hooks run ruff lint/format + mypy on commit.
-- **BaseGameController**: All 4 game controllers inherit from `ipg.api.controllers.base_game.BaseGameController`, which provides shared methods: `_get_game`, `_check_is_host`, `_update_heartbeat_throttled`, `_check_spectator`, `_resolve_multilingual`. Game-specific logic stays in each subclass.
+- **BaseGameController**: All 4 game controllers inherit from `majlisna.api.controllers.base_game.BaseGameController`, which provides shared methods: `_get_game`, `_check_is_host`, `_update_heartbeat_throttled`, `_check_spectator`, `_resolve_multilingual`. Game-specific logic stays in each subclass.
 - **Room Share Links**: `GET /api/v1/rooms/{id}/share-link` returns `public_id` + `password`. Frontend constructs URL `majlisna.app/rooms/join?code=X&pin=Y`. The `/rooms/join` route auto-joins via `useEffect` with the join mutation.
 - **Shared Quiz Components**: `PlayerScoreboard` and `QuizGameOver` in `components/games/shared/` are used by both Word Quiz and MCQ Quiz. Game-specific i18n keys passed via props.
 - **Timer expiration**: Any player can trigger timer expiration (not just host). The server validates that the timer has actually elapsed before processing the action.
-- **Google OAuth**: "Continue with Google" on login/register pages. Frontend uses `@react-oauth/google` (`useGoogleLogin` hook → access token). Backend `POST /api/v1/auth/social/login` verifies via Google userinfo API, creates/links user, returns JWT pair. User model has `google_sub`, `auth_provider`, `profile_picture_url` fields. Social users get a sentinel password and cannot use password login. GCP project: same as Latabdhir (`<REDACTED_GCP_PROJECT_ID>`), OAuth client: "Majlisna Web". Env vars: `GOOGLE_CLIENT_ID_WEB` (backend), `VITE_GOOGLE_CLIENT_ID` (frontend).
+- **Google OAuth**: "Continue with Google" on login/register pages. Frontend uses `@react-oauth/google` (`useGoogleLogin` hook → access token). Backend `POST /api/v1/auth/social/login` verifies via Google userinfo API, creates/links user, returns JWT pair. User model has `google_sub`, `auth_provider`, `profile_picture_url` fields. Social users get a sentinel password and cannot use password login. Env vars: `GOOGLE_CLIENT_ID_WEB` (backend), `VITE_GOOGLE_CLIENT_ID` (frontend).
 
 ## Lessons Learned
 
@@ -401,7 +401,7 @@ page.locator('text=Discuss and vote')
 
 **CI is a real quality gate for PRs.** No `continue-on-error` on any CI step. `cancel-in-progress: true` since there's no deploy to protect.
 
-**E2E docker-compose is separate from production.** `docker-compose.e2e.yml` runs the backend with `IPG_ENV=development` and a dedicated PostgreSQL. Never mix E2E and production compose files.
+**E2E docker-compose is separate from production.** `docker-compose.e2e.yml` runs the backend with `MAJLISNA_ENV=development` and a dedicated PostgreSQL. Never mix E2E and production compose files.
 
 **Backend health check endpoint is `/health`.**
 
@@ -412,15 +412,15 @@ page.locator('text=Discuss and vote')
 
 Cloudflare handles DNS (proxied/orange cloud) and SSL termination (Flexible mode — HTTPS to Cloudflare, HTTP to origin). Traefik on the server routes requests via Docker compose labels. `VITE_API_URL` is baked at frontend build time — rebuild frontend when changing it.
 
-**Production server**: Oracle VPS at `<SERVER_IP>`, accessible via SSH as `ubuntu`. Dokploy compose project is named "IBG" (`<REDACTED_DOKPLOY_ID>`), connected to `Souhib/IBG` GitHub repo, branch `main`, compose path `./docker-compose.dokploy.yml`. Repo clone at `<REDACTED_SERVER_PATH>`.
+**Production server**: Oracle VPS. Dokploy compose project connected to `Souhib/Majlisna` GitHub repo, branch `main`, compose path `./docker-compose.dokploy.yml`. See Claude Code memory for connection details.
 
 **Redis is ephemeral and non-critical.** Redis is only used for Socket.IO cross-worker pub/sub. If Redis is down, the app works but Socket.IO won't broadcast across workers. The CI pipeline treats Redis health as a non-blocking warning. If Redis crash-loops due to corrupt `dump.rdb`, delete the RDB file from the Docker volume and recreate the container.
 
-**Monitoring tools** are deployed alongside the app:
-- **Umami** (`analytics.majlisna.app`, port 31200): Privacy-focused web analytics. Own PostgreSQL database.
-- **GlitchTip** (`glitchtip.majlisna.app`, port 31300): Error tracking and alerting (open-source Sentry alternative). Own PostgreSQL + Redis + Celery worker.
-- **Dozzle** (`dozzle.majlisna.app`, port 31400): Real-time Docker log viewer. Zero storage, streams from Docker API. Use for quick debugging.
-- **Uptime Kuma** (`kuma.majlisna.app`, port 31500): Uptime monitoring with alerting. Monitors endpoints, sends notifications on failures.
+**Monitoring tools** are deployed alongside the app (see Claude Code memory for URLs and ports):
+- **Umami**: Privacy-focused web analytics. Own PostgreSQL database.
+- **GlitchTip**: Error tracking and alerting (open-source Sentry alternative). Own PostgreSQL + Redis + Celery worker.
+- **Dozzle**: Real-time Docker log viewer. Zero storage, streams from Docker API. Use for quick debugging.
+- **Uptime Kuma**: Uptime monitoring with alerting. Monitors endpoints, sends notifications on failures.
 - **Trivy**: CI-only vulnerability scanner. Runs filesystem scan on PRs and container image scan post-build on deploy. Non-blocking (exit-code 0).
 
 ## Games

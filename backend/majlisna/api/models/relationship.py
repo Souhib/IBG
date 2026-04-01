@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import Index
 from sqlmodel import Field
 
-from ipg.api.models.shared import DBModel
+from majlisna.api.models.shared import DBModel
 
 
 class RoomUserLink(DBModel, table=True):

@@ -4,10 +4,10 @@ from sqlalchemy.exc import NoResultFound
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.stats import UserStats
-from ipg.api.models.table import User
-from ipg.api.schemas.error import UserNotFoundError
-from ipg.api.schemas.profile import PublicProfile
+from majlisna.api.models.stats import UserStats
+from majlisna.api.models.table import User
+from majlisna.api.schemas.error import UserNotFoundError
+from majlisna.api.schemas.profile import PublicProfile
 
 
 class ProfileController:

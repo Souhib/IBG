@@ -1,8 +1,8 @@
-# CLAUDE.md - IPG Frontend
+# CLAUDE.md - Majlisna Frontend
 
 ## Overview
 
-React 19 SPA for the IPG (Islamic Party Games) platform. Uses TanStack Router for file-based routing, TanStack Query for server state management and real-time polling, Tailwind CSS v4 with shadcn/ui components.
+React 19 SPA for the Majlisna platform. Uses TanStack Router for file-based routing, TanStack Query for server state management and real-time polling, Tailwind CSS v4 with shadcn/ui components.
 
 ## Development Commands
 
@@ -126,7 +126,7 @@ Phase transitions detected by comparing refs to previous state (`previousPhaseRe
 - `index.tsx` - Index route for directory
 
 ### Authentication
-- JWT stored in localStorage (`ipg-token`, `ipg-refresh-token`, `ipg-token-expiry`)
+- JWT stored in localStorage (`majlisna-token`, `majlisna-refresh-token`, `majlisna-token-expiry`)
 - Auto-refresh 1 minute before expiry
 - 401 responses clear auth state and redirect to login
 

@@ -1,11 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from ipg.api.models.event import TurnBase
-from ipg.api.models.game import GameBase
-from ipg.api.models.room import RoomBase, RoomType
-from ipg.api.models.table import Event, Game, Room, Turn, User
-from ipg.api.models.user import UserBase
+from majlisna.api.models.event import TurnBase
+from majlisna.api.models.game import GameBase
+from majlisna.api.models.room import RoomBase, RoomType
+from majlisna.api.models.table import Event, Game, Room, Turn, User
+from majlisna.api.models.user import UserBase
 
 
 class TurnView(TurnBase):

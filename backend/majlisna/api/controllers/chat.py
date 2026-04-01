@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.chat import ChatMessage
+from majlisna.api.models.chat import ChatMessage
 
 
 class ChatController:

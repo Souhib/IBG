@@ -8,12 +8,12 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import DEFAULT_WORD_QUIZ_ROUNDS
-from ipg.api.controllers.wordquiz_game import WordQuizGameController
-from ipg.api.models.game import GameStatus
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game
-from ipg.api.schemas.error import (
+from majlisna.api.constants import DEFAULT_WORD_QUIZ_ROUNDS
+from majlisna.api.controllers.wordquiz_game import WordQuizGameController
+from majlisna.api.models.game import GameStatus
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game
+from majlisna.api.schemas.error import (
     AlreadyAnsweredError,
     EmptyAnswerError,
     RoundNotPlayingError,

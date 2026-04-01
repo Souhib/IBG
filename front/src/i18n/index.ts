@@ -22,8 +22,8 @@ i18n
     detection: {
       order: ["localStorage", "cookie", "navigator", "htmlTag"],
       caches: ["localStorage"],
-      lookupLocalStorage: "ipg-language",
-      lookupCookie: "ipg-lang",
+      lookupLocalStorage: "majlisna-language",
+      lookupCookie: "majlisna-lang",
     },
   })
 

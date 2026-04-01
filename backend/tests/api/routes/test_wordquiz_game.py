@@ -6,11 +6,11 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.wordquiz_game import WordQuizGameController
-from ipg.api.models.table import User
-from ipg.api.schemas.common import AdvanceRoundResponse, GameStartResponse, HintRecordResponse, TimerExpiredResponse
-from ipg.api.schemas.wordquiz import SubmitAnswerResponse, WordQuizGameState
-from ipg.dependencies import get_current_user, get_wordquiz_game_controller
+from majlisna.api.controllers.wordquiz_game import WordQuizGameController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.common import AdvanceRoundResponse, GameStartResponse, HintRecordResponse, TimerExpiredResponse
+from majlisna.api.schemas.wordquiz import SubmitAnswerResponse, WordQuizGameState
+from majlisna.dependencies import get_current_user, get_wordquiz_game_controller
 
 BASE_URL = "/api/v1/wordquiz"
 
@@ -49,9 +49,9 @@ def _mock_game_state(game_id: str, room_id: str) -> WordQuizGameState:
 # ========== POST /wordquiz/games/{room_id}/start ==========
 
 
-@patch("ipg.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
-@patch("ipg.api.routes.wordquiz.notify_room_changed", new_callable=AsyncMock)
-@patch("ipg.api.routes.wordquiz.auto_join_game_room", new_callable=AsyncMock)
+@patch("majlisna.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.wordquiz.notify_room_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.wordquiz.auto_join_game_room", new_callable=AsyncMock)
 def test_start_game_success(
     mock_auto_join: AsyncMock,
     mock_notify_room: AsyncMock,
@@ -177,7 +177,7 @@ def test_get_state_unauthenticated(test_app: FastAPI, client: TestClient) -> Non
 # ========== POST /wordquiz/games/{game_id}/answer ==========
 
 
-@patch("ipg.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
 def test_submit_answer_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """Submitting an answer returns 200 with result."""
     # Arrange
@@ -231,7 +231,7 @@ def test_submit_answer_missing_body(test_app: FastAPI, client: TestClient) -> No
 # ========== POST /wordquiz/games/{game_id}/timer-expired ==========
 
 
-@patch("ipg.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
 def test_timer_expired_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """Timer expired returns 200 with action."""
     # Arrange
@@ -261,7 +261,7 @@ def test_timer_expired_success(mock_notify: AsyncMock, test_app: FastAPI, client
 # ========== POST /wordquiz/games/{game_id}/next-round ==========
 
 
-@patch("ipg.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.wordquiz.notify_game_changed", new_callable=AsyncMock)
 def test_next_round_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """Advancing to next round returns 200 with game_id and room_id."""
     # Arrange

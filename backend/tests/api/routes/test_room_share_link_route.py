@@ -6,9 +6,9 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.room import RoomController
-from ipg.api.models.table import User
-from ipg.dependencies import get_current_user, get_room_controller
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.models.table import User
+from majlisna.dependencies import get_current_user, get_room_controller
 
 BASE_URL = "/api/v1/rooms"
 

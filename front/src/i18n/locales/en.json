@@ -36,7 +36,7 @@
     "loginTitle": "Welcome back",
     "loginDescription": "Enter your credentials to continue",
     "registerTitle": "Create an account",
-    "registerDescription": "Join IPG and play with your friends",
+    "registerDescription": "Join Majlisna and play with your friends",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "forgotPassword": "Forgot password?",
@@ -445,8 +445,8 @@
     "name": "Souhib TRABELSI",
     "role": "Software Engineer",
     "bio": "Software engineer with more than 6 years of experience specializing in backend development with Python (FastAPI, Flask), React, and cloud infrastructure (AWS, GCP). Experienced across the full software lifecycle — from frontend to deployment on cloud and on-premise infrastructures. Passionate about clean architecture, real-time apps, and building technology for the Islamic community.",
-    "projectPurpose": "What is IPG?",
-    "projectDescription": "IPG (Islamic Party Games) is a real-time multiplayer platform featuring Islamized versions of popular party games like Undercover and Codenames. Built with FastAPI, Socket.IO, React, and Redis for a seamless gaming experience.",
+    "projectPurpose": "What is Majlisna?",
+    "projectDescription": "Majlisna is a real-time multiplayer platform featuring Islamized versions of popular party games like Undercover and Codenames. Built with FastAPI, Socket.IO, React, and Redis for a seamless gaming experience.",
     "education": "Education",
     "educationEpitech": "Epitech Paris — Master's in Software Engineering",
     "educationSfsu": "San Francisco State University — Certificate",
@@ -575,6 +575,6 @@
   },
   "footer": {
     "madeWithLove": "Made with <heart/> for the Ummah",
-    "copyright": "\u00a9 {{year}} IPG \u2014 Islamic Party Games"
+    "copyright": "\u00a9 {{year}} Majlisna"
   }
 }

@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import status
 from loguru import logger
 
-from ipg.api.constants import CODENAMES_BOARD_SIZE
+from majlisna.api.constants import CODENAMES_BOARD_SIZE
 
 
 class LogLevel(StrEnum):

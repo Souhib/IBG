@@ -1,5 +1,5 @@
 [project]
-name = "ipg"
+name = "majlisna"
 version = "0.1.0"
 description = "Islamic Party Game - Real-time multiplayer platform for Islamicized party games"
 requires-python = ">=3.12"
@@ -53,7 +53,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["ipg"]
+packages = ["majlisna"]
 
 [tool.ruff]
 line-length = 120
@@ -64,36 +64,36 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "C90", "N", "PL", "ARG"]
 ignore = ["E501", "PLR0913", "PLR2004", "ARG002", "B008"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ipg"]
+known-first-party = ["majlisna"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
-addopts = "--cov=ipg --cov-report=term --cov-fail-under=50"
+addopts = "--cov=majlisna --cov-report=term --cov-fail-under=50"
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
 
 [tool.coverage.run]
 omit = [
-    "ipg/app.py",
-    "ipg/dependencies.py",
-    "ipg/database.py",
-    "ipg/logger_config.py",
-    "ipg/settings.py",
+    "majlisna/app.py",
+    "majlisna/dependencies.py",
+    "majlisna/database.py",
+    "majlisna/logger_config.py",
+    "majlisna/settings.py",
     "scripts/*",
 ]
 
 [tool.poe.tasks]
 # Check commands (CI mode)
-lint = "ruff check ipg/ tests/"
-format-check = "ruff format --check ipg/ tests/"
+lint = "ruff check majlisna/ tests/"
+format-check = "ruff format --check majlisna/ tests/"
 check = ["lint", "format-check"]
 
 # Fix commands
-lint-fix = "ruff check --fix ipg/ tests/"
-format = "ruff format ipg/ tests/"
+lint-fix = "ruff check --fix majlisna/ tests/"
+format = "ruff format majlisna/ tests/"
 fix = ["format", "lint-fix"]
 
 # Pre-commit

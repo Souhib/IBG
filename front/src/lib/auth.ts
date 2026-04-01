@@ -1,7 +1,7 @@
-const TOKEN_KEY = "ipg-token"
-const REFRESH_TOKEN_KEY = "ipg-refresh-token"
-const TOKEN_EXPIRY_KEY = "ipg-token-expiry"
-const USER_DATA_KEY = "ipg-user-data"
+const TOKEN_KEY = "majlisna-token"
+const REFRESH_TOKEN_KEY = "majlisna-refresh-token"
+const TOKEN_EXPIRY_KEY = "majlisna-token-expiry"
+const USER_DATA_KEY = "majlisna-user-data"
 
 export function getStoredToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)

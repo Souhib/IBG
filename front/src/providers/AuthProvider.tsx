@@ -51,7 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshAccessToken = useCallback(async (): Promise<boolean> => {
     if (isRefreshingRef.current) return false
-    const storedRefreshToken = localStorage.getItem("ipg-refresh-token")
+    const storedRefreshToken = localStorage.getItem("majlisna-refresh-token")
 
     isRefreshingRef.current = true
     try {
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const setUserData = useCallback((userData: UserData | null) => {
     setUser(userData)
     if (userData) {
-      localStorage.setItem("ipg-user-data", JSON.stringify(userData))
+      localStorage.setItem("majlisna-user-data", JSON.stringify(userData))
     }
   }, [])
 

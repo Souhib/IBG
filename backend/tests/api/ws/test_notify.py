@@ -4,23 +4,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ipg.api.models.game import GameType
-from ipg.api.ws.notify import notify_chat_message, notify_game_changed, notify_room_changed, notify_user_kicked
-from ipg.api.ws.state import fetch_game_state
-from ipg.api.ws.state import fetch_room_state as state_fetch_room_state
+from majlisna.api.models.game import GameType
+from majlisna.api.ws.notify import notify_chat_message, notify_game_changed, notify_room_changed, notify_user_kicked
+from majlisna.api.ws.state import fetch_game_state
+from majlisna.api.ws.state import fetch_room_state as state_fetch_room_state
 
 
 @pytest.fixture
 def mock_sio():
     """Mock Socket.IO server for notify tests."""
-    with patch("ipg.api.ws.notify.sio") as mock:
+    with patch("majlisna.api.ws.notify.sio") as mock:
         mock.emit = AsyncMock()
         yield mock
 
 
 @pytest.fixture
 def mock_fetch_room_state():
-    with patch("ipg.api.ws.notify.fetch_room_state", new_callable=AsyncMock) as mock:
+    with patch("majlisna.api.ws.notify.fetch_room_state", new_callable=AsyncMock) as mock:
         mock.return_value = {"id": "room-1", "players": [], "active_game_id": None}
         yield mock
 
@@ -40,7 +40,7 @@ async def test_notify_room_broadcasts_room_state(mock_sio, mock_fetch_room_state
 
 async def test_notify_room_does_not_raise_on_failure(mock_sio):  # noqa: ARG001
     """Best-effort — swallows exceptions."""
-    with patch("ipg.api.ws.notify.fetch_room_state", new_callable=AsyncMock, side_effect=Exception("DB error")):
+    with patch("majlisna.api.ws.notify.fetch_room_state", new_callable=AsyncMock, side_effect=Exception("DB error")):
         # Should not raise
         await notify_room_changed("room-1")
 
@@ -50,7 +50,7 @@ async def test_notify_room_does_not_raise_on_failure(mock_sio):  # noqa: ARG001
 
 async def test_notify_game_emits_game_updated_signal(mock_sio, mock_fetch_room_state):
     """Emits game_updated signal to game room instead of per-user state."""
-    with patch("ipg.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value="room-1"):
+    with patch("majlisna.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value="room-1"):
         await notify_game_changed("game-1")
 
     # Signal to game room
@@ -70,7 +70,7 @@ async def test_notify_game_does_not_raise_on_failure(mock_sio):
     """Best-effort — swallows exceptions."""
     mock_sio.emit.side_effect = Exception("Redis down")
 
-    with patch("ipg.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value=None):
+    with patch("majlisna.api.ws.notify._get_room_id_for_game", new_callable=AsyncMock, return_value=None):
         # Should not raise
         await notify_game_changed("game-1")
 
@@ -115,9 +115,9 @@ async def test_fetch_room_state_returns_state():
     room_id = "00000000-0000-0000-0000-000000000001"
 
     with (
-        patch("ipg.api.ws.state.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.state.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.state.RoomController", return_value=mock_controller),
+        patch("majlisna.api.ws.state.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.state.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.state.RoomController", return_value=mock_controller),
     ):
         result = await state_fetch_room_state(room_id)
 
@@ -148,9 +148,9 @@ async def test_fetch_game_state_returns_state():
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.state.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.state.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.state.UndercoverGameController", return_value=mock_controller),
+        patch("majlisna.api.ws.state.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.state.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.state.UndercoverGameController", return_value=mock_controller),
     ):
         result = await fetch_game_state("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002")
 
@@ -168,8 +168,8 @@ async def test_fetch_game_state_not_found():
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.state.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.state.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.state.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.state.AsyncSession", return_value=mock_session),
     ):
         result = await fetch_game_state("00000000-0000-0000-0000-000000000099", "00000000-0000-0000-0000-000000000002")
 

@@ -1,4 +1,4 @@
-from ipg.api.controllers.chat import ChatController
+from majlisna.api.controllers.chat import ChatController
 
 
 async def test_send_message(chat_controller: ChatController, create_user, create_room):

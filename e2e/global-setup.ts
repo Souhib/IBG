@@ -6,11 +6,11 @@ const MAX_SEED_RETRIES = 3;
 const RETRY_DELAY_MS = 3_000;
 
 const DELETE_CMD =
-  "docker exec -w /app ipg-e2e-backend " +
+  "docker exec -w /app majlisna-e2e-backend " +
   "env PYTHONPATH=/app python scripts/generate_fake_data.py --delete";
 
 const SEED_CMD =
-  "docker exec -w /app ipg-e2e-backend " +
+  "docker exec -w /app majlisna-e2e-backend " +
   "env PYTHONPATH=/app python scripts/generate_fake_data.py --create-db";
 
 function sleep(ms: number): void {
@@ -25,8 +25,8 @@ function sleep(ms: number): void {
  */
 function restartServicesAfterDDL(): void {
   console.log("[E2E Setup] Restarting PgBouncer + backend to clear stale connections...");
-  execSync("docker restart ipg-e2e-pgbouncer", { stdio: "inherit", timeout: 15_000 });
-  execSync("docker restart ipg-e2e-backend", { stdio: "inherit", timeout: 30_000 });
+  execSync("docker restart majlisna-e2e-pgbouncer", { stdio: "inherit", timeout: 15_000 });
+  execSync("docker restart majlisna-e2e-backend", { stdio: "inherit", timeout: 30_000 });
 }
 
 /**
@@ -89,7 +89,7 @@ async function globalSetup(): Promise<void> {
   console.log("[E2E Setup] Terminating stale DB connections...");
   try {
     execSync(
-      'docker exec ipg-e2e-db psql -U ipg -d ipg -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"',
+      'docker exec majlisna-e2e-db psql -U majlisna -d majlisna -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"',
       { stdio: "inherit", timeout: 15_000 },
     );
   } catch {
@@ -102,7 +102,7 @@ async function globalSetup(): Promise<void> {
 
   // Restart backend to ensure fresh DB connections after seeding
   console.log("[E2E Setup] Restarting backend to refresh DB connections...");
-  execSync("docker restart ipg-e2e-backend", {
+  execSync("docker restart majlisna-e2e-backend", {
     stdio: "inherit",
     timeout: 30_000,
   });

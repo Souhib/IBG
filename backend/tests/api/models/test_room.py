@@ -5,7 +5,7 @@ import random
 import pytest
 from faker import Faker
 
-from ipg.api.models.room import RoomCreate, RoomStatus
+from majlisna.api.models.room import RoomCreate, RoomStatus
 
 
 def test_room_password_with_non_digit_characters(faker: Faker):

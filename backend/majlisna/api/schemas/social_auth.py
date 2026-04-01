@@ -2,7 +2,7 @@
 
 from pydantic import Field
 
-from ipg.api.schemas.shared import BaseModel
+from majlisna.api.schemas.shared import BaseModel
 
 
 class SocialLoginRequest(BaseModel):

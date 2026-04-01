@@ -9,7 +9,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-const THEME_KEY = "ipg-theme"
+const THEME_KEY = "majlisna-theme"
 
 interface ThemeProviderProps {
   children: ReactNode

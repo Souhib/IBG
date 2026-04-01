@@ -8,17 +8,17 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     DEFAULT_WORD_QUIZ_HINT_INTERVAL,
     DEFAULT_WORD_QUIZ_MAX_HINTS,
     DEFAULT_WORD_QUIZ_ROUNDS,
     DEFAULT_WORD_QUIZ_TURN_DURATION,
     TIMER_EXPIRATION_TOLERANCE_SECONDS,
 )
-from ipg.api.controllers.base_game import BaseGameController
-from ipg.api.controllers.game_lock import get_game_lock
-from ipg.api.controllers.wordquiz import WordQuizController
-from ipg.api.models.error import (
+from majlisna.api.controllers.base_game import BaseGameController
+from majlisna.api.controllers.game_lock import get_game_lock
+from majlisna.api.controllers.wordquiz import WordQuizController
+from majlisna.api.models.error import (
     AlreadyAnsweredError,
     EmptyAnswerError,
     NoQuizWordsAvailableError,
@@ -26,12 +26,12 @@ from ipg.api.models.error import (
     RoundNotPlayingError,
     SpectatorCannotAnswerError,
 )
-from ipg.api.models.game import GameCreate, GameStatus, GameType
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game, Room
-from ipg.api.schemas.common import AdvanceRoundResponse, GameStartResponse, HintRecordResponse, TimerExpiredResponse
-from ipg.api.schemas.error import BaseError
-from ipg.api.schemas.wordquiz import (
+from majlisna.api.models.game import GameCreate, GameStatus, GameType
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game, Room
+from majlisna.api.schemas.common import AdvanceRoundResponse, GameStartResponse, HintRecordResponse, TimerExpiredResponse
+from majlisna.api.schemas.error import BaseError
+from majlisna.api.schemas.wordquiz import (
     SubmitAnswerResponse,
     WordQuizGameState,
     WordQuizPlayerState,

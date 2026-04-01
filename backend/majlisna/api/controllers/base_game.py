@@ -4,14 +4,14 @@ from uuid import UUID
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.achievement import AchievementController
-from ipg.api.controllers.game import GameController
-from ipg.api.controllers.room import RoomController
-from ipg.api.controllers.stats import StatsController
-from ipg.api.models.error import GameNotFoundError, NotEnoughPlayersError, PlayerRemovedFromGameError, RoomNotFoundError
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game, Room, User
-from ipg.api.schemas.error import BaseError
+from majlisna.api.controllers.achievement import AchievementController
+from majlisna.api.controllers.game import GameController
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.controllers.stats import StatsController
+from majlisna.api.models.error import GameNotFoundError, NotEnoughPlayersError, PlayerRemovedFromGameError, RoomNotFoundError
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game, Room, User
+from majlisna.api.schemas.error import BaseError
 
 
 class BaseGameController:

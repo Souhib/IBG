@@ -35,7 +35,7 @@ export default defineConfig({
         {
           origin: FRONTEND_URL,
           localStorage: [
-            { name: "ipg-first-visit-complete", value: "true" },
+            { name: "majlisna-first-visit-complete", value: "true" },
           ],
         },
       ],

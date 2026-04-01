@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script to generate fake data for IPG platform testing.
+"""Script to generate fake data for Majlisna platform testing.
 
 This script can be used to:
 1. Create database tables and generate fake users, rooms, games, and seed data
@@ -49,18 +49,18 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.achievement import AchievementController
-from ipg.api.controllers.challenge import ChallengeController
-from ipg.api.controllers.shared import get_password_hash
-from ipg.api.models.challenge import ChallengeDefinition, ChallengeType, UserChallenge
-from ipg.api.models.chat import ChatMessage
-from ipg.api.models.friendship import Friendship, FriendshipStatus
-from ipg.api.models.game import GameType
-from ipg.api.models.room import RoomStatus, RoomType
-from ipg.api.models.stats import AchievementDefinition, UserAchievement, UserStats
-from ipg.api.models.table import Game, Room, User
-from ipg.database import create_app_engine, create_db_and_tables
-from ipg.settings import Settings
+from majlisna.api.controllers.achievement import AchievementController
+from majlisna.api.controllers.challenge import ChallengeController
+from majlisna.api.controllers.shared import get_password_hash
+from majlisna.api.models.challenge import ChallengeDefinition, ChallengeType, UserChallenge
+from majlisna.api.models.chat import ChatMessage
+from majlisna.api.models.friendship import Friendship, FriendshipStatus
+from majlisna.api.models.game import GameType
+from majlisna.api.models.room import RoomStatus, RoomType
+from majlisna.api.models.stats import AchievementDefinition, UserAchievement, UserStats
+from majlisna.api.models.table import Game, Room, User
+from majlisna.database import create_app_engine, create_db_and_tables
+from majlisna.settings import Settings
 from scripts.seed_data.codenames_data import seed_codenames_words
 from scripts.seed_data.mcqquiz_data import seed_mcq_questions
 from scripts.seed_data.undercover_data import seed_undercover_pairs, seed_undercover_words
@@ -756,7 +756,7 @@ async def seed_game_content(engine: AsyncEngine) -> None:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Generate fake data for IPG platform testing",
+        description="Generate fake data for Majlisna platform testing",
     )
 
     group = parser.add_mutually_exclusive_group(required=True)

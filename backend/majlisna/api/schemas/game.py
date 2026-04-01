@@ -1,8 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from ipg.api.models.game import GameType
-from ipg.api.schemas.shared import BaseModel
+from majlisna.api.models.game import GameType
+from majlisna.api.schemas.shared import BaseModel
 
 
 class GameHistoryEntry(BaseModel):

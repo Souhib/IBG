@@ -29,5 +29,5 @@ def configure_logger(log_level: str = "DEBUG", serialize: bool = False) -> None:
         serialize=serialize,
         backtrace=False,
         diagnose=False,
-        filter=lambda record: "ipg" in record["file"].path,
+        filter=lambda record: "majlisna" in record["file"].path,
     )

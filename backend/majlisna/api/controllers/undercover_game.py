@@ -8,26 +8,26 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     DEFAULT_DESCRIPTION_TIMER_SECONDS,
     DEFAULT_VOTING_TIMER_SECONDS,
     TIMER_EXPIRATION_TOLERANCE_SECONDS,
 )
-from ipg.api.controllers.base_game import BaseGameController
-from ipg.api.controllers.game_lock import get_game_lock
-from ipg.api.controllers.undercover import UndercoverController
-from ipg.api.models.error import (
+from majlisna.api.controllers.base_game import BaseGameController
+from majlisna.api.controllers.game_lock import get_game_lock
+from majlisna.api.controllers.undercover import UndercoverController
+from majlisna.api.models.error import (
     CantVoteBecauseYouDeadError,
     CantVoteForDeadPersonError,
     CantVoteForYourselfError,
 )
-from ipg.api.models.event import EventCreate
-from ipg.api.models.game import GameCreate, GameStatus, GameType
-from ipg.api.models.table import Room
-from ipg.api.models.undercover import UndercoverRole
-from ipg.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
-from ipg.api.schemas.error import BaseError
-from ipg.api.schemas.undercover import (
+from majlisna.api.models.event import EventCreate
+from majlisna.api.models.game import GameCreate, GameStatus, GameType
+from majlisna.api.models.table import Room
+from majlisna.api.models.undercover import UndercoverRole
+from majlisna.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
+from majlisna.api.schemas.error import BaseError
+from majlisna.api.schemas.undercover import (
     EliminatedPlayer,
     MrWhiteGuessResponse,
     StartNextRoundResponse,

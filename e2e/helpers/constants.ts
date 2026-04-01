@@ -19,10 +19,10 @@ export const TEST_USER = {
 // ─── localStorage Keys (must match front/src/lib/auth.ts) ──
 
 export const STORAGE_KEYS = {
-  token: "ipg-token",
-  refreshToken: "ipg-refresh-token",
-  tokenExpiry: "ipg-token-expiry",
-  userData: "ipg-user-data",
+  token: "majlisna-token",
+  refreshToken: "majlisna-refresh-token",
+  tokenExpiry: "majlisna-token-expiry",
+  userData: "majlisna-user-data",
 } as const;
 
 // ─── Frontend Routes ────────────────────────────────────────

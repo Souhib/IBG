@@ -4,11 +4,11 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.shared import get_password_hash, verify_password
-from ipg.api.controllers.user import UserController
-from ipg.api.models.table import User
-from ipg.api.models.user import UserCreate, UserUpdate
-from ipg.api.schemas.error import InvalidCredentialsError, UserAlreadyExistsError, UserNotFoundError
+from majlisna.api.controllers.shared import get_password_hash, verify_password
+from majlisna.api.controllers.user import UserController
+from majlisna.api.models.table import User
+from majlisna.api.models.user import UserCreate, UserUpdate
+from majlisna.api.schemas.error import InvalidCredentialsError, UserAlreadyExistsError, UserNotFoundError
 
 
 async def test_create_user_success(user_controller: UserController):

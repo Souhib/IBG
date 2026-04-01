@@ -6,9 +6,9 @@ Handles access token verification via Google's userinfo API.
 import httpx
 from loguru import logger
 
-from ipg.api.schemas.error import InvalidCredentialsError
-from ipg.api.schemas.social_auth import SocialTokenPayload
-from ipg.settings import Settings
+from majlisna.api.schemas.error import InvalidCredentialsError
+from majlisna.api.schemas.social_auth import SocialTokenPayload
+from majlisna.settings import Settings
 
 
 class SocialAuthService:

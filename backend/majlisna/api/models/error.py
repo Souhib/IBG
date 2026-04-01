@@ -1,5 +1,5 @@
 # Re-export all errors from schemas for backward compatibility
-from ipg.api.schemas.error import (  # noqa: F401
+from majlisna.api.schemas.error import (  # noqa: F401
     AlreadyAnsweredError,
     BaseError,
     CantVoteBecauseYouDeadError,

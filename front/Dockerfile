@@ -1,4 +1,4 @@
-# Multi-stage build for IPG frontend
+# Multi-stage build for Majlisna frontend
 
 # Stage 1: Build
 FROM oven/bun:1-alpine AS build

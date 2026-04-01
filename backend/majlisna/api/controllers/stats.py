@@ -7,13 +7,13 @@ from sqlalchemy.exc import NoResultFound
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.game import GameStatus, GameType
-from ipg.api.models.relationship import UserGameLink
-from ipg.api.models.stats import UserStats
-from ipg.api.models.table import Game, User
-from ipg.api.schemas.error import UserNotFoundError
-from ipg.api.schemas.stats import DailyGameRecord, GameDurationStats, HeadToHeadStats, LeaderboardEntry
-from ipg.api.utils.cache import cache
+from majlisna.api.models.game import GameStatus, GameType
+from majlisna.api.models.relationship import UserGameLink
+from majlisna.api.models.stats import UserStats
+from majlisna.api.models.table import Game, User
+from majlisna.api.schemas.error import UserNotFoundError
+from majlisna.api.schemas.stats import DailyGameRecord, GameDurationStats, HeadToHeadStats, LeaderboardEntry
+from majlisna.api.utils.cache import cache
 
 LEADERBOARD_TTL_SECONDS = 30
 USER_STATS_TTL_SECONDS = 300

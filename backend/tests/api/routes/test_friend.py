@@ -6,11 +6,11 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.friend import FriendController
-from ipg.api.models.friendship import Friendship, FriendshipStatus
-from ipg.api.models.table import User
-from ipg.api.schemas.friend import FriendEntry, FriendshipStatusEnum, FriendshipStatusResponse
-from ipg.dependencies import get_current_user, get_friend_controller
+from majlisna.api.controllers.friend import FriendController
+from majlisna.api.models.friendship import Friendship, FriendshipStatus
+from majlisna.api.models.table import User
+from majlisna.api.schemas.friend import FriendEntry, FriendshipStatusEnum, FriendshipStatusResponse
+from majlisna.dependencies import get_current_user, get_friend_controller
 
 BASE_URL = "/api/v1/friends"
 

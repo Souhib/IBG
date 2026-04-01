@@ -88,10 +88,10 @@ jobs:
         run: uv sync --frozen --all-extras
 
       - name: Lint (ruff check)
-        run: uv run ruff check ipg/ tests/
+        run: uv run ruff check majlisna/ tests/
 
       - name: Format check (ruff format)
-        run: uv run ruff format --check ipg/ tests/
+        run: uv run ruff format --check majlisna/ tests/
 
       - name: Test (pytest)
         run: uv run pytest --tb=short -q --no-cov

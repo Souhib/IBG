@@ -8,7 +8,7 @@ import pytest
 from starlette.responses import PlainTextResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from ipg.api.middleware import LoggingMiddleware, RequestIDMiddleware, SecurityMiddleware
+from majlisna.api.middleware import LoggingMiddleware, RequestIDMiddleware, SecurityMiddleware
 
 # ─── Helpers ──────────────────────────────────────────────────
 
@@ -345,7 +345,7 @@ async def test_logging_request_start_logged():
     app = LoggingMiddleware(_ok_app)
 
     # Act
-    with patch("ipg.api.middleware.logger") as mock_logger:
+    with patch("majlisna.api.middleware.logger") as mock_logger:
         mock_logger.contextualize.return_value.__enter__ = lambda _s: None
         mock_logger.contextualize.return_value.__exit__ = lambda _s, *_a: None
         async with _client(app) as client:
@@ -365,7 +365,7 @@ async def test_logging_request_completion_logged():
     app = LoggingMiddleware(_status_app)
 
     # Act
-    with patch("ipg.api.middleware.logger") as mock_logger:
+    with patch("majlisna.api.middleware.logger") as mock_logger:
         mock_logger.contextualize.return_value.__enter__ = lambda _s: None
         mock_logger.contextualize.return_value.__exit__ = lambda _s, *_a: None
         async with _client(app) as client:
@@ -385,8 +385,8 @@ async def test_logging_slow_request_warning():
 
     # Act — patch perf_counter to simulate 2s duration
     with (
-        patch("ipg.api.middleware.logger") as mock_logger,
-        patch("ipg.api.middleware.time") as mock_time,
+        patch("majlisna.api.middleware.logger") as mock_logger,
+        patch("majlisna.api.middleware.time") as mock_time,
     ):
         mock_logger.contextualize.return_value.__enter__ = lambda _s: None
         mock_logger.contextualize.return_value.__exit__ = lambda _s, *_a: None
@@ -408,8 +408,8 @@ async def test_logging_exception_reraised_and_logged():
 
     # Act & Assert
     with (
-        patch("ipg.api.middleware.logger") as mock_logger,
-        patch("ipg.api.middleware.time") as mock_time,
+        patch("majlisna.api.middleware.logger") as mock_logger,
+        patch("majlisna.api.middleware.time") as mock_time,
         pytest.raises(RuntimeError, match="Intentional test error"),
     ):
         mock_logger.contextualize.return_value.__enter__ = lambda _s: None
@@ -430,7 +430,7 @@ async def test_logging_auth_header_creates_user_prefix():
     app = LoggingMiddleware(_ok_app)
 
     # Act
-    with patch("ipg.api.middleware.logger") as mock_logger:
+    with patch("majlisna.api.middleware.logger") as mock_logger:
         mock_logger.contextualize.return_value.__enter__ = lambda _s: None
         mock_logger.contextualize.return_value.__exit__ = lambda _s, *_a: None
         async with _client(app) as client:
@@ -448,7 +448,7 @@ async def test_logging_no_auth_header_empty_prefix():
     app = LoggingMiddleware(_ok_app)
 
     # Act
-    with patch("ipg.api.middleware.logger") as mock_logger:
+    with patch("majlisna.api.middleware.logger") as mock_logger:
         mock_logger.contextualize.return_value.__enter__ = lambda _s: None
         mock_logger.contextualize.return_value.__exit__ = lambda _s, *_a: None
         async with _client(app) as client:
@@ -472,7 +472,7 @@ async def test_logging_non_http_passes_through():
     app = LoggingMiddleware(passthrough_app)
 
     # Act
-    with patch("ipg.api.middleware.logger") as mock_logger:
+    with patch("majlisna.api.middleware.logger") as mock_logger:
         scope = {"type": "lifespan"}
         await app(scope, lambda: None, lambda _msg: None)
 

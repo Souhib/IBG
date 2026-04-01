@@ -36,7 +36,7 @@
     "loginTitle": "مرحباً بعودتك",
     "loginDescription": "أدخل بياناتك للمتابعة",
     "registerTitle": "إنشاء حساب جديد",
-    "registerDescription": "انضم إلى IPG والعب مع أصدقائك",
+    "registerDescription": "انضم إلى Majlisna والعب مع أصدقائك",
     "noAccount": "ليس لديك حساب؟",
     "hasAccount": "لديك حساب بالفعل؟",
     "forgotPassword": "نسيت كلمة المرور؟",
@@ -445,8 +445,8 @@
     "name": "صهيب الطرابلسي",
     "role": "مهندس برمجيات",
     "bio": "مهندس برمجيات بخبرة تزيد عن 6 سنوات متخصص في تطوير الخوادم باستخدام Python (FastAPI, Flask) و React والبنية التحتية السحابية (AWS, GCP). خبرة في دورة حياة البرمجيات الكاملة — من الواجهة الأمامية إلى النشر على البنية التحتية السحابية والمحلية. شغوف بالهندسة النظيفة والتطبيقات في الوقت الحقيقي وبناء تقنية لخدمة المجتمع الإسلامي.",
-    "projectPurpose": "ما هي IPG؟",
-    "projectDescription": "IPG (ألعاب حفلات إسلامية) هي منصة متعددة اللاعبين في الوقت الحقيقي تقدم نسخاً إسلامية من الألعاب الحفلية الشهيرة مثل المتخفي وأسماء رمزية. مبنية بـ FastAPI و Socket.IO و React و Redis لتجربة لعب سلسة.",
+    "projectPurpose": "ما هي Majlisna؟",
+    "projectDescription": "Majlisna هي منصة متعددة اللاعبين في الوقت الحقيقي تقدم نسخاً إسلامية من الألعاب الحفلية الشهيرة مثل المتخفي وأسماء رمزية. مبنية بـ FastAPI و Socket.IO و React و Redis لتجربة لعب سلسة.",
     "education": "التعليم",
     "educationEpitech": "Epitech Paris — Master's in Software Engineering",
     "educationSfsu": "San Francisco State University — Certificate",
@@ -575,6 +575,6 @@
   },
   "footer": {
     "madeWithLove": "صُنع بـ <heart/> للأمة",
-    "copyright": "\u00a9 {{year}} IPG \u2014 ألعاب جماعية إسلامية"
+    "copyright": "\u00a9 {{year}} Majlisna"
   }
 }

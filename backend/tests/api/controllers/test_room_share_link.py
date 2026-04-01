@@ -2,8 +2,8 @@
 
 import pytest
 
-from ipg.api.controllers.room import RoomController
-from ipg.api.schemas.error import UserNotInRoomError
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.schemas.error import UserNotInRoomError
 
 
 async def test_get_share_link_returns_data_for_member(room_controller: RoomController, create_user, create_room):

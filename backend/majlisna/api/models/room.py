@@ -3,8 +3,8 @@ from uuid import UUID
 
 from pydantic import Field, field_validator
 
-from ipg.api.models.game import GameType
-from ipg.api.models.shared import DBModel
+from majlisna.api.models.game import GameType
+from majlisna.api.models.shared import DBModel
 
 
 class RoomType(StrEnum):

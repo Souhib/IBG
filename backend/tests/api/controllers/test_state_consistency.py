@@ -7,15 +7,15 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.codenames_game import CodenamesGameController
-from ipg.api.controllers.codenames_helpers import CodenamesRole
-from ipg.api.controllers.mcqquiz_game import McqQuizGameController
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.controllers.wordquiz_game import WordQuizGameController
-from ipg.api.models.game import GameStatus
-from ipg.api.models.table import Game, Room
-from ipg.api.models.undercover import UndercoverRole
-from ipg.api.schemas.error import AlreadyAnsweredError, RoundNotPlayingError
+from majlisna.api.controllers.codenames_game import CodenamesGameController
+from majlisna.api.controllers.codenames_helpers import CodenamesRole
+from majlisna.api.controllers.mcqquiz_game import McqQuizGameController
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.controllers.wordquiz_game import WordQuizGameController
+from majlisna.api.models.game import GameStatus
+from majlisna.api.models.table import Game, Room
+from majlisna.api.models.undercover import UndercoverRole
+from majlisna.api.schemas.error import AlreadyAnsweredError, RoundNotPlayingError
 
 # ─── Helpers ──────────────────────────────────────────────────
 

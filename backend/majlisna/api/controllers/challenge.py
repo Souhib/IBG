@@ -7,8 +7,8 @@ from loguru import logger
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.challenge import ChallengeDefinition, ChallengeType, UserChallenge
-from ipg.api.schemas.challenge import ActiveChallenge
+from majlisna.api.models.challenge import ChallengeDefinition, ChallengeType, UserChallenge
+from majlisna.api.schemas.challenge import ActiveChallenge
 
 # Seed data for challenge definitions
 CHALLENGE_DEFINITIONS: list[dict] = [

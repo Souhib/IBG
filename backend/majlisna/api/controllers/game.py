@@ -7,13 +7,13 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import desc, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.error import GameNotFoundError, NoTurnInsideGameError, RoomIsNotActiveError
-from ipg.api.models.event import EventCreate
-from ipg.api.models.game import GameCreate, GameType, GameUpdate
-from ipg.api.models.relationship import GameTurnLink, RoomGameLink, TurnEventLink, UserGameLink
-from ipg.api.models.room import RoomType
-from ipg.api.models.table import Event, Game, Room, Turn
-from ipg.api.schemas.game import (
+from majlisna.api.models.error import GameNotFoundError, NoTurnInsideGameError, RoomIsNotActiveError
+from majlisna.api.models.event import EventCreate
+from majlisna.api.models.game import GameCreate, GameType, GameUpdate
+from majlisna.api.models.relationship import GameTurnLink, RoomGameLink, TurnEventLink, UserGameLink
+from majlisna.api.models.room import RoomType
+from majlisna.api.models.table import Event, Game, Room, Turn
+from majlisna.api.schemas.game import (
     ClueGuess,
     ClueHistoryEntry,
     EliminatedInfo,

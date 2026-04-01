@@ -4,12 +4,12 @@ import pytest
 from jose import jwt
 from sqlalchemy.exc import IntegrityError
 
-from ipg.api.controllers.auth import AuthController
-from ipg.api.controllers.shared import get_password_hash
-from ipg.api.models.user import UserCreate
-from ipg.api.schemas.auth import LoginResult, TokenPairResponse, TokenPayload
-from ipg.api.schemas.error import InvalidCredentialsError, InvalidTokenError, TokenExpiredError
-from ipg.settings import Settings
+from majlisna.api.controllers.auth import AuthController
+from majlisna.api.controllers.shared import get_password_hash
+from majlisna.api.models.user import UserCreate
+from majlisna.api.schemas.auth import LoginResult, TokenPairResponse, TokenPayload
+from majlisna.api.schemas.error import InvalidCredentialsError, InvalidTokenError, TokenExpiredError
+from majlisna.settings import Settings
 
 
 async def test_register_success(auth_controller: AuthController):

@@ -6,10 +6,10 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.challenge import ChallengeController
-from ipg.api.models.table import User
-from ipg.api.schemas.challenge import ActiveChallenge
-from ipg.dependencies import get_challenge_controller, get_current_user
+from majlisna.api.controllers.challenge import ChallengeController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.challenge import ActiveChallenge
+from majlisna.dependencies import get_challenge_controller, get_current_user
 
 BASE_URL = "/api/v1/challenges"
 

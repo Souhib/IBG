@@ -8,15 +8,15 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     CODENAMES_BOARD_SIZE,
     DEFAULT_CODENAMES_CLUE_TIMER_SECONDS,
     DEFAULT_CODENAMES_GUESS_TIMER_SECONDS,
     TIMER_EXPIRATION_TOLERANCE_SECONDS,
 )
-from ipg.api.controllers.base_game import BaseGameController
-from ipg.api.controllers.codenames import CodenamesController
-from ipg.api.controllers.codenames_helpers import (
+from majlisna.api.controllers.base_game import BaseGameController
+from majlisna.api.controllers.codenames import CodenamesController
+from majlisna.api.controllers.codenames_helpers import (
     CodenamesCardType,
     CodenamesGameStatus,
     CodenamesRole,
@@ -26,8 +26,8 @@ from ipg.api.controllers.codenames_helpers import (
     get_board_for_player,
     get_player_from_game,
 )
-from ipg.api.controllers.game_lock import get_game_lock
-from ipg.api.models.error import (
+from majlisna.api.controllers.game_lock import get_game_lock
+from majlisna.api.models.error import (
     CardAlreadyRevealedError,
     ClueWordIsOnBoardError,
     GameNotInProgressError,
@@ -37,18 +37,18 @@ from ipg.api.models.error import (
     NotSpymasterError,
     NotYourTurnError,
 )
-from ipg.api.models.game import GameCreate, GameStatus, GameType
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game, Room
-from ipg.api.schemas.codenames import (
+from majlisna.api.models.game import GameCreate, GameStatus, GameType
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game, Room
+from majlisna.api.schemas.codenames import (
     CodenamesBoardState,
     CodenamesPlayerView,
     EndTurnResponse,
     GiveClueResponse,
     GuessCardResponse,
 )
-from ipg.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
-from ipg.api.schemas.error import BaseError
+from majlisna.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
+from majlisna.api.schemas.error import BaseError
 
 
 class CodenamesGameController(BaseGameController):

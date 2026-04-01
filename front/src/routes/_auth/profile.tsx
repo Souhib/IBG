@@ -55,7 +55,7 @@ function ProfilePage() {
         is_admin: updated.is_admin,
       })
       localStorage.setItem(
-        "ipg-user-data",
+        "majlisna-user-data",
         JSON.stringify({
           id: updated.id,
           username: updated.username,

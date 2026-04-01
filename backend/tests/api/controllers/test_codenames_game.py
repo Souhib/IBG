@@ -8,18 +8,18 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import CODENAMES_BOARD_SIZE
-from ipg.api.controllers.codenames_game import CodenamesGameController
-from ipg.api.controllers.codenames_helpers import (
+from majlisna.api.constants import CODENAMES_BOARD_SIZE
+from majlisna.api.controllers.codenames_game import CodenamesGameController
+from majlisna.api.controllers.codenames_helpers import (
     CodenamesCardType,
     CodenamesGameStatus,
     CodenamesRole,
     CodenamesTeam,
 )
-from ipg.api.models.game import GameStatus
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game, Room, User
-from ipg.api.schemas.error import (
+from majlisna.api.models.game import GameStatus
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game, Room, User
+from majlisna.api.schemas.error import (
     BaseError,
     CardAlreadyRevealedError,
     ClueWordIsOnBoardError,
@@ -796,7 +796,7 @@ async def test_vote_resolve_unanimous(codenames_game_controller, setup_codenames
 
 
 @pytest.mark.asyncio
-@patch("ipg.api.controllers.codenames_game.random.choice", side_effect=lambda x: x[0])
+@patch("majlisna.api.controllers.codenames_game.random.choice", side_effect=lambda x: x[0])
 async def test_vote_resolve_two_way_tie(mock_choice, codenames_game_controller, setup_codenames_game, session):
     """Each votes different → tied=True (mock random.choice)."""
     setup = await setup_codenames_game(6)
@@ -823,7 +823,7 @@ async def test_vote_resolve_two_way_tie(mock_choice, codenames_game_controller, 
 
 
 @pytest.mark.asyncio
-@patch("ipg.api.controllers.codenames_game.random.choice", side_effect=lambda x: x[0])
+@patch("majlisna.api.controllers.codenames_game.random.choice", side_effect=lambda x: x[0])
 async def test_vote_resolve_three_way_tie(mock_choice, codenames_game_controller, setup_codenames_game, session):
     """8p game, 3 ops vote 3 different cards → tied=True (mock)."""
     setup = await setup_codenames_game(8)

@@ -3,10 +3,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from ipg.api.controllers.challenge import ChallengeController
-from ipg.api.models.table import User
-from ipg.api.schemas.challenge import ActiveChallenge
-from ipg.dependencies import get_challenge_controller, get_current_user
+from majlisna.api.controllers.challenge import ChallengeController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.challenge import ActiveChallenge
+from majlisna.dependencies import get_challenge_controller, get_current_user
 
 router = APIRouter(
     prefix="/challenges",

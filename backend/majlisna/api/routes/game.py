@@ -3,11 +3,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from ipg.api.controllers.game import GameController
-from ipg.api.models.game import GameCreate, GameUpdate
-from ipg.api.models.table import Game
-from ipg.api.schemas.game import GameHistoryEntry, GameSummary
-from ipg.dependencies import get_game_controller
+from majlisna.api.controllers.game import GameController
+from majlisna.api.models.game import GameCreate, GameUpdate
+from majlisna.api.models.table import Game
+from majlisna.api.schemas.game import GameHistoryEntry, GameSummary
+from majlisna.dependencies import get_game_controller
 
 router = APIRouter(
     prefix="/games",

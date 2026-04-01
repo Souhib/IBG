@@ -4,11 +4,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from ipg.api.controllers.room import RoomController
-from ipg.api.models.room import RoomCreateRequest, RoomJoin, RoomLeave
-from ipg.api.models.table import User
-from ipg.api.models.view import RoomView
-from ipg.api.schemas.room import (
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.models.room import RoomCreateRequest, RoomJoin, RoomLeave
+from majlisna.api.models.table import User
+from majlisna.api.models.view import RoomView
+from majlisna.api.schemas.room import (
     ActiveRoomResponse,
     JoinSpectatorRequest,
     KickPlayerRequest,
@@ -22,8 +22,8 @@ from ipg.api.schemas.room import (
     ShareLinkResponse,
     UpdateRoomSettingsResponse,
 )
-from ipg.api.ws.notify import notify_room_changed, notify_user_kicked
-from ipg.dependencies import get_current_user, get_room_controller
+from majlisna.api.ws.notify import notify_room_changed, notify_user_kicked
+from majlisna.dependencies import get_current_user, get_room_controller
 
 router = APIRouter(
     prefix="/rooms",

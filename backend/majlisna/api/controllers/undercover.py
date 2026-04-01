@@ -6,15 +6,15 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.error import (
+from majlisna.api.models.error import (
     TermPairAlreadyExistsError,
     TermPairNotFoundError,
     WordAlreadyExistsError,
     WordNotFoundByIdError,
     WordNotFoundByNameError,
 )
-from ipg.api.models.undercover import TermPair, Word, WordCreate, WordUpdate
-from ipg.api.utils.cache import cache
+from majlisna.api.models.undercover import TermPair, Word, WordCreate, WordUpdate
+from majlisna.api.utils.cache import cache
 
 WORDS_CACHE_KEY = "undercover:words"
 TERM_PAIRS_CACHE_KEY = "undercover:term_pairs"

@@ -5,12 +5,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from starlette.status import HTTP_201_CREATED
 
-from ipg.api.controllers.undercover import UndercoverController
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.models.table import User
-from ipg.api.models.undercover import TermPair, TermPairCreate, Word, WordCreate
-from ipg.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
-from ipg.api.schemas.undercover import (
+from majlisna.api.controllers.undercover import UndercoverController
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.models.table import User
+from majlisna.api.models.undercover import TermPair, TermPairCreate, Word, WordCreate
+from majlisna.api.schemas.common import GameStartResponse, HintRecordResponse, TimerExpiredResponse
+from majlisna.api.schemas.undercover import (
     DescriptionRequest,
     MrWhiteGuessRequest,
     MrWhiteGuessResponse,
@@ -22,9 +22,9 @@ from ipg.api.schemas.undercover import (
     UndercoverHintViewedRequest,
     VoteRequest,
 )
-from ipg.api.ws.handlers import auto_join_game_room
-from ipg.api.ws.notify import notify_game_changed, notify_room_changed
-from ipg.dependencies import get_current_user, get_undercover_controller, get_undercover_game_controller
+from majlisna.api.ws.handlers import auto_join_game_room
+from majlisna.api.ws.notify import notify_game_changed, notify_room_changed
+from majlisna.dependencies import get_current_user, get_undercover_controller, get_undercover_game_controller
 
 router = APIRouter(
     prefix="/undercover",

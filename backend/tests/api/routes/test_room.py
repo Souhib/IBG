@@ -7,17 +7,17 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.room import RoomController
-from ipg.api.models.game import GameType
-from ipg.api.models.room import RoomStatus, RoomType
-from ipg.api.models.table import Room, User
-from ipg.api.schemas.error import (
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.models.game import GameType
+from majlisna.api.models.room import RoomStatus, RoomType
+from majlisna.api.models.table import Room, User
+from majlisna.api.schemas.error import (
     RoomNotFoundError,
     UserAlreadyInRoomError,
     UserNotInRoomError,
     WrongRoomPasswordError,
 )
-from ipg.dependencies import get_current_user, get_room_controller
+from majlisna.dependencies import get_current_user, get_room_controller
 
 BASE_URL = "/api/v1/rooms"
 

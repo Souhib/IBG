@@ -8,12 +8,12 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.codenames import (
+from majlisna.api.controllers.codenames import (
     CodenamesController,
     CodenamesWordPackNotFoundError,
 )
-from ipg.api.models.codenames import CodenamesWord, CodenamesWordPack
-from ipg.dependencies import get_codenames_controller
+from majlisna.api.models.codenames import CodenamesWord, CodenamesWordPack
+from majlisna.dependencies import get_codenames_controller
 
 # ──────────────────────────────────────────────────────────────
 # Word Packs (/api/v1/codenames/word-packs)

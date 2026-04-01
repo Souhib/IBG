@@ -8,13 +8,13 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.shared import get_password_hash
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.models.game import GameStatus
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game, Room, User
-from ipg.api.models.undercover import UndercoverRole
-from ipg.api.schemas.error import (
+from majlisna.api.controllers.shared import get_password_hash
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.models.game import GameStatus
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game, Room, User
+from majlisna.api.models.undercover import UndercoverRole
+from majlisna.api.schemas.error import (
     BaseError,
     CantVoteBecauseYouDeadError,
     CantVoteForDeadPersonError,

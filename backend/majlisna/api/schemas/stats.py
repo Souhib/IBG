@@ -1,7 +1,7 @@
 from datetime import date
 from uuid import UUID
 
-from ipg.api.schemas.shared import BaseModel
+from majlisna.api.schemas.shared import BaseModel
 
 
 class DailyGameRecord(BaseModel):

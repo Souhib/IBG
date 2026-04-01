@@ -6,7 +6,7 @@ from sqlalchemy import JSON, Column, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
 
-from ipg.api.models.shared import DBModel
+from majlisna.api.models.shared import DBModel
 
 
 class GameType(StrEnum):

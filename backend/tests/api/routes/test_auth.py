@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, Mock
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.auth import AuthController
-from ipg.api.models.table import User
-from ipg.api.schemas.auth import LoginResult, LoginUserData, TokenPairResponse, TokenPayload
-from ipg.api.schemas.error import InvalidCredentialsError, InvalidTokenError, UserAlreadyExistsError
-from ipg.dependencies import get_auth_controller
+from majlisna.api.controllers.auth import AuthController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.auth import LoginResult, LoginUserData, TokenPairResponse, TokenPayload
+from majlisna.api.schemas.error import InvalidCredentialsError, InvalidTokenError, UserAlreadyExistsError
+from majlisna.dependencies import get_auth_controller
 
 # ========== Register ==========
 

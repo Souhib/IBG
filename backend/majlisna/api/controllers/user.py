@@ -6,16 +6,16 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.shared import (
+from majlisna.api.controllers.shared import (
     async_get_password_hash,
     async_verify_password,
 )
-from ipg.api.models.error import UserAlreadyExistsError, UserNotFoundError
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.room import RoomType
-from ipg.api.models.table import Room, User
-from ipg.api.models.user import UserCreate, UserUpdate
-from ipg.api.schemas.error import InvalidCredentialsError
+from majlisna.api.models.error import UserAlreadyExistsError, UserNotFoundError
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.room import RoomType
+from majlisna.api.models.table import Room, User
+from majlisna.api.models.user import UserCreate, UserUpdate
+from majlisna.api.schemas.error import InvalidCredentialsError
 
 
 class UserController:

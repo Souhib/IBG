@@ -36,7 +36,7 @@
     "loginTitle": "Bon retour",
     "loginDescription": "Entrez vos identifiants pour continuer",
     "registerTitle": "Créer un compte",
-    "registerDescription": "Rejoignez IPG et jouez avec vos amis",
+    "registerDescription": "Rejoignez Majlisna et jouez avec vos amis",
     "noAccount": "Pas encore de compte ?",
     "hasAccount": "Déjà un compte ?",
     "forgotPassword": "Mot de passe oublié ?",
@@ -436,8 +436,8 @@
     "name": "Souhib TRABELSI",
     "role": "Ingénieur logiciel",
     "bio": "Ingénieur logiciel avec plus de 6 ans d'expérience dans la création d'applications web évolutives avec Python, FastAPI, React et TypeScript. Passionné par les applications temps réel, l'architecture propre et la création de technologies pour la communauté islamique.",
-    "projectPurpose": "Qu'est-ce que IPG ?",
-    "projectDescription": "IPG (Islamic Party Games) est une plateforme multijoueur en temps réel proposant des versions islamiques de jeux de soirée populaires comme l'Infiltré et les Noms de Code. Construite avec FastAPI, Socket.IO, React et Redis pour une expérience de jeu fluide.",
+    "projectPurpose": "Qu'est-ce que Majlisna ?",
+    "projectDescription": "Majlisna est une plateforme multijoueur en temps réel proposant des versions islamiques de jeux de soirée populaires comme l'Infiltré et les Noms de Code. Construite avec FastAPI, Socket.IO, React et Redis pour une expérience de jeu fluide.",
     "education": "Formation",
     "educationEpitech": "Epitech Paris — Master en ingénierie logicielle",
     "educationSfsu": "San Francisco State University — Certificat",
@@ -566,6 +566,6 @@
   },
   "footer": {
     "madeWithLove": "Fait avec <heart/> pour la Oumma",
-    "copyright": "\u00a9 {{year}} IPG \u2014 Jeux de société islamiques"
+    "copyright": "\u00a9 {{year}} Majlisna"
   }
 }

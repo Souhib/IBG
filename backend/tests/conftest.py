@@ -1,4 +1,4 @@
-"""Test configuration and fixtures for IPG backend."""
+"""Test configuration and fixtures for Majlisna backend."""
 
 import subprocess
 from datetime import datetime
@@ -12,33 +12,33 @@ from sqlalchemy.pool import NullPool, StaticPool
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.achievement import AchievementController
-from ipg.api.controllers.auth import AuthController
-from ipg.api.controllers.challenge import ChallengeController
-from ipg.api.controllers.chat import ChatController
-from ipg.api.controllers.codenames import CodenamesController
-from ipg.api.controllers.codenames_game import CodenamesGameController
-from ipg.api.controllers.friend import FriendController
-from ipg.api.controllers.game import GameController
-from ipg.api.controllers.mcqquiz_game import McqQuizGameController
-from ipg.api.controllers.profile import ProfileController
-from ipg.api.controllers.room import RoomController
-from ipg.api.controllers.shared import get_password_hash
-from ipg.api.controllers.stats import StatsController
-from ipg.api.controllers.undercover import UndercoverController
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.controllers.user import UserController
-from ipg.api.controllers.wordquiz import WordQuizController
-from ipg.api.controllers.wordquiz_game import WordQuizGameController
-from ipg.api.models.codenames import CodenamesWord, CodenamesWordPack, CodenamesWordPackCreate
-from ipg.api.models.game import GameCreate, GameType
-from ipg.api.models.mcqquiz import McqQuestion
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Room, User
-from ipg.api.models.undercover import TermPair, Word, WordCreate
-from ipg.api.models.wordquiz import QuizWord
-from ipg.api.utils.cache import cache
-from ipg.settings import Settings
+from majlisna.api.controllers.achievement import AchievementController
+from majlisna.api.controllers.auth import AuthController
+from majlisna.api.controllers.challenge import ChallengeController
+from majlisna.api.controllers.chat import ChatController
+from majlisna.api.controllers.codenames import CodenamesController
+from majlisna.api.controllers.codenames_game import CodenamesGameController
+from majlisna.api.controllers.friend import FriendController
+from majlisna.api.controllers.game import GameController
+from majlisna.api.controllers.mcqquiz_game import McqQuizGameController
+from majlisna.api.controllers.profile import ProfileController
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.controllers.shared import get_password_hash
+from majlisna.api.controllers.stats import StatsController
+from majlisna.api.controllers.undercover import UndercoverController
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.controllers.user import UserController
+from majlisna.api.controllers.wordquiz import WordQuizController
+from majlisna.api.controllers.wordquiz_game import WordQuizGameController
+from majlisna.api.models.codenames import CodenamesWord, CodenamesWordPack, CodenamesWordPackCreate
+from majlisna.api.models.game import GameCreate, GameType
+from majlisna.api.models.mcqquiz import McqQuestion
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Room, User
+from majlisna.api.models.undercover import TermPair, Word, WordCreate
+from majlisna.api.models.wordquiz import QuizWord
+from majlisna.api.utils.cache import cache
+from majlisna.settings import Settings
 
 # ========== PyTest Configuration ==========
 

@@ -4,12 +4,12 @@ from uuid import uuid4
 import pytest
 from freezegun import freeze_time
 
-from ipg.api.controllers.stats import StatsController
-from ipg.api.models.game import GameStatus, GameType
-from ipg.api.models.relationship import UserGameLink
-from ipg.api.models.table import Game
-from ipg.api.schemas.error import UserNotFoundError
-from ipg.api.schemas.stats import DailyGameRecord, GameDurationStats, HeadToHeadStats
+from majlisna.api.controllers.stats import StatsController
+from majlisna.api.models.game import GameStatus, GameType
+from majlisna.api.models.relationship import UserGameLink
+from majlisna.api.models.table import Game
+from majlisna.api.schemas.error import UserNotFoundError
+from majlisna.api.schemas.stats import DailyGameRecord, GameDurationStats, HeadToHeadStats
 
 
 async def test_get_or_create_user_stats_creates(stats_controller: StatsController, create_user):

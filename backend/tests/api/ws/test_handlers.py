@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ipg.api.schemas.error import InvalidTokenError
-from ipg.api.ws.handlers import _user_sids, auto_join_game_room, connect, disconnect, heartbeat, join_game
-from ipg.api.ws.server import sio as real_sio
+from majlisna.api.schemas.error import InvalidTokenError
+from majlisna.api.ws.handlers import _user_sids, auto_join_game_room, connect, disconnect, heartbeat, join_game
+from majlisna.api.ws.server import sio as real_sio
 
 
 @pytest.fixture(autouse=True)
@@ -21,7 +21,7 @@ def _clean_user_sids():
 @pytest.fixture
 def mock_sio():
     """Mock Socket.IO server for handler tests."""
-    with patch("ipg.api.ws.handlers.sio") as mock:
+    with patch("majlisna.api.ws.handlers.sio") as mock:
         mock.enter_room = AsyncMock()
         mock.emit = AsyncMock()
         mock.disconnect = AsyncMock()
@@ -45,11 +45,11 @@ def mock_connect_dependencies(mock_sio):  # noqa: ARG001
     mock_engine = MagicMock()
 
     patches = {
-        "engine": patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock, return_value=mock_engine),
-        "session": patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
-        "auth": patch("ipg.api.ws.handlers.AuthController", return_value=mock_auth_controller),
-        "heartbeat": patch("ipg.api.ws.handlers.update_heartbeat", new_callable=AsyncMock),
-        "fetch_room": patch("ipg.api.ws.handlers.fetch_room_state", new_callable=AsyncMock, return_value={}),
+        "engine": patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock, return_value=mock_engine),
+        "session": patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
+        "auth": patch("majlisna.api.ws.handlers.AuthController", return_value=mock_auth_controller),
+        "heartbeat": patch("majlisna.api.ws.handlers.update_heartbeat", new_callable=AsyncMock),
+        "fetch_room": patch("majlisna.api.ws.handlers.fetch_room_state", new_callable=AsyncMock, return_value={}),
     }
 
     started = {}
@@ -165,10 +165,10 @@ async def test_join_game_awaits_enter_room(mock_sio):
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.handlers.update_heartbeat", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.fetch_game_state", new_callable=AsyncMock, return_value={}),
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.handlers.update_heartbeat", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.fetch_game_state", new_callable=AsyncMock, return_value={}),
     ):
         await join_game("sid1", {"game_id": game_id})
 
@@ -185,10 +185,10 @@ async def test_disconnect_cleans_user_sids(mock_sio):
     mock_sio.get_session.return_value = {"user_id": "u1", "room_id": "room1"}
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession") as mock_session_cls,
-        patch("ipg.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.fire_notify_room_changed"),
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession") as mock_session_cls,
+        patch("majlisna.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.fire_notify_room_changed"),
     ):
         mock_session = AsyncMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -223,10 +223,10 @@ async def test_old_tab_disconnect_does_not_remove_active_sid(mock_sio):
     mock_sio.get_session.return_value = {"user_id": "user1", "room_id": "room1"}
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession") as mock_session_cls,
-        patch("ipg.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.fire_notify_room_changed"),
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession") as mock_session_cls,
+        patch("majlisna.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.fire_notify_room_changed"),
     ):
         mock_session = AsyncMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -300,9 +300,9 @@ async def test_connect_invalid_token_rejected(mock_sio):  # noqa: ARG001
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.handlers.AuthController", return_value=mock_auth_controller),
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.handlers.AuthController", return_value=mock_auth_controller),
         pytest.raises(ConnectionRefusedError, match="Invalid or expired token"),
     ):
         await connect("sid1", {}, {"token": "expired", "room_id": "room1"})
@@ -320,9 +320,9 @@ async def test_heartbeat_updates_last_seen(mock_sio):
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.handlers.update_heartbeat", new_callable=AsyncMock) as mock_heartbeat,
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.handlers.update_heartbeat", new_callable=AsyncMock) as mock_heartbeat,
     ):
         await heartbeat("sid1")
 
@@ -334,8 +334,8 @@ async def test_heartbeat_no_session_data_returns_early(mock_sio):
     mock_sio.get_session.return_value = {}
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock) as mock_engine,
-        patch("ipg.api.ws.handlers.update_heartbeat", new_callable=AsyncMock) as mock_heartbeat,
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock) as mock_engine,
+        patch("majlisna.api.ws.handlers.update_heartbeat", new_callable=AsyncMock) as mock_heartbeat,
     ):
         # Should not raise
         await heartbeat("sid1")
@@ -357,10 +357,10 @@ async def test_disconnect_marks_user_disconnected(mock_sio):
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock) as mock_mark,
-        patch("ipg.api.ws.handlers.fire_notify_room_changed"),
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock) as mock_mark,
+        patch("majlisna.api.ws.handlers.fire_notify_room_changed"),
     ):
         await disconnect("sid1")
 
@@ -377,10 +377,10 @@ async def test_disconnect_fires_room_notification(mock_sio):
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
-        patch("ipg.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.fire_notify_room_changed") as mock_fire,
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.handlers.mark_user_disconnected", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.fire_notify_room_changed") as mock_fire,
     ):
         await disconnect("sid1")
 
@@ -415,8 +415,8 @@ async def test_join_game_invalid_game_returns_early(mock_sio):
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with (
-        patch("ipg.api.ws.handlers.get_engine", new_callable=AsyncMock),
-        patch("ipg.api.ws.handlers.AsyncSession", return_value=mock_session),
+        patch("majlisna.api.ws.handlers.get_engine", new_callable=AsyncMock),
+        patch("majlisna.api.ws.handlers.AsyncSession", return_value=mock_session),
     ):
         await join_game("sid1", {"game_id": game_id})
 

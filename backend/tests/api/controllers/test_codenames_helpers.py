@@ -2,7 +2,7 @@
 
 import pytest
 
-from ipg.api.controllers.codenames_helpers import (
+from majlisna.api.controllers.codenames_helpers import (
     CodenamesCardType,
     CodenamesRole,
     CodenamesTeam,
@@ -11,7 +11,7 @@ from ipg.api.controllers.codenames_helpers import (
     get_board_for_player,
     get_player_from_game,
 )
-from ipg.api.schemas.error import BaseError
+from majlisna.api.schemas.error import BaseError
 
 # ========== Helpers ==========
 

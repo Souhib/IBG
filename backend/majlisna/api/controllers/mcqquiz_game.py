@@ -6,15 +6,15 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     DEFAULT_MCQ_QUIZ_ROUNDS,
     DEFAULT_MCQ_QUIZ_TURN_DURATION,
     TIMER_EXPIRATION_TOLERANCE_SECONDS,
 )
-from ipg.api.controllers.base_game import BaseGameController
-from ipg.api.controllers.game_lock import get_game_lock
-from ipg.api.controllers.mcqquiz import McqQuizController
-from ipg.api.models.error import (
+from majlisna.api.controllers.base_game import BaseGameController
+from majlisna.api.controllers.game_lock import get_game_lock
+from majlisna.api.controllers.mcqquiz import McqQuizController
+from majlisna.api.models.error import (
     AlreadyAnsweredError,
     InvalidChoiceIndexError,
     NoMcqQuestionsAvailableError,
@@ -22,13 +22,13 @@ from ipg.api.models.error import (
     RoundNotPlayingError,
     SpectatorCannotAnswerError,
 )
-from ipg.api.models.game import GameCreate, GameStatus, GameType
-from ipg.api.models.mcqquiz import McqQuestion
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game, Room
-from ipg.api.schemas.common import AdvanceRoundResponse, GameStartResponse, TimerExpiredResponse
-from ipg.api.schemas.error import BaseError
-from ipg.api.schemas.mcqquiz import (
+from majlisna.api.models.game import GameCreate, GameStatus, GameType
+from majlisna.api.models.mcqquiz import McqQuestion
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game, Room
+from majlisna.api.schemas.common import AdvanceRoundResponse, GameStartResponse, TimerExpiredResponse
+from majlisna.api.schemas.error import BaseError
+from majlisna.api.schemas.mcqquiz import (
     McqQuizGameState,
     McqQuizPlayerState,
     McqQuizRoundResult,

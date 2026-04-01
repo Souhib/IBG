@@ -5,10 +5,10 @@ from loguru import logger
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.table import Game
-from ipg.api.ws.server import sio
-from ipg.api.ws.state import fetch_room_state
-from ipg.database import get_engine
+from majlisna.api.models.table import Game
+from majlisna.api.ws.server import sio
+from majlisna.api.ws.state import fetch_room_state
+from majlisna.database import get_engine
 
 # Strong references to prevent garbage collection of fire-and-forget tasks
 _pending_tasks: set[asyncio.Task] = set()

@@ -4,10 +4,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from ipg.api.controllers.friend import FriendController
-from ipg.api.models.table import User
-from ipg.api.schemas.friend import FriendActionResponse, FriendEntry, FriendRequestBody, FriendshipStatusResponse
-from ipg.dependencies import get_current_user, get_friend_controller
+from majlisna.api.controllers.friend import FriendController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.friend import FriendActionResponse, FriendEntry, FriendRequestBody, FriendshipStatusResponse
+from majlisna.dependencies import get_current_user, get_friend_controller
 
 router = APIRouter(
     prefix="/friends",

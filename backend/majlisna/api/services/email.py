@@ -1,7 +1,7 @@
 from loguru import logger
 from resend import Emails
 
-from ipg.settings import Settings
+from majlisna.settings import Settings
 
 
 class EmailService:
@@ -13,10 +13,10 @@ class EmailService:
 
     async def send_password_reset_email(self, to_email: str, username: str, reset_url: str) -> bool:
         """Send password reset email."""
-        subject = "IPG - Reset Your Password"
+        subject = "Majlisna - Reset Your Password"
         html = f"""
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #10b981;">IPG - Islamic Party Games</h2>
+            <h2 style="color: #10b981;">Majlisna</h2>
             <p>Hi {username},</p>
             <p>You requested a password reset. Click the button below to set a new password:</p>
             <div style="text-align: center; margin: 30px 0;">
@@ -32,12 +32,12 @@ class EmailService:
 
     async def send_verification_email(self, to_email: str, username: str, verify_url: str) -> bool:
         """Send email verification."""
-        subject = "IPG - Verify Your Email"
+        subject = "Majlisna - Verify Your Email"
         html = f"""
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #10b981;">IPG - Islamic Party Games</h2>
+            <h2 style="color: #10b981;">Majlisna</h2>
             <p>Hi {username},</p>
-            <p>Welcome to IPG! Please verify your email address:</p>
+            <p>Welcome to Majlisna! Please verify your email address:</p>
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{verify_url}" style="background-color: #10b981; color: white; padding: 12px 32px;
                    text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">

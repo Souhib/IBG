@@ -5,8 +5,8 @@ from pydantic import model_validator
 from sqlalchemy import JSON, Column
 from sqlmodel import Field
 
-from ipg.api.models.game import GameBase
-from ipg.api.models.shared import DBModel
+from majlisna.api.models.game import GameBase
+from majlisna.api.models.shared import DBModel
 
 
 class WordBase(DBModel):

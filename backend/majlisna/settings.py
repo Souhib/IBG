@@ -8,14 +8,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _get_env_file() -> tuple[str, ...]:
-    """Determine which .env files to load based on IPG_ENV."""
-    env = os.getenv("IPG_ENV")
+    """Determine which .env files to load based on MAJLISNA_ENV."""
+    env = os.getenv("MAJLISNA_ENV")
     if not env:
         selector_path = Path(".env")
         if selector_path.exists():
             load_dotenv(selector_path, override=False)
             selector = dotenv_values(selector_path)
-            env = selector.get("IPG_ENV", "development")
+            env = selector.get("MAJLISNA_ENV", "development")
         else:
             env = "development"
 
@@ -62,7 +62,7 @@ class Settings(BaseSettings):
 
     # Email (Resend)
     resend_api_key: str = ""
-    from_email: str = "IPG <noreply@ipg.app>"
+    from_email: str = "Majlisna <noreply@majlisna.app>"
 
     # Google OAuth
     google_client_id_web: str = ""

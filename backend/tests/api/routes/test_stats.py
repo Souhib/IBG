@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, Mock
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.achievement import AchievementController
-from ipg.api.controllers.stats import StatsController
-from ipg.api.models.stats import UserStats
-from ipg.api.schemas.stats import AchievementWithProgress, LeaderboardEntry
-from ipg.dependencies import get_achievement_controller, get_stats_controller
+from majlisna.api.controllers.achievement import AchievementController
+from majlisna.api.controllers.stats import StatsController
+from majlisna.api.models.stats import UserStats
+from majlisna.api.schemas.stats import AchievementWithProgress, LeaderboardEntry
+from majlisna.dependencies import get_achievement_controller, get_stats_controller
 
 # ──────────────────────────────────────────────────────────────
 # User Stats (GET /api/v1/stats/users/{user_id}/stats)

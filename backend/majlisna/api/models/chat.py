@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Field
 
-from ipg.api.schemas.shared import BaseTable
+from majlisna.api.schemas.shared import BaseTable
 
 
 class ChatMessage(BaseTable, table=True):

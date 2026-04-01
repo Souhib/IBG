@@ -4,8 +4,8 @@ from collections.abc import Sequence
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.mcqquiz import McqQuestion
-from ipg.api.utils.cache import cache
+from majlisna.api.models.mcqquiz import McqQuestion
+from majlisna.api.utils.cache import cache
 
 MCQ_QUESTIONS_CACHE_KEY = "mcqquiz:questions"
 CACHE_TTL_SECONDS = 3600

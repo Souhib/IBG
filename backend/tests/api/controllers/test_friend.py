@@ -1,9 +1,9 @@
 import pytest
 from sqlmodel import select
 
-from ipg.api.controllers.friend import FriendController
-from ipg.api.models.friendship import Friendship, FriendshipStatus
-from ipg.api.schemas.error import BaseError
+from majlisna.api.controllers.friend import FriendController
+from majlisna.api.models.friendship import Friendship, FriendshipStatus
+from majlisna.api.schemas.error import BaseError
 
 
 async def test_send_friend_request(friend_controller: FriendController, create_user):

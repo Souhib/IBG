@@ -3,9 +3,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.exc import NoResultFound
 
-from ipg.api.controllers.undercover import UndercoverController
-from ipg.api.models.undercover import WordCreate, WordUpdate
-from ipg.api.schemas.error import (
+from majlisna.api.controllers.undercover import UndercoverController
+from majlisna.api.models.undercover import WordCreate, WordUpdate
+from majlisna.api.schemas.error import (
     TermPairAlreadyExistsError,
     TermPairNotFoundError,
     WordAlreadyExistsError,

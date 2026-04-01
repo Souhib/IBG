@@ -5,14 +5,14 @@ from uuid import UUID, uuid4
 from sqlalchemy import JSON, Column, ForeignKey
 from sqlmodel import Field, Relationship
 
-from ipg.api.models.challenge import ChallengeDefinition, UserChallenge  # noqa: F401
-from ipg.api.models.chat import ChatMessage  # noqa: F401
-from ipg.api.models.codenames import CodenamesWord, CodenamesWordPack  # noqa: F401
-from ipg.api.models.event import TurnBase
-from ipg.api.models.friendship import Friendship  # noqa: F401
-from ipg.api.models.game import GameBase
-from ipg.api.models.mcqquiz import McqQuestion  # noqa: F401
-from ipg.api.models.relationship import (
+from majlisna.api.models.challenge import ChallengeDefinition, UserChallenge  # noqa: F401
+from majlisna.api.models.chat import ChatMessage  # noqa: F401
+from majlisna.api.models.codenames import CodenamesWord, CodenamesWordPack  # noqa: F401
+from majlisna.api.models.event import TurnBase
+from majlisna.api.models.friendship import Friendship  # noqa: F401
+from majlisna.api.models.game import GameBase
+from majlisna.api.models.mcqquiz import McqQuestion  # noqa: F401
+from majlisna.api.models.relationship import (
     GameTurnLink,
     RoomActivityLink,
     RoomGameLink,
@@ -20,11 +20,11 @@ from ipg.api.models.relationship import (
     TurnEventLink,
     UserGameLink,
 )
-from ipg.api.models.room import RoomBase, RoomType
-from ipg.api.models.shared import DBModel
-from ipg.api.models.token import EmailVerificationToken, PasswordResetToken  # noqa: F401
-from ipg.api.models.user import UserBase
-from ipg.api.models.wordquiz import QuizWord  # noqa: F401
+from majlisna.api.models.room import RoomBase, RoomType
+from majlisna.api.models.shared import DBModel
+from majlisna.api.models.token import EmailVerificationToken, PasswordResetToken  # noqa: F401
+from majlisna.api.models.user import UserBase
+from majlisna.api.models.wordquiz import QuizWord  # noqa: F401
 
 
 class Room(RoomBase, table=True):

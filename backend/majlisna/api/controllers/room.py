@@ -10,23 +10,23 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.disconnect import _handle_permanent_disconnect
-from ipg.api.controllers.friend import FriendController
-from ipg.api.controllers.shared import create_random_public_id
-from ipg.api.models.error import (
+from majlisna.api.controllers.disconnect import _handle_permanent_disconnect
+from majlisna.api.controllers.friend import FriendController
+from majlisna.api.controllers.shared import create_random_public_id
+from majlisna.api.models.error import (
     RoomNotFoundError,
     UserAlreadyInRoomError,
     UserNotFoundError,
     UserNotInRoomError,
     WrongRoomPasswordError,
 )
-from ipg.api.models.event import EventCreate
-from ipg.api.models.game import GameType
-from ipg.api.models.relationship import RoomActivityLink, RoomUserLink
-from ipg.api.models.room import RoomCreate, RoomJoin, RoomLeave, RoomStatus, RoomType
-from ipg.api.models.table import Activity, Game, Room, User
-from ipg.api.schemas.error import BaseError
-from ipg.api.schemas.room import (
+from majlisna.api.models.event import EventCreate
+from majlisna.api.models.game import GameType
+from majlisna.api.models.relationship import RoomActivityLink, RoomUserLink
+from majlisna.api.models.room import RoomCreate, RoomJoin, RoomLeave, RoomStatus, RoomType
+from majlisna.api.models.table import Activity, Game, Room, User
+from majlisna.api.schemas.error import BaseError
+from majlisna.api.schemas.room import (
     ActiveRoomResponse,
     KickPlayerResponse,
     RematchResponse,
@@ -495,7 +495,7 @@ class RoomController:
             )
 
         # Emit Socket.IO invite event to the friend's personal room
-        from ipg.api.ws.server import sio  # noqa: PLC0415
+        from majlisna.api.ws.server import sio  # noqa: PLC0415
 
         inviter = (await self.session.exec(select(User).where(User.id == host_id))).first()
         await sio.emit(

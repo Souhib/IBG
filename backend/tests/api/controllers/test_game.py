@@ -7,12 +7,12 @@ from sqlalchemy.exc import NoResultFound
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.game import GameController
-from ipg.api.models.event import EventCreate
-from ipg.api.models.game import GameCreate, GameType, GameUpdate
-from ipg.api.models.room import RoomType
-from ipg.api.models.table import Room
-from ipg.api.schemas.error import GameNotFoundError, NoTurnInsideGameError, RoomIsNotActiveError
+from majlisna.api.controllers.game import GameController
+from majlisna.api.models.event import EventCreate
+from majlisna.api.models.game import GameCreate, GameType, GameUpdate
+from majlisna.api.models.room import RoomType
+from majlisna.api.models.table import Room
+from majlisna.api.schemas.error import GameNotFoundError, NoTurnInsideGameError, RoomIsNotActiveError
 
 
 async def test_create_game_success(sample_room: Room, game_controller: GameController):

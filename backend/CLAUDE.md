@@ -1,4 +1,4 @@
-# CLAUDE.md - IPG Backend
+# CLAUDE.md - Majlisna Backend
 
 ## Overview
 
@@ -28,7 +28,7 @@ PYTHONPATH=. uv run python scripts/generate_fake_data.py --delete
 
 ## Architecture
 
-### API Layer (`ipg/api/`)
+### API Layer (`majlisna/api/`)
 
 ```
 api/
@@ -121,7 +121,7 @@ All game state stored in `Game.live_state` JSON column:
 All game mutations use `get_game_lock(game_id, session)` — PostgreSQL advisory locks in production, asyncio.Lock fallback for SQLite tests:
 ```python
 from sqlalchemy.orm.attributes import flag_modified
-from ipg.api.controllers.game_lock import get_game_lock
+from majlisna.api.controllers.game_lock import get_game_lock
 
 async def submit_vote(self, game_id: UUID, ...):
     async with get_game_lock(str(game_id), self.session):
@@ -154,10 +154,10 @@ async def submit_vote(self, game_id: UUID, ...):
 - No auto-disconnect — players are only removed by explicit kick or leaving
 
 ### Base Classes
-**CRITICAL: Always use `ipg.api.schemas.shared.BaseModel` and `BaseTable`**, never `pydantic.BaseModel` or `sqlmodel.SQLModel` directly.
+**CRITICAL: Always use `majlisna.api.schemas.shared.BaseModel` and `BaseTable`**, never `pydantic.BaseModel` or `sqlmodel.SQLModel` directly.
 
 ```python
-from ipg.api.schemas.shared import BaseModel, BaseTable
+from majlisna.api.schemas.shared import BaseModel, BaseTable
 
 class UserCreate(BaseModel):     # For schemas
     username: str
@@ -191,7 +191,7 @@ class MyController:
 Errors auto-generate i18n keys and log on construction:
 
 ```python
-from ipg.api.schemas.error import BaseError
+from majlisna.api.schemas.error import BaseError
 
 class MyCustomError(BaseError):
     def __init__(self, item_id: UUID):
@@ -210,7 +210,7 @@ Use `Annotated` + `Depends` for DI:
 ```python
 from typing import Annotated
 from fastapi import Depends
-from ipg.dependencies import get_current_user, get_room_controller
+from majlisna.dependencies import get_current_user, get_room_controller
 
 async def my_route(
     user: Annotated[User, Depends(get_current_user)],
@@ -232,10 +232,10 @@ async def get_item(
 ```
 
 ### Constants
-All magic values in `ipg/api/constants.py`:
+All magic values in `majlisna/api/constants.py`:
 
 ```python
-from ipg.api.constants import MIN_PLAYERS_FOR_GAME, ROOM_PASSWORD_LENGTH
+from majlisna.api.constants import MIN_PLAYERS_FOR_GAME, ROOM_PASSWORD_LENGTH
 ```
 
 ## Database Models
@@ -259,11 +259,11 @@ from ipg.api.constants import MIN_PLAYERS_FOR_GAME, ROOM_PASSWORD_LENGTH
 
 ## Environment Configuration
 
-Settings use `IPG_ENV` selector:
+Settings use `MAJLISNA_ENV` selector:
 
 | File | Purpose |
 |------|---------|
-| `.env` | `IPG_ENV=development` (selector) |
+| `.env` | `MAJLISNA_ENV=development` (selector) |
 | `.env.development` | SQLite, dev JWT key |
 | `.env.production` | PostgreSQL, production keys |
 | `.env.example` | Template (committed) |

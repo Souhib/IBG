@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field
 
-from ipg.api.schemas.shared import BaseTable
+from majlisna.api.schemas.shared import BaseTable
 
 
 class AchievementCategory(StrEnum):

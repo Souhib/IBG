@@ -5,7 +5,7 @@ from uuid import uuid4
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.codenames import CodenamesWord, CodenamesWordPack
+from majlisna.api.models.codenames import CodenamesWord, CodenamesWordPack
 
 CODENAMES_WORD_PACKS: dict[str, list[dict[str, str | dict[str, str]]]] = {
     "Prophets & Messengers": [

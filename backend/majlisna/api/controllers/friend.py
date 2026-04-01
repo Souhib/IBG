@@ -6,10 +6,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import or_, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.friendship import Friendship, FriendshipStatus
-from ipg.api.models.table import User
-from ipg.api.schemas.error import BaseError, UserNotFoundError
-from ipg.api.schemas.friend import FriendEntry, FriendshipStatusEnum, FriendshipStatusResponse
+from majlisna.api.models.friendship import Friendship, FriendshipStatus
+from majlisna.api.models.table import User
+from majlisna.api.schemas.error import BaseError, UserNotFoundError
+from majlisna.api.schemas.friend import FriendEntry, FriendshipStatusEnum, FriendshipStatusResponse
 
 
 class FriendController:

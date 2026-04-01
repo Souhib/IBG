@@ -24,7 +24,7 @@ test.describe("Full User Journey", () => {
           {
             origin: FRONTEND_URL,
             localStorage: [
-              { name: "ipg-first-visit-complete", value: "true" },
+              { name: "majlisna-first-visit-complete", value: "true" },
             ],
           },
         ],
@@ -61,7 +61,7 @@ test.describe("Full User Journey", () => {
     // Wait for auth tokens to be stored
     await page1.waitForFunction(
       (key) => !!localStorage.getItem(key),
-      "ipg-token",
+      "majlisna-token",
       { timeout: 10_000 },
     );
 
@@ -128,7 +128,7 @@ test.describe("Full User Journey", () => {
             {
               origin: FRONTEND_URL,
               localStorage: [
-                { name: "ipg-first-visit-complete", value: "true" },
+                { name: "majlisna-first-visit-complete", value: "true" },
               ],
             },
           ],
@@ -149,7 +149,7 @@ test.describe("Full User Journey", () => {
       // Wait for auth tokens
       await page.waitForFunction(
         (key) => !!localStorage.getItem(key),
-        "ipg-token",
+        "majlisna-token",
         { timeout: 10_000 },
       );
 

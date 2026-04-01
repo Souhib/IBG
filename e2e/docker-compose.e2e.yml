@@ -1,4 +1,4 @@
-# IPG - E2E Testing Docker Compose
+# Majlisna - E2E Testing Docker Compose
 # Non-standard ports to avoid conflicts with local dev (54339, 5049, 3049)
 # Usage: docker compose -f docker-compose.e2e.yml up -d --build
 
@@ -7,28 +7,28 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: ipg-e2e-db
+    container_name: majlisna-e2e-db
     environment:
-      POSTGRES_USER: ipg
-      POSTGRES_PASSWORD: ipg
-      POSTGRES_DB: ipg
+      POSTGRES_USER: majlisna
+      POSTGRES_PASSWORD: majlisna
+      POSTGRES_DB: majlisna
     ports:
       - "54339:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ipg"]
+      test: ["CMD-SHELL", "pg_isready -U majlisna"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - ipg-e2e-network
+      - majlisna-e2e-network
 
   # ─── PgBouncer ────────────────────────────────────────────
 
   pgbouncer:
     image: edoburu/pgbouncer:v1.25.1-p0
-    container_name: ipg-e2e-pgbouncer
+    container_name: majlisna-e2e-pgbouncer
     environment:
-      DATABASE_URL: postgres://ipg:ipg@db:5432/ipg
+      DATABASE_URL: postgres://majlisna:majlisna@db:5432/majlisna
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: 50
       MAX_CLIENT_CONN: 200
@@ -43,13 +43,13 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ipg-e2e-network
+      - majlisna-e2e-network
 
   # ─── Redis ───────────────────────────────────────────────
 
   redis:
     image: redis:7-alpine
-    container_name: ipg-e2e-redis
+    container_name: majlisna-e2e-redis
     command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -57,7 +57,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - ipg-e2e-network
+      - majlisna-e2e-network
 
   # ─── Backend API ──────────────────────────────────────────
 
@@ -68,14 +68,14 @@ services:
       target: production
       args:
         INSTALL_DEV: "true"
-    container_name: ipg-e2e-backend
+    container_name: majlisna-e2e-backend
     ports:
       - "5049:5000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://ipg:ipg@pgbouncer:6432/ipg
+      DATABASE_URL: postgresql+asyncpg://majlisna:majlisna@pgbouncer:6432/majlisna
       REDIS_URL: redis://redis:6379/0
       ENVIRONMENT: development
-      IPG_ENV: development
+      MAJLISNA_ENV: development
       JWT_SECRET_KEY: e2e-secret-key
       CORS_ORIGINS: "http://localhost:3049"
       LOG_LEVEL: WARNING
@@ -94,7 +94,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - ipg-e2e-network
+      - majlisna-e2e-network
 
   # ─── Frontend SPA ─────────────────────────────────────────
 
@@ -105,7 +105,7 @@ services:
       target: production
       args:
         VITE_API_URL: http://localhost:5049
-    container_name: ipg-e2e-frontend
+    container_name: majlisna-e2e-frontend
     ports:
       - "3049:80"
     depends_on:
@@ -118,8 +118,8 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - ipg-e2e-network
+      - majlisna-e2e-network
 
 networks:
-  ipg-e2e-network:
+  majlisna-e2e-network:
     driver: bridge

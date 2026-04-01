@@ -6,14 +6,14 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import AUTH_PROVIDER_EMAIL, AUTH_PROVIDER_GOOGLE
-from ipg.api.controllers.auth import AuthController
-from ipg.api.controllers.shared import get_password_hash
-from ipg.api.models.table import User
-from ipg.api.schemas.error import InvalidCredentialsError
-from ipg.api.schemas.social_auth import SocialTokenPayload
-from ipg.api.services.social_auth import SocialAuthService
-from ipg.settings import Settings
+from majlisna.api.constants import AUTH_PROVIDER_EMAIL, AUTH_PROVIDER_GOOGLE
+from majlisna.api.controllers.auth import AuthController
+from majlisna.api.controllers.shared import get_password_hash
+from majlisna.api.models.table import User
+from majlisna.api.schemas.error import InvalidCredentialsError
+from majlisna.api.schemas.social_auth import SocialTokenPayload
+from majlisna.api.services.social_auth import SocialAuthService
+from majlisna.settings import Settings
 
 
 @pytest.fixture

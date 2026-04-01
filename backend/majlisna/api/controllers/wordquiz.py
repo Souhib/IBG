@@ -5,8 +5,8 @@ from uuid import UUID
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.wordquiz import QuizWord
-from ipg.api.utils.cache import cache
+from majlisna.api.models.wordquiz import QuizWord
+from majlisna.api.utils.cache import cache
 
 QUIZ_WORDS_CACHE_KEY = "wordquiz:words"
 CACHE_TTL_SECONDS = 3600

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlmodel import SQLModel
 
-from ipg.settings import Settings
+from majlisna.settings import Settings
 
 _engine: AsyncEngine | None = None
 

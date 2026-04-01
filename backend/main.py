@@ -4,10 +4,10 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-from ipg.app import create_app
-from ipg.database import create_app_engine, create_db_and_tables
-from ipg.logger_config import configure_logger
-from ipg.settings import Settings
+from majlisna.app import create_app
+from majlisna.database import create_app_engine, create_db_and_tables
+from majlisna.logger_config import configure_logger
+from majlisna.settings import Settings
 
 
 @asynccontextmanager
@@ -22,8 +22,8 @@ async def lifespan(app: FastAPI):
     await create_db_and_tables(engine)
 
     # Start background disconnect checker loop
-    from ipg.api.controllers.disconnect import disconnect_checker_loop
-    from ipg.api.ws.notify import fire_notify_game_changed, fire_notify_room_changed
+    from majlisna.api.controllers.disconnect import disconnect_checker_loop
+    from majlisna.api.ws.notify import fire_notify_game_changed, fire_notify_room_changed
 
     checker_task = asyncio.create_task(
         disconnect_checker_loop(

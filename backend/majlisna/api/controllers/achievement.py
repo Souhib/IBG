@@ -6,14 +6,14 @@ from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.stats import (
+from majlisna.api.models.stats import (
     AchievementCategory,
     AchievementDefinition,
     UserAchievement,
     UserStats,
 )
-from ipg.api.models.table import User
-from ipg.api.schemas.stats import AchievementWithProgress
+from majlisna.api.models.table import User
+from majlisna.api.schemas.stats import AchievementWithProgress
 
 # All achievement definitions to seed into the database
 ACHIEVEMENT_DEFINITIONS: list[dict] = [

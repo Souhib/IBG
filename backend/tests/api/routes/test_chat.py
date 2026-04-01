@@ -7,10 +7,10 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.chat import ChatController
-from ipg.api.models.chat import ChatMessage
-from ipg.api.models.table import User
-from ipg.dependencies import get_chat_controller, get_current_user
+from majlisna.api.controllers.chat import ChatController
+from majlisna.api.models.chat import ChatMessage
+from majlisna.api.models.table import User
+from majlisna.dependencies import get_chat_controller, get_current_user
 
 BASE_URL = "/api/v1/rooms"
 
@@ -28,7 +28,7 @@ def _mock_user() -> User:
 # ========== POST /rooms/{room_id}/messages ==========
 
 
-@patch("ipg.api.routes.chat.notify_chat_message", new_callable=AsyncMock)
+@patch("majlisna.api.routes.chat.notify_chat_message", new_callable=AsyncMock)
 def test_send_message_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """POST /rooms/{room_id}/messages returns 201 and the ChatMessageView."""
     # Arrange

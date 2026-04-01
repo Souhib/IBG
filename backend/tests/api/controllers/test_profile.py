@@ -3,9 +3,9 @@ from uuid import uuid4
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.profile import ProfileController
-from ipg.api.controllers.stats import StatsController
-from ipg.api.schemas.error import UserNotFoundError
+from majlisna.api.controllers.profile import ProfileController
+from majlisna.api.controllers.stats import StatsController
+from majlisna.api.schemas.error import UserNotFoundError
 
 
 async def test_get_public_profile_with_no_stats(profile_controller: ProfileController, create_user):

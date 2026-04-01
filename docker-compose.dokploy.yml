@@ -1,4 +1,4 @@
-# Dokploy deployment for Majlisna (IPG)
+# Dokploy deployment for Majlisna
 # App-only compose — monitoring services live in ~/monitoring/docker-compose.yml on the server
 
 name: majlisna
@@ -15,13 +15,13 @@ services:
     container_name: majlisna-db
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ipg
-      POSTGRES_USER: ipg
+      POSTGRES_DB: majlisna
+      POSTGRES_USER: majlisna
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ipg"]
+      test: ["CMD-SHELL", "pg_isready -U majlisna"]
       interval: 10s
       timeout: 5s
       start_period: 30s
@@ -38,7 +38,7 @@ services:
     container_name: majlisna-pgbouncer
     image: edoburu/pgbouncer:v1.25.1-p0
     environment:
-      DATABASE_URL: postgres://ipg:${DB_PASSWORD}@db:5432/ipg
+      DATABASE_URL: postgres://majlisna:${DB_PASSWORD}@db:5432/majlisna
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: 20
       MAX_CLIENT_CONN: 200
@@ -80,7 +80,7 @@ services:
       dockerfile: Dockerfile
       target: production
     environment:
-      DATABASE_URL: postgresql+asyncpg://ipg:${DB_PASSWORD}@pgbouncer:6432/ipg
+      DATABASE_URL: postgresql+asyncpg://majlisna:${DB_PASSWORD}@pgbouncer:6432/majlisna
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ENCRYPTION_ALGORITHM: HS256
@@ -90,7 +90,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://<SERVER_IP>:30819}
       LOGFIRE_TOKEN: ${LOGFIRE_TOKEN:-}
       ENVIRONMENT: ${ENVIRONMENT:-production}
-      IPG_ENV: ${IPG_ENV:-production}
+      MAJLISNA_ENV: ${MAJLISNA_ENV:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       SENTRY_DSN: ${SENTRY_DSN:-}
       GOOGLE_CLIENT_ID_WEB: ${GOOGLE_CLIENT_ID_WEB:-}
@@ -109,9 +109,9 @@ services:
       - "33648:5000"
     labels:
       - "traefik.enable=${TRAEFIK_ENABLED:-false}"
-      - "traefik.http.routers.ipg-backend.rule=(Host(`${DOMAIN:-ipg.local}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`) || PathPrefix(`/health`) || PathPrefix(`/scalar`) || PathPrefix(`/openapi.json`))) || Host(`api.${DOMAIN:-ipg.local}`)"
-      - "traefik.http.routers.ipg-backend.entrypoints=web,websecure"
-      - "traefik.http.services.ipg-backend.loadbalancer.server.port=5000"
+      - "traefik.http.routers.majlisna-backend.rule=(Host(`${DOMAIN:-majlisna.local}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`) || PathPrefix(`/health`) || PathPrefix(`/scalar`) || PathPrefix(`/openapi.json`))) || Host(`api.${DOMAIN:-majlisna.local}`)"
+      - "traefik.http.routers.majlisna-backend.entrypoints=web,websecure"
+      - "traefik.http.services.majlisna-backend.loadbalancer.server.port=5000"
     networks:
       - internal
       - dokploy-network
@@ -143,9 +143,9 @@ services:
       - "30819:80"
     labels:
       - "traefik.enable=${TRAEFIK_ENABLED:-false}"
-      - "traefik.http.routers.ipg-frontend.rule=Host(`${DOMAIN:-ipg.local}`)"
-      - "traefik.http.routers.ipg-frontend.entrypoints=web,websecure"
-      - "traefik.http.services.ipg-frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.majlisna-frontend.rule=Host(`${DOMAIN:-majlisna.local}`)"
+      - "traefik.http.routers.majlisna-frontend.entrypoints=web,websecure"
+      - "traefik.http.services.majlisna-frontend.loadbalancer.server.port=80"
     networks:
       - internal
       - dokploy-network

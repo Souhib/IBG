@@ -5,7 +5,7 @@ from uuid import uuid4
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.undercover import TermPair, Word
+from majlisna.api.models.undercover import TermPair, Word
 
 UNDERCOVER_WORDS = [
     # Pillars of Islam

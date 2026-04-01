@@ -6,11 +6,11 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.mcqquiz_game import McqQuizGameController
-from ipg.api.models.game import GameStatus
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game
-from ipg.api.schemas.error import (
+from majlisna.api.controllers.mcqquiz_game import McqQuizGameController
+from majlisna.api.models.game import GameStatus
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game
+from majlisna.api.schemas.error import (
     AlreadyAnsweredError,
     InvalidChoiceIndexError,
     NoMcqQuestionsAvailableError,

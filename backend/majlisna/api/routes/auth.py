@@ -5,11 +5,11 @@ from fastapi import APIRouter, Depends, Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from ipg.api.controllers.auth import AuthController
-from ipg.api.models.table import User
-from ipg.api.models.user import UserCreate
-from ipg.api.models.view import UserView
-from ipg.api.schemas.auth import (
+from majlisna.api.controllers.auth import AuthController
+from majlisna.api.models.table import User
+from majlisna.api.models.user import UserCreate
+from majlisna.api.models.view import UserView
+from majlisna.api.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     LoginResponse,
@@ -18,19 +18,19 @@ from ipg.api.schemas.auth import (
     TokenPairResponse,
     VerifyEmailRequest,
 )
-from ipg.api.schemas.common import StatusMessageResponse, StatusResponse
-from ipg.api.schemas.error import InvalidTokenError
-from ipg.api.schemas.social_auth import SocialLoginRequest, SocialLoginResponse
-from ipg.api.services.email import EmailService
-from ipg.api.services.social_auth import SocialAuthService
-from ipg.dependencies import (
+from majlisna.api.schemas.common import StatusMessageResponse, StatusResponse
+from majlisna.api.schemas.error import InvalidTokenError
+from majlisna.api.schemas.social_auth import SocialLoginRequest, SocialLoginResponse
+from majlisna.api.services.email import EmailService
+from majlisna.api.services.social_auth import SocialAuthService
+from majlisna.dependencies import (
     get_auth_controller,
     get_current_user,
     get_email_service,
     get_settings,
     get_social_auth_service,
 )
-from ipg.settings import Settings
+from majlisna.settings import Settings
 
 limiter = Limiter(
     key_func=get_remote_address,
@@ -47,7 +47,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str,
     """Set httpOnly auth cookies on the response."""
     use_secure = settings.frontend_url.startswith("https://")
     response.set_cookie(
-        key="ipg-access-token",
+        key="majlisna-access-token",
         value=access_token,
         httponly=True,
         secure=use_secure,
@@ -56,7 +56,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str,
         path="/",
     )
     response.set_cookie(
-        key="ipg-refresh-token",
+        key="majlisna-refresh-token",
         value=refresh_token,
         httponly=True,
         secure=use_secure,
@@ -68,8 +68,8 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str,
 
 def _clear_auth_cookies(response: Response) -> None:
     """Clear auth cookies."""
-    response.delete_cookie(key="ipg-access-token", path="/")
-    response.delete_cookie(key="ipg-refresh-token", path="/api/v1/auth")
+    response.delete_cookie(key="majlisna-access-token", path="/")
+    response.delete_cookie(key="majlisna-refresh-token", path="/api/v1/auth")
 
 
 @router.post("/register", response_model=UserView, status_code=201)
@@ -116,7 +116,7 @@ async def refresh_token(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> TokenPairResponse:
     """Refresh access token using refresh token (from param or cookie)."""
-    effective_token = refresh_token or request.cookies.get("ipg-refresh-token")
+    effective_token = refresh_token or request.cookies.get("majlisna-refresh-token")
     if not effective_token:
         raise InvalidTokenError("No refresh token provided")
 

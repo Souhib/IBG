@@ -7,33 +7,33 @@ from loguru import logger
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     AUTH_PROVIDER_EMAIL,
     AUTH_PROVIDER_GOOGLE,
     EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS,
     PASSWORD_RESET_TOKEN_EXPIRE_HOURS,
 )
-from ipg.api.controllers.shared import (
+from majlisna.api.controllers.shared import (
     async_get_password_hash,
     async_verify_password,
     get_password_hash,
     verify_password,
 )
-from ipg.api.models.table import User
-from ipg.api.models.token import EmailVerificationToken, PasswordResetToken
-from ipg.api.models.user import UserCreate
-from ipg.api.schemas.auth import LoginResult, LoginUserData, TokenPairResponse, TokenPayload
-from ipg.api.schemas.error import (
+from majlisna.api.models.table import User
+from majlisna.api.models.token import EmailVerificationToken, PasswordResetToken
+from majlisna.api.models.user import UserCreate
+from majlisna.api.schemas.auth import LoginResult, LoginUserData, TokenPairResponse, TokenPayload
+from majlisna.api.schemas.error import (
     InvalidCredentialsError,
     InvalidOrExpiredTokenError,
     InvalidTokenError,
     TokenExpiredError,
     UserNotFoundError,
 )
-from ipg.api.schemas.social_auth import SocialLoginResponse, SocialLoginUserData, SocialTokenPayload
-from ipg.api.services.email import EmailService
-from ipg.api.services.social_auth import SocialAuthService
-from ipg.settings import Settings
+from majlisna.api.schemas.social_auth import SocialLoginResponse, SocialLoginUserData, SocialTokenPayload
+from majlisna.api.services.email import EmailService
+from majlisna.api.services.social_auth import SocialAuthService
+from majlisna.settings import Settings
 
 
 class AuthController:

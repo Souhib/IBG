@@ -16,25 +16,25 @@ from sqlalchemy.exc import NoResultFound
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.responses import JSONResponse
 
-from ipg.api.middleware import LoggingMiddleware, RequestIDMiddleware, SecurityMiddleware
-from ipg.api.routes.auth import limiter
-from ipg.api.routes.auth import router as auth_router
-from ipg.api.routes.challenge import router as challenge_router
-from ipg.api.routes.chat import router as chat_router
-from ipg.api.routes.codenames import router as codenames_router
-from ipg.api.routes.friend import router as friend_router
-from ipg.api.routes.game import router as game_router
-from ipg.api.routes.mcqquiz import router as mcqquiz_router
-from ipg.api.routes.profile import router as profile_router
-from ipg.api.routes.room import router as room_router
-from ipg.api.routes.stats import router as stats_router
-from ipg.api.routes.undercover import router as undercover_router
-from ipg.api.routes.user import router as user_router
-from ipg.api.routes.wordquiz import router as wordquiz_router
-from ipg.api.schemas.error import BaseError
-from ipg.api.ws import socketio_app
-from ipg.database import get_engine as _get_engine
-from ipg.settings import Settings
+from majlisna.api.middleware import LoggingMiddleware, RequestIDMiddleware, SecurityMiddleware
+from majlisna.api.routes.auth import limiter
+from majlisna.api.routes.auth import router as auth_router
+from majlisna.api.routes.challenge import router as challenge_router
+from majlisna.api.routes.chat import router as chat_router
+from majlisna.api.routes.codenames import router as codenames_router
+from majlisna.api.routes.friend import router as friend_router
+from majlisna.api.routes.game import router as game_router
+from majlisna.api.routes.mcqquiz import router as mcqquiz_router
+from majlisna.api.routes.profile import router as profile_router
+from majlisna.api.routes.room import router as room_router
+from majlisna.api.routes.stats import router as stats_router
+from majlisna.api.routes.undercover import router as undercover_router
+from majlisna.api.routes.user import router as user_router
+from majlisna.api.routes.wordquiz import router as wordquiz_router
+from majlisna.api.schemas.error import BaseError
+from majlisna.api.ws import socketio_app
+from majlisna.database import get_engine as _get_engine
+from majlisna.settings import Settings
 
 
 def _sentry_sink(message) -> None:
@@ -66,7 +66,7 @@ def _configure_observability(settings: Settings, app: FastAPI) -> None:
             traces_sample_rate=0.1,
             environment=settings.environment,
         )
-        logger.add(_sentry_sink, level="WARNING", filter=lambda record: "ipg" in record["file"].path)
+        logger.add(_sentry_sink, level="WARNING", filter=lambda record: "majlisna" in record["file"].path)
 
     if settings.logfire_token:
         logfire.configure(
@@ -82,7 +82,7 @@ def create_app(lifespan) -> FastAPI:
     """Create a FastAPI app with all routers, middleware, and exception handlers."""
     settings = Settings()  # type: ignore
 
-    app = FastAPI(title="IPG", lifespan=lifespan)
+    app = FastAPI(title="Majlisna", lifespan=lifespan)
     _configure_observability(settings, app)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -121,7 +121,7 @@ def create_app(lifespan) -> FastAPI:
     async def scalar_html():
         return get_scalar_api_reference(
             openapi_url="/openapi.json",
-            title="IPG API Scalar",
+            title="Majlisna API Scalar",
         )
 
     @app.get("/health")

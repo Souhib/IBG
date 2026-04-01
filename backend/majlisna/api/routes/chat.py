@@ -4,12 +4,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from ipg.api.controllers.chat import ChatController
-from ipg.api.models.chat import ChatMessage
-from ipg.api.models.table import User
-from ipg.api.schemas.chat import ChatMessageView, SendMessageRequest
-from ipg.api.ws.notify import notify_chat_message
-from ipg.dependencies import get_chat_controller, get_current_user
+from majlisna.api.controllers.chat import ChatController
+from majlisna.api.models.chat import ChatMessage
+from majlisna.api.models.table import User
+from majlisna.api.schemas.chat import ChatMessageView, SendMessageRequest
+from majlisna.api.ws.notify import notify_chat_message
+from majlisna.dependencies import get_chat_controller, get_current_user
 
 router = APIRouter(
     tags=["chat"],

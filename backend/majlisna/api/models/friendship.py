@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Field, UniqueConstraint
 
-from ipg.api.schemas.shared import BaseTable
+from majlisna.api.schemas.shared import BaseTable
 
 
 class FriendshipStatus(StrEnum):

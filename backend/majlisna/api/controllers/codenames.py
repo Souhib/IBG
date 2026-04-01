@@ -6,13 +6,13 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.models.codenames import (
+from majlisna.api.models.codenames import (
     CodenamesWord,
     CodenamesWordCreate,
     CodenamesWordPack,
     CodenamesWordPackCreate,
 )
-from ipg.api.utils.cache import cache
+from majlisna.api.utils.cache import cache
 
 WORD_PACKS_CACHE_KEY = "codenames:word_packs"
 CACHE_TTL_SECONDS = 3600

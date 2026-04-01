@@ -6,18 +6,18 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.models.error import GameNotFoundError
-from ipg.api.models.table import User
-from ipg.api.schemas.common import GameStartResponse, HintRecordResponse
-from ipg.api.schemas.undercover import (
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.models.error import GameNotFoundError
+from majlisna.api.models.table import User
+from majlisna.api.schemas.common import GameStartResponse, HintRecordResponse
+from majlisna.api.schemas.undercover import (
     DescriptionOrderEntry,
     StartNextRoundResponse,
     SubmitDescriptionResponse,
     SubmitVoteResponse,
     UndercoverGameState,
 )
-from ipg.dependencies import get_current_user, get_undercover_game_controller
+from majlisna.dependencies import get_current_user, get_undercover_game_controller
 
 BASE_URL = "/api/v1/undercover"
 

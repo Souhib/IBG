@@ -1,6 +1,6 @@
 import socketio
 
-from ipg.settings import Settings
+from majlisna.settings import Settings
 
 
 def _get_redis_url() -> str:
@@ -24,4 +24,4 @@ sio = socketio.AsyncServer(
 socketio_app = socketio.ASGIApp(sio, socketio_path="/socket.io")
 
 # Register event handlers (side-effect import, must be after sio is created)
-import ipg.api.ws.handlers  # noqa: E402, F401, PLC0415
+import majlisna.api.ws.handlers  # noqa: E402, F401, PLC0415

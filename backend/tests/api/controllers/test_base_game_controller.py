@@ -8,10 +8,10 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.base_game import BaseGameController
-from ipg.api.models.error import GameNotFoundError, PlayerRemovedFromGameError
-from ipg.api.models.game import GameCreate, GameType
-from ipg.api.models.relationship import RoomUserLink
+from majlisna.api.controllers.base_game import BaseGameController
+from majlisna.api.models.error import GameNotFoundError, PlayerRemovedFromGameError
+from majlisna.api.models.game import GameCreate, GameType
+from majlisna.api.models.relationship import RoomUserLink
 
 # ── Fixture ──────────────────────────────────────────────────────
 

@@ -7,13 +7,13 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.codenames_game import CodenamesGameController
-from ipg.api.controllers.codenames_helpers import CodenamesRole, CodenamesTeam
-from ipg.api.controllers.mcqquiz_game import McqQuizGameController
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.controllers.wordquiz_game import WordQuizGameController
-from ipg.api.models.table import Game
-from ipg.api.schemas.error import AlreadyAnsweredError, BaseError, NotYourTurnError
+from majlisna.api.controllers.codenames_game import CodenamesGameController
+from majlisna.api.controllers.codenames_helpers import CodenamesRole, CodenamesTeam
+from majlisna.api.controllers.mcqquiz_game import McqQuizGameController
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.controllers.wordquiz_game import WordQuizGameController
+from majlisna.api.models.table import Game
+from majlisna.api.schemas.error import AlreadyAnsweredError, BaseError, NotYourTurnError
 
 # ─── Helpers ──────────────────────────────────────────────────
 

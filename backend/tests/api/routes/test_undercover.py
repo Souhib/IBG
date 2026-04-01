@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, Mock
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.undercover import UndercoverController
-from ipg.api.models.undercover import TermPair, Word
-from ipg.api.schemas.error import TermPairNotFoundError, WordNotFoundByIdError, WordNotFoundByNameError
-from ipg.dependencies import get_undercover_controller
+from majlisna.api.controllers.undercover import UndercoverController
+from majlisna.api.models.undercover import TermPair, Word
+from majlisna.api.schemas.error import TermPairNotFoundError, WordNotFoundByIdError, WordNotFoundByNameError
+from majlisna.dependencies import get_undercover_controller
 
 # ──────────────────────────────────────────────────────────────
 # Words (/api/v1/undercover/words)

@@ -72,7 +72,7 @@ function LanguageSwitcher() {
     if (!lang) return
     trackEvent("language-change", { lang: lang.code })
     i18n.changeLanguage(lang.code)
-    localStorage.setItem("ipg-language", lang.code)
+    localStorage.setItem("majlisna-language", lang.code)
     document.documentElement.dir = lang.dir
     document.documentElement.lang = lang.code
     setOpen(false)
@@ -235,7 +235,7 @@ export function MainNav() {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground transition-transform duration-200 group-hover:scale-105">
               <BookOpen className="h-4 w-4" />
             </div>
-            <span className="gradient-text font-extrabold tracking-tight">IPG</span>
+            <span className="gradient-text font-extrabold tracking-tight">Majlisna</span>
           </Link>
         </div>
 

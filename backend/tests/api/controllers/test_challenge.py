@@ -2,13 +2,13 @@ from datetime import UTC, datetime, timedelta
 
 from sqlmodel import select
 
-from ipg.api.controllers.challenge import (
+from majlisna.api.controllers.challenge import (
     CHALLENGE_DEFINITIONS,
     DAILY_CHALLENGE_COUNT,
     WEEKLY_CHALLENGE_COUNT,
     ChallengeController,
 )
-from ipg.api.models.challenge import ChallengeDefinition, UserChallenge
+from majlisna.api.models.challenge import ChallengeDefinition, UserChallenge
 
 
 async def test_seed_challenges(challenge_controller: ChallengeController):

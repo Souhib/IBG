@@ -4,13 +4,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from ipg.api.controllers.user import UserController
-from ipg.api.models.table import User
-from ipg.api.models.user import UserCreate, UserUpdate, UserUpdatePassword
-from ipg.api.models.view import UserView
-from ipg.api.schemas.error import ForbiddenError
-from ipg.api.schemas.user import DeleteAccountRequest
-from ipg.dependencies import get_current_user, get_user_controller
+from majlisna.api.controllers.user import UserController
+from majlisna.api.models.table import User
+from majlisna.api.models.user import UserCreate, UserUpdate, UserUpdatePassword
+from majlisna.api.models.view import UserView
+from majlisna.api.schemas.error import ForbiddenError
+from majlisna.api.schemas.user import DeleteAccountRequest
+from majlisna.dependencies import get_current_user, get_user_controller
 
 router = APIRouter(
     prefix="/users",

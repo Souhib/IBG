@@ -3,14 +3,14 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ipg.api.controllers.codenames import (
+from majlisna.api.controllers.codenames import (
     CodenamesController,
     CodenamesWordNotFoundError,
     CodenamesWordPackAlreadyExistsError,
     CodenamesWordPackNotFoundError,
     NotEnoughWordsError,
 )
-from ipg.api.models.codenames import CodenamesWordCreate, CodenamesWordPackCreate
+from majlisna.api.models.codenames import CodenamesWordCreate, CodenamesWordPackCreate
 
 # --- Word Pack CRUD ---
 

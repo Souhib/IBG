@@ -36,7 +36,7 @@ describe("auth token storage", () => {
   })
 
   it("handles corrupted JSON in user data gracefully", () => {
-    localStorage.setItem("ipg-user-data", "not-valid-json{")
+    localStorage.setItem("majlisna-user-data", "not-valid-json{")
 
     expect(getStoredUserData()).toBeNull()
   })

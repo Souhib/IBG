@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { BookOpen, Check, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const STORAGE_KEY = "ipg-first-visit-complete"
+const STORAGE_KEY = "majlisna-first-visit-complete"
 
 function useFirstVisit() {
   const [isFirstVisit, setIsFirstVisit] = useState(() => {
@@ -42,7 +42,7 @@ export function LanguageWelcomeModal() {
       const lang = languages.find((l) => l.code === code)
       if (!lang) return
       i18n.changeLanguage(code)
-      localStorage.setItem("ipg-language", code)
+      localStorage.setItem("majlisna-language", code)
       document.documentElement.dir = lang.dir
       document.documentElement.lang = lang.code
 

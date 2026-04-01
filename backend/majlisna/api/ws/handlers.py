@@ -4,16 +4,16 @@ from loguru import logger
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.auth import AuthController
-from ipg.api.controllers.disconnect import mark_user_disconnected, update_heartbeat
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.table import Game
-from ipg.api.schemas.error import InvalidTokenError, TokenExpiredError
-from ipg.api.ws.notify import fire_notify_room_changed
-from ipg.api.ws.server import sio
-from ipg.api.ws.state import fetch_game_state, fetch_room_state
-from ipg.database import get_engine
-from ipg.settings import Settings
+from majlisna.api.controllers.auth import AuthController
+from majlisna.api.controllers.disconnect import mark_user_disconnected, update_heartbeat
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.table import Game
+from majlisna.api.schemas.error import InvalidTokenError, TokenExpiredError
+from majlisna.api.ws.notify import fire_notify_room_changed
+from majlisna.api.ws.server import sio
+from majlisna.api.ws.state import fetch_game_state, fetch_room_state
+from majlisna.database import get_engine
+from majlisna.settings import Settings
 
 # Track user→sid mapping for multi-tab deduplication
 _user_sids: dict[str, str] = {}

@@ -1,13 +1,13 @@
 import random
 from enum import StrEnum
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     CODENAMES_ASSASSIN_CARDS,
     CODENAMES_FIRST_TEAM_CARDS,
     CODENAMES_NEUTRAL_CARDS,
     CODENAMES_SECOND_TEAM_CARDS,
 )
-from ipg.api.schemas.error import BaseError
+from majlisna.api.schemas.error import BaseError
 
 
 class CodenamesTeam(StrEnum):

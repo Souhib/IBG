@@ -3,13 +3,13 @@ from uuid import uuid4
 import pytest
 from sqlmodel import select
 
-from ipg.api.controllers.room import RoomController
-from ipg.api.models.event import EventCreate
-from ipg.api.models.game import GameType
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.room import RoomJoin, RoomLeave, RoomType
-from ipg.api.models.table import Room, User
-from ipg.api.schemas.error import (
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.models.event import EventCreate
+from majlisna.api.models.game import GameType
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.room import RoomJoin, RoomLeave, RoomType
+from majlisna.api.models.table import Room, User
+from majlisna.api.schemas.error import (
     BaseError,
     RoomNotFoundError,
     UserAlreadyInRoomError,
@@ -17,7 +17,7 @@ from ipg.api.schemas.error import (
     UserNotInRoomError,
     WrongRoomPasswordError,
 )
-from ipg.api.schemas.room import RoomSettings
+from majlisna.api.schemas.room import RoomSettings
 
 
 async def test_create_room_success(room_controller: RoomController, create_user):

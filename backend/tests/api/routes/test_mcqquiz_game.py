@@ -6,11 +6,11 @@ from uuid import uuid4
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ipg.api.controllers.mcqquiz_game import McqQuizGameController
-from ipg.api.models.table import User
-from ipg.api.schemas.common import AdvanceRoundResponse, GameStartResponse, TimerExpiredResponse
-from ipg.api.schemas.mcqquiz import McqQuizGameState, McqSubmitAnswerResponse
-from ipg.dependencies import get_current_user, get_mcqquiz_game_controller
+from majlisna.api.controllers.mcqquiz_game import McqQuizGameController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.common import AdvanceRoundResponse, GameStartResponse, TimerExpiredResponse
+from majlisna.api.schemas.mcqquiz import McqQuizGameState, McqSubmitAnswerResponse
+from majlisna.dependencies import get_current_user, get_mcqquiz_game_controller
 
 BASE_URL = "/api/v1/mcqquiz"
 
@@ -48,9 +48,9 @@ def _mock_game_state(game_id: str, room_id: str) -> McqQuizGameState:
 # ========== POST /mcqquiz/games/{room_id}/start ==========
 
 
-@patch("ipg.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
-@patch("ipg.api.routes.mcqquiz.notify_room_changed", new_callable=AsyncMock)
-@patch("ipg.api.routes.mcqquiz.auto_join_game_room", new_callable=AsyncMock)
+@patch("majlisna.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.mcqquiz.notify_room_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.mcqquiz.auto_join_game_room", new_callable=AsyncMock)
 def test_start_game_success(
     mock_auto_join: AsyncMock,
     mock_notify_room: AsyncMock,
@@ -175,7 +175,7 @@ def test_get_state_unauthenticated(test_app: FastAPI, client: TestClient) -> Non
 # ========== POST /mcqquiz/games/{game_id}/answer ==========
 
 
-@patch("ipg.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
 def test_submit_answer_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """Submitting an answer returns 200 with result."""
     # Arrange
@@ -226,7 +226,7 @@ def test_submit_answer_missing_body(test_app: FastAPI, client: TestClient) -> No
 # ========== POST /mcqquiz/games/{game_id}/timer-expired ==========
 
 
-@patch("ipg.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
 def test_timer_expired_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """Timer expired returns 200 with action."""
     # Arrange
@@ -256,7 +256,7 @@ def test_timer_expired_success(mock_notify: AsyncMock, test_app: FastAPI, client
 # ========== POST /mcqquiz/games/{game_id}/next-round ==========
 
 
-@patch("ipg.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
+@patch("majlisna.api.routes.mcqquiz.notify_game_changed", new_callable=AsyncMock)
 def test_next_round_success(mock_notify: AsyncMock, test_app: FastAPI, client: TestClient) -> None:
     """Advancing to next round returns 200 with game_id and room_id."""
     # Arrange

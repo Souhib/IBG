@@ -9,19 +9,19 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.constants import (
+from majlisna.api.constants import (
     DISCONNECT_CHECK_INTERVAL_SECONDS,
     GRACE_PERIOD_SECONDS,
     HEARTBEAT_STALE_SECONDS,
     LOBBY_GRACE_PERIOD_SECONDS,
 )
-from ipg.api.controllers.codenames_helpers import CodenamesGameStatus
-from ipg.api.controllers.game_lock import get_game_lock
-from ipg.api.models.game import GameStatus, GameType
-from ipg.api.models.relationship import RoomUserLink
-from ipg.api.models.room import RoomType
-from ipg.api.models.table import Game, Room
-from ipg.api.models.undercover import UndercoverRole
+from majlisna.api.controllers.codenames_helpers import CodenamesGameStatus
+from majlisna.api.controllers.game_lock import get_game_lock
+from majlisna.api.models.game import GameStatus, GameType
+from majlisna.api.models.relationship import RoomUserLink
+from majlisna.api.models.room import RoomType
+from majlisna.api.models.table import Game, Room
+from majlisna.api.models.undercover import UndercoverRole
 
 
 async def _mark_stale_users(session: AsyncSession) -> set[str]:

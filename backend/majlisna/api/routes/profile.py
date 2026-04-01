@@ -3,10 +3,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from ipg.api.controllers.profile import ProfileController
-from ipg.api.models.table import User
-from ipg.api.schemas.profile import PublicProfile, UpdateBioRequest
-from ipg.dependencies import get_current_user, get_profile_controller
+from majlisna.api.controllers.profile import ProfileController
+from majlisna.api.models.table import User
+from majlisna.api.schemas.profile import PublicProfile, UpdateBioRequest
+from majlisna.dependencies import get_current_user, get_profile_controller
 
 router = APIRouter(
     prefix="/profiles",

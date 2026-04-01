@@ -3,7 +3,7 @@
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.game_lock import _fallback_locks, _game_id_to_lock_key, cleanup_game_lock, get_game_lock
+from majlisna.api.controllers.game_lock import _fallback_locks, _game_id_to_lock_key, cleanup_game_lock, get_game_lock
 
 # ========== Fallback (asyncio.Lock) Tests ==========
 

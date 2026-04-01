@@ -13,7 +13,7 @@ test.describe("i18n Language Switching", () => {
     );
 
     // Reset language to English first
-    await page.evaluate(() => localStorage.setItem("ipg-language", "en"));
+    await page.evaluate(() => localStorage.setItem("majlisna-language", "en"));
     await page.goto(FRONTEND_URL);
     await page.waitForLoadState("domcontentloaded");
 
@@ -44,7 +44,7 @@ test.describe("i18n Language Switching", () => {
     );
 
     // Reset language to English first
-    await page.evaluate(() => localStorage.setItem("ipg-language", "en"));
+    await page.evaluate(() => localStorage.setItem("majlisna-language", "en"));
     await page.goto(FRONTEND_URL);
     await page.waitForLoadState("domcontentloaded");
 
@@ -79,7 +79,7 @@ test.describe("i18n Language Switching", () => {
     );
 
     // Reset language to English first
-    await page.evaluate(() => localStorage.setItem("ipg-language", "en"));
+    await page.evaluate(() => localStorage.setItem("majlisna-language", "en"));
     await page.goto(FRONTEND_URL);
     await page.waitForLoadState("domcontentloaded");
 

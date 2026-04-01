@@ -2,7 +2,7 @@
 
 import pytest
 
-from ipg.api.controllers.wordquiz import WordQuizController
+from majlisna.api.controllers.wordquiz import WordQuizController
 
 
 @pytest.mark.asyncio

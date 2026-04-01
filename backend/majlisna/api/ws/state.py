@@ -3,14 +3,14 @@ from uuid import UUID
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ipg.api.controllers.codenames_game import CodenamesGameController
-from ipg.api.controllers.mcqquiz_game import McqQuizGameController
-from ipg.api.controllers.room import RoomController
-from ipg.api.controllers.undercover_game import UndercoverGameController
-from ipg.api.controllers.wordquiz_game import WordQuizGameController
-from ipg.api.models.game import GameType
-from ipg.api.models.table import Game
-from ipg.database import get_engine
+from majlisna.api.controllers.codenames_game import CodenamesGameController
+from majlisna.api.controllers.mcqquiz_game import McqQuizGameController
+from majlisna.api.controllers.room import RoomController
+from majlisna.api.controllers.undercover_game import UndercoverGameController
+from majlisna.api.controllers.wordquiz_game import WordQuizGameController
+from majlisna.api.models.game import GameType
+from majlisna.api.models.table import Game
+from majlisna.database import get_engine
 
 
 async def fetch_room_state(room_id: str, user_id: str | None = None) -> dict:

@@ -5,7 +5,7 @@ import pydantic
 import pytest
 from faker import Faker
 
-from ipg.api.models.user import UserBase
+from majlisna.api.models.user import UserBase
 
 
 def test_valid_username_email_address_country(faker: Faker):
