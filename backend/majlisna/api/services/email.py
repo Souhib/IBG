@@ -3,10 +3,7 @@ from loguru import logger
 
 from majlisna.settings import Settings
 
-_FONT_STACK = (
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, "
-    "'Helvetica Neue', Arial, sans-serif"
-)
+_FONT_STACK = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
 
 
 def _base_layout(content: str) -> str:
