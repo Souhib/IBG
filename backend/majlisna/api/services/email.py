@@ -34,7 +34,7 @@ def _base_layout(content: str) -> str:
                   <td>
                     <span style="font-family:{_FONT_STACK};font-size:20px;font-weight:700;
                                  color:#10b981;letter-spacing:-0.3px;">
-                      🎲 Majlisna
+                      Majlisna
                     </span>
                   </td>
                 </tr>
